@@ -2,23 +2,30 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const { ROLES } = require('../utils/constants');
 
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 const userSchema = new mongoose.Schema({
     name: {
         type: String,
         required: true,
-        trim: true
+        trim: true,
+        minlength: 2,
+        maxlength: 80
     },
     email: {
         type: String,
         required: true,
         unique: true,
         lowercase: true,
-        trim: true
+        trim: true,
+        maxlength: 320,
+        match: EMAIL_PATTERN
     },
     password: {
         type: String,
         required: true,
-        minlength: 6
+        minlength: 8,
+        maxlength: 128
     },
     role: {
         type: String,
@@ -36,7 +43,8 @@ const userSchema = new mongoose.Schema({
         default: {}
     }
 }, {
-    timestamps: true
+    timestamps: true,
+    minimize: false
 });
 
 userSchema.pre('save', async function (next) {

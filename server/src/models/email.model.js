@@ -1,31 +1,64 @@
 const mongoose = require('mongoose');
 const { EMAIL_STATUS, EMAIL_CATEGORIES, PRIORITY } = require('../utils/constants');
 
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+const emailMetadataSchema = new mongoose.Schema(
+    {
+        source: {
+            type: String,
+            trim: true,
+            maxlength: 64
+        },
+        fetchedAt: Date,
+        hasAttachments: {
+            type: Boolean,
+            default: false
+        },
+        sentVia: {
+            type: String,
+            trim: true,
+            maxlength: 64
+        }
+    },
+    {
+        _id: false,
+        strict: false
+    }
+);
+
 const emailSchema = new mongoose.Schema({
     fromAddress: {
         type: String,
         required: true,
         trim: true,
-        lowercase: true
+        lowercase: true,
+        maxlength: 320,
+        match: EMAIL_PATTERN
     },
     toAddress: {
         type: String,
         required: true,
         trim: true,
-        lowercase: true
+        lowercase: true,
+        maxlength: 320,
+        match: EMAIL_PATTERN
     },
     subject: {
         type: String,
         required: true,
         trim: true,
+        maxlength: 300,
         index: true
     },
     bodyText: {
         type: String,
-        required: true
+        required: true,
+        minlength: 1
     },
     bodyHtml: {
-        type: String
+        type: String,
+        default: ''
     },
 
     category: {
@@ -62,29 +95,38 @@ const emailSchema = new mongoose.Schema({
 
     threadId: {
         type: String,
+        trim: true,
+        maxlength: 255,
         index: true
     },
     messageId: {
         type: String,
         unique: true,
+        trim: true,
+        maxlength: 500,
         default: () => `<${new mongoose.Types.ObjectId().toString()}@processmail.local>`
     },
     inReplyTo: {
-        type: String
+        type: String,
+        trim: true,
+        maxlength: 500
     },
     references: [{
-        type: String
+        type: String,
+        trim: true,
+        maxlength: 500
     }],
 
     metadata: {
-        type: Map,
-        of: mongoose.Schema.Types.Mixed
+        type: emailMetadataSchema,
+        default: () => ({})
     },
 
     processedAt: Date,
     sentAt: Date
 }, {
-    timestamps: true
+    timestamps: true,
+    minimize: false
 });
 
 emailSchema.index({ status: 1, createdAt: -1 });

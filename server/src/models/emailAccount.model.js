@@ -1,9 +1,12 @@
 const mongoose = require('mongoose');
 
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const HEX_COLOR_PATTERN = /^#[0-9A-F]{6}$/i;
+
 const labelSchema = new mongoose.Schema(
     {
-        name: { type: String, required: true, trim: true },
-        color: { type: String, default: '#3B82F6' },
+        name: { type: String, required: true, trim: true, minlength: 1, maxlength: 50 },
+        color: { type: String, default: '#3B82F6', match: HEX_COLOR_PATTERN },
         type: { type: String, enum: ['system', 'user'], default: 'user' }
     },
     { _id: false }
@@ -19,7 +22,11 @@ const sharedWithSchema = new mongoose.Schema(
         permissions: {
             type: [String],
             enum: ['read', 'write', 'delete', 'admin'],
-            default: ['read']
+            default: ['read'],
+            validate: {
+                validator: (permissions) => Array.isArray(permissions) && new Set(permissions).size === permissions.length,
+                message: 'Permissions must not contain duplicates'
+            }
         },
         addedAt: { type: Date, default: Date.now }
     },
@@ -28,15 +35,23 @@ const sharedWithSchema = new mongoose.Schema(
 
 const connectionSchema = new mongoose.Schema(
     {
-        host: { type: String, required: true, trim: true },
-        port: { type: Number, required: true },
+        host: { type: String, required: true, trim: true, lowercase: true, minlength: 3, maxlength: 255 },
+        port: { type: Number, required: true, min: 1, max: 65535 },
         secure: { type: Boolean, default: true },
         auth: {
-            user: { type: String, required: true, trim: true },
-            pass: { type: String, required: true }
+            user: { type: String, required: true, trim: true, maxlength: 320 },
+            pass: { type: String, required: true, minlength: 1, maxlength: 512 }
         }
     },
     { _id: false }
+);
+
+const accountMetadataSchema = new mongoose.Schema(
+    {},
+    {
+        _id: false,
+        strict: false
+    }
 );
 
 const emailAccountSchema = new mongoose.Schema(
@@ -47,12 +62,14 @@ const emailAccountSchema = new mongoose.Schema(
             required: true,
             index: true
         },
-        name: { type: String, required: true, trim: true },
+        name: { type: String, required: true, trim: true, minlength: 2, maxlength: 100 },
         email: {
             type: String,
             required: true,
             trim: true,
-            lowercase: true
+            lowercase: true,
+            maxlength: 320,
+            match: EMAIL_PATTERN
         },
         provider: {
             type: String,
@@ -71,15 +88,15 @@ const emailAccountSchema = new mongoose.Schema(
         labels: { type: [labelSchema], default: [] },
         sharedWith: { type: [sharedWithSchema], default: [] },
         statistics: {
-            totalEmails: { type: Number, default: 0 },
-            unreadEmails: { type: Number, default: 0 },
-            lastSyncDuration: { type: Number, default: 0 }
+            totalEmails: { type: Number, default: 0, min: 0 },
+            unreadEmails: { type: Number, default: 0, min: 0 },
+            lastSyncDuration: { type: Number, default: 0, min: 0 }
         },
         lastSyncedAt: { type: Date, default: null },
-        lastError: { type: String, default: null },
-        metadata: { type: Map, of: mongoose.Schema.Types.Mixed, default: {} }
+        lastError: { type: String, default: null, maxlength: 500 },
+        metadata: { type: accountMetadataSchema, default: () => ({}) }
     },
-    { timestamps: true }
+    { timestamps: true, minimize: false }
 );
 
 emailAccountSchema.index({ userId: 1, email: 1 }, { unique: true });
