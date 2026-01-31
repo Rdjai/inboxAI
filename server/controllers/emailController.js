@@ -3,6 +3,7 @@ const AuditLog = require('../models/AuditLog');
 const Attachment = require('../models/Attachment');
 const queueService = require('../services/queueService');
 const aiService = require('../services/aiService');
+const fs = require('fs');
 
 const getEmails = async (req, res) => {
     try {
@@ -406,6 +407,91 @@ const bulkUpdate = async (req, res) => {
     }
 };
 
+const uploadAttachments = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const files = req.files;
+
+        if (!files || files.length === 0) {
+            return res.status(400).json({
+                success: false,
+                error: 'No files uploaded'
+            });
+        }
+
+        // Save attachments
+        const attachments = await Promise.all(
+            files.map(async (file) => {
+                return await Attachment.create({
+                    email: id,
+                    filename: file.originalname,
+                    mimetype: file.mimetype,
+                    size: file.size,
+                    path: file.path
+                });
+            })
+        );
+
+        await Email.findByIdAndUpdate(id, {
+            hasAttachments: true
+        });
+
+        await AuditLog.create({
+            email: id,
+            user: req.user._id,
+            action: 'edited',
+            details: {
+                attachments: files.map(f => ({
+                    filename: f.originalname,
+                    size: f.size
+                }))
+            }
+        });
+
+        res.json({
+            success: true,
+            data: attachments
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+};
+
+const downloadAttachment = async (req, res) => {
+    try {
+        const { emailId, attachmentId } = req.params;
+
+        const attachment = await Attachment.findOne({
+            _id: attachmentId,
+            email: emailId
+        });
+
+        if (!attachment) {
+            return res.status(404).json({
+                success: false,
+                error: 'Attachment not found'
+            });
+        }
+
+        if (!fs.existsSync(attachment.path)) {
+            return res.status(404).json({
+                success: false,
+                error: 'File not found'
+            });
+        }
+
+        res.download(attachment.path, attachment.filename);
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+};
+
 module.exports = {
     getEmails,
     getEmail,
@@ -414,5 +500,7 @@ module.exports = {
     approveEmail,
     sendEmail,
     replyToEmail,
-    bulkUpdate
+    bulkUpdate,
+    uploadAttachments,
+    downloadAttachment
 };

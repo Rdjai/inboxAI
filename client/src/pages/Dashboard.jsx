@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { emailAccountsAPI, emailsAPI, authAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { Link } from 'react-router-dom';
-import { format } from 'date-fns';
+import { format, isValid } from 'date-fns';
 
 const Dashboard = () => {
     const { user } = useAuth();
@@ -19,6 +19,13 @@ const Dashboard = () => {
     useEffect(() => {
         fetchDashboardData();
     }, []);
+
+    const getEmailDateLabel = (email) => {
+        const dateValue = email?.receivedAt || email?.sentAt || email?.createdAt;
+        if (!dateValue) return '—';
+        const date = new Date(dateValue);
+        return isValid(date) ? format(date, 'MMM d') : '—';
+    };
 
     const fetchDashboardData = async () => {
         try {
@@ -191,7 +198,7 @@ const Dashboard = () => {
                                 </div>
                                 <div className="flex items-center space-x-4">
                                     <span className="text-xs text-gray-500">
-                                        {format(new Date(email.receivedAt), 'MMM d')}
+                                        {getEmailDateLabel(email)}
                                     </span>
                                     {!email.isRead && (
                                         <span className="w-2 h-2 bg-blue-500 rounded-full"></span>

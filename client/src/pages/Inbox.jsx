@@ -41,9 +41,8 @@ const Inbox = () => {
             console.log('📥 Fetching emails for account:', selectedAccount);
             fetchEmails(selectedAccount);
         } else if (accounts.length > 0 && !selectedAccount) {
-            // Auto-select first account
-            console.log('🎯 Auto-selecting first account:', accounts[0]._id);
-            setSelectedAccount(accounts[0]._id);
+            console.log('🎯 Auto-selecting all accounts');
+            setSelectedAccount('all');
         }
     }, [selectedAccount, accounts.length]);
 
@@ -136,7 +135,7 @@ const Inbox = () => {
                                 <option value="">No accounts available</option>
                             ) : (
                                 <>
-                                    <option value="">Select an account</option>
+                                    <option value="all">All accounts</option>
                                     {accounts.map((account) => (
                                         <option key={account._id} value={account._id}>
                                             {account.displayName || account.email}

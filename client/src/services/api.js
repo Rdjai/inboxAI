@@ -72,6 +72,8 @@ export const emailAccountsAPI = {
 
 // Emails API
 export const emailsAPI = {
+    getAllEmails: (params = {}) =>
+        api.get('/email/emails', { params }),
     getEmails: (accountId, params = {}) =>
         api.get(`/email/accounts/${accountId}/emails`, { params }),
     getEmail: (emailId) => api.get(`/email/${emailId}`),

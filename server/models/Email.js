@@ -41,6 +41,15 @@ const emailSchema = new mongoose.Schema({
         text: String,
         html: String
     },
+    attachments: [{
+        filename: String,
+        contentType: String,
+        size: Number
+    }],
+    labels: [String],
+    receivedAt: {
+        type: Date
+    },
     category: {
         type: String,
         enum: ['inbox', 'sent', 'draft', 'spam', 'trash'],

@@ -250,78 +250,36 @@ export const EmailProvider = ({ children }) => {
     };
 
     const fetchEmails = async (accountId, params = {}) => {
-        if (!isAuthenticated) {
-            console.log('⛔ Skipping fetchEmails - not authenticated');
-            return [];
+    if (!isAuthenticated) {
+        console.log('??? Skipping fetchEmails - not authenticated');
+        return [];
+    }
+
+    try {
+        setLoading(true);
+        console.log('???? fetchEmails called for account:', accountId, 'params:', params);
+
+        const response = accountId === 'all'
+            ? await emailsAPI.getAllEmails(params)
+            : await emailsAPI.getEmails(accountId, params);
+
+        const emailsData = response.emails || response.data || response || [];
+
+        console.log('???? Emails fetched:', Array.isArray(emailsData) ? emailsData.length : 0);
+        setEmails(Array.isArray(emailsData) ? emailsData : []);
+
+        return Array.isArray(emailsData) ? emailsData : [];
+
+    } catch (error) {
+        console.error('??? fetchEmails error:', error);
+        if (typeof toast !== 'undefined' && toast.error) {
+            toast.error('Failed to load emails');
         }
-
-        try {
-            setLoading(true);
-            console.log('📥 fetchEmails called for account:', accountId, 'params:', params);
-
-            // Mock emails for development
-            const mockEmails = [
-                {
-                    _id: '1',
-                    messageId: 'mock-1',
-                    from: {
-                        email: 'john@example.com',
-                        name: 'John Doe'
-                    },
-                    to: [{
-                        email: 'you@example.com',
-                        name: 'You'
-                    }],
-                    subject: 'Welcome to InboxFlow! 🎉',
-                    body: {
-                        text: 'Hello! This is a demo email to show how your inbox will look.',
-                        html: '<p>Hello! This is a demo email.</p>'
-                    },
-                    receivedAt: new Date().toISOString(),
-                    isRead: false,
-                    category: 'general',
-                    priority: 'normal',
-                    labels: ['inbox', 'important']
-                },
-                {
-                    _id: '2',
-                    messageId: 'mock-2',
-                    from: {
-                        email: 'team@inboxflow.com',
-                        name: 'InboxFlow Team'
-                    },
-                    to: [{
-                        email: 'you@example.com',
-                        name: 'You'
-                    }],
-                    subject: 'Getting Started Guide 📚',
-                    body: {
-                        text: 'Here\'s how to get started.',
-                        html: '<p>Here\'s how to get started.</p>'
-                    },
-                    receivedAt: new Date(Date.now() - 3600000).toISOString(),
-                    isRead: true,
-                    category: 'help',
-                    priority: 'medium',
-                    labels: ['inbox']
-                }
-            ];
-
-            console.log('📥 Setting mock emails:', mockEmails.length);
-            setEmails(mockEmails);
-
-            return mockEmails;
-
-        } catch (error) {
-            console.error('❌ fetchEmails error:', error);
-            if (typeof toast !== 'undefined' && toast.error) {
-                toast.error('Failed to load emails');
-            }
-            return [];
-        } finally {
-            setLoading(false);
-        }
-    };
+        return [];
+    } finally {
+        setLoading(false);
+    }
+};
 
     const sendEmail = async (accountId, emailData) => {
         if (!isAuthenticated) {
