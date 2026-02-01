@@ -1,5 +1,5 @@
 // client/src/pages/Home.jsx
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { 
   Smartphone, 
@@ -13,15 +13,54 @@ import {
   Users,
   Globe,
   Battery,
-  Smartphone as Mobile
+  Smartphone as Mobile,
+  Menu,
+  X,
+  ArrowRight,
+  ExternalLink,
+  Rocket,
+  Clock,
+  Wrench,
+  Code,
+  Eye,
+  RefreshCw,
+  Brain,
+  BarChart,
+  Send,
+  Inbox,
+  Filter
 } from 'lucide-react';
 
 const Home = () => {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [scrollY, setScrollY] = useState(0);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrollY(window.scrollY);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   const features = [
     {
-      icon: <Sparkles className="h-8 w-8" />,
-      title: "AI-Powered Email Assistant",
-      description: "Smart email classification, summarization, and auto-responses powered by advanced AI"
+      icon: <Brain className="h-8 w-8" />,
+      title: "AI Email Assistant",
+      description: "Smart email classification, summarization, and auto-responses powered by advanced AI",
+      highlight: true
+    },
+    {
+      icon: <BarChart className="h-8 w-8" />,
+      title: "Smart Analytics",
+      description: "Detailed insights into your email habits and productivity patterns",
+      highlight: true
+    },
+    {
+      icon: <RefreshCw className="h-8 w-8" />,
+      title: "Temp Email Generator",
+      description: "Create disposable email addresses for signups and spam protection",
+      highlight: true
     },
     {
       icon: <Shield className="h-8 w-8" />,
@@ -47,32 +86,62 @@ const Home = () => {
       icon: <Battery className="h-8 w-8" />,
       title: "Battery Efficient",
       description: "Optimized background sync and push notifications for long battery life"
+    },
+    {
+      icon: <Filter className="h-8 w-8" />,
+      title: "Smart Filtering",
+      description: "AI-powered spam detection and email organization"
+    }
+  ];
+
+  const mainFeatures = [
+    {
+      icon: "🤖",
+      title: "AI-Powered Email Management",
+      description: "Let AI organize, prioritize, and respond to your emails automatically",
+      color: "from-blue-500 to-cyan-500"
+    },
+    {
+      icon: "📧",
+      title: "Temporary Email Service",
+      description: "Generate disposable emails for signups, verifications, and spam protection",
+      color: "from-purple-500 to-pink-500"
+    },
+    {
+      icon: "📊",
+      title: "Productivity Analytics",
+      description: "Get insights into your email habits and improve your workflow",
+      color: "from-green-500 to-emerald-500"
     }
   ];
 
   const screenshots = [
     {
       id: 1,
-      title: "Smart Inbox",
+      title: "AI Smart Inbox",
       description: "AI-organized inbox with priority sorting",
+      icon: <Brain className="w-8 h-8" />,
       color: "from-blue-500 to-cyan-500"
     },
     {
       id: 2,
-      title: "AI Composer",
-      description: "AI-assisted email drafting and suggestions",
+      title: "Temp Mail Generator",
+      description: "Create disposable emails instantly",
+      icon: <RefreshCw className="w-8 h-8" />,
       color: "from-purple-500 to-pink-500"
     },
     {
       id: 3,
       title: "Analytics Dashboard",
       description: "Detailed email insights and productivity stats",
+      icon: <BarChart className="w-8 h-8" />,
       color: "from-green-500 to-emerald-500"
     },
     {
       id: 4,
       title: "Team Collaboration",
       description: "Shared inboxes and team workflows",
+      icon: <Users className="w-8 h-8" />,
       color: "from-orange-500 to-red-500"
     }
   ];
@@ -88,71 +157,158 @@ const Home = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+      {/* Development Banner */}
+      <div className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-amber-500 to-orange-600 text-white py-2 px-4 text-center font-bold text-sm md:text-base">
+        <div className="container mx-auto flex items-center justify-center space-x-2">
+          <Wrench className="h-4 w-4 md:h-5 md:w-5" />
+          <span>🚧 UNDER ACTIVE DEVELOPMENT - Join our waitlist for early access!</span>
+          <a href="#waitlist" className="ml-2 inline-flex items-center text-sm bg-white text-amber-600 px-3 py-1 rounded-full hover:bg-gray-100 transition-colors">
+            Join Waitlist <ArrowRight className="h-3 w-3 ml-1" />
+          </a>
+        </div>
+      </div>
+
+      {/* Navbar */}
+      <nav className={`fixed top-8 left-0 right-0 z-40 transition-all duration-300 ${scrollY > 50 ? 'bg-white/95 backdrop-blur-md shadow-lg' : 'bg-transparent'}`}>
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            {/* Logo */}
+            <Link to="/" className="flex items-center space-x-2">
+              <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
+                <Mail className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <span className="text-2xl font-bold text-gray-900">InboxAI</span>
+                <div className="flex items-center space-x-1">
+                  <div className="w-2 h-2 bg-amber-500 rounded-full animate-pulse"></div>
+                  <span className="text-xs text-amber-600 font-medium">Coming Soon</span>
+                </div>
+              </div>
+            </Link>
+
+            {/* Desktop Menu */}
+            <div className="hidden md:flex items-center space-x-8">
+              <a href="#features" className="text-gray-700 hover:text-blue-600 font-medium transition-colors">Features</a>
+              <a href="#screenshots" className="text-gray-700 hover:text-blue-600 font-medium transition-colors">Screenshots</a>
+              <a href="#ai" className="text-gray-700 hover:text-blue-600 font-medium transition-colors">AI Assistant</a>
+              <a href="#temp-email" className="text-gray-700 hover:text-blue-600 font-medium transition-colors">Temp Mail</a>
+              <a href="#waitlist" className="text-gray-700 hover:text-blue-600 font-medium transition-colors">Waitlist</a>
+            </div>
+
+            {/* Mobile Menu Button */}
+            <button
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className="md:hidden text-gray-700"
+            >
+              {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+            </button>
+          </div>
+
+          {/* Mobile Menu */}
+          {isMenuOpen && (
+            <div className="md:hidden absolute top-full left-0 right-0 bg-white shadow-lg rounded-b-2xl p-6 mt-2 border border-gray-200">
+              <div className="flex flex-col space-y-4">
+                <a href="#features" onClick={() => setIsMenuOpen(false)} className="text-gray-700 hover:text-blue-600 font-medium py-2">Features</a>
+                <a href="#screenshots" onClick={() => setIsMenuOpen(false)} className="text-gray-700 hover:text-blue-600 font-medium py-2">Screenshots</a>
+                <a href="#ai" onClick={() => setIsMenuOpen(false)} className="text-gray-700 hover:text-blue-600 font-medium py-2">AI Assistant</a>
+                <a href="#temp-email" onClick={() => setIsMenuOpen(false)} className="text-gray-700 hover:text-blue-600 font-medium py-2">Temp Mail</a>
+                <a href="#waitlist" onClick={() => setIsMenuOpen(false)} className="text-gray-700 hover:text-blue-600 font-medium py-2">Waitlist</a>
+                
+                <div className="pt-4 border-t border-gray-200">
+                  <a href="#waitlist" onClick={() => setIsMenuOpen(false)} className="block bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all text-center font-medium">
+                    Join Waitlist
+                  </a>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </nav>
+
       {/* Hero Section */}
-      <section className="relative overflow-hidden">
+      <section className="relative overflow-hidden pt-24 md:pt-28">
         <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-purple-600 opacity-5"></div>
-        <div className="container mx-auto px-4 py-20 md:py-32">
+        <div className="container mx-auto px-4 py-12 md:py-24">
           <div className="flex flex-col lg:flex-row items-center">
             <div className="lg:w-1/2 mb-12 lg:mb-0">
-              <div className="inline-flex items-center px-4 py-2 bg-blue-100 text-blue-700 rounded-full text-sm font-medium mb-6">
-                <Smartphone className="h-4 w-4 mr-2" />
-                Now Available on Android
+              {/* Coming Soon Badge */}
+              <div className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-full text-sm font-medium mb-6">
+                <Clock className="h-4 w-4 mr-2" />
+                🚀 COMING SOON - Be the first to experience it!
+              </div>
+              
+              <div className="flex items-center space-x-2 mb-4">
+                <div className="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">
+                  <Brain className="h-4 w-4 mr-2" />
+                  AI-Powered Email Assistant
+                </div>
+                <div className="inline-flex items-center px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm font-medium">
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                  + Temp Mail Service
+                </div>
               </div>
               
               <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6">
-                Transform Your
+                Intelligent Email
                 <span className="block text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">
-                  Email Experience
+                  Meets Privacy
                 </span>
               </h1>
               
               <p className="text-xl text-gray-600 mb-8">
-                The intelligent email assistant that helps you manage, organize, and respond to emails effortlessly. 
-                Built with Flutter for seamless Android performance.
+                Transform your email experience with AI-powered intelligence and disposable privacy protection. 
+                Smart email management meets secure temporary emails in one powerful app.
               </p>
               
               <div className="flex flex-col sm:flex-row gap-4">
                 <a
-                  href="#download"
-                  className="inline-flex items-center justify-center px-8 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all shadow-lg"
+                  href="#waitlist"
+                  className="inline-flex items-center justify-center px-8 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all shadow-lg text-center"
                 >
-                  <Download className="h-5 w-5 mr-2" />
-                  Download App
+                  <Rocket className="h-5 w-5 mr-2" />
+                  Join Waitlist for Early Access
                 </a>
-                <Link
-                  to="/login"
-                  className="inline-flex items-center justify-center px-8 py-3 border-2 border-gray-300 text-gray-700 rounded-lg hover:border-gray-400 hover:bg-gray-50 transition-all"
+                <a
+                  href="#screenshots"
+                  className="inline-flex items-center justify-center px-8 py-3 border-2 border-gray-300 text-gray-700 rounded-lg hover:border-gray-400 hover:bg-gray-50 transition-all text-center"
                 >
-                  <PlayCircle className="h-5 w-5 mr-2" />
-                  Try Web Version
-                </Link>
+                  <Eye className="h-5 w-5 mr-2" />
+                  View Screenshots
+                </a>
               </div>
               
               <div className="mt-8 flex items-center space-x-4">
                 <div className="flex -space-x-2">
-                  {[1, 2, 3, 4].map((i) => (
+                  {[1, 2, 3, 4, 5].map((i) => (
                     <div key={i} className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-400 to-purple-400 border-2 border-white"></div>
                   ))}
                 </div>
                 <div>
-                  <p className="font-medium">Join 10,000+ happy users</p>
+                  <p className="font-medium text-gray-900"><span className="text-blue-600">1,200+</span> people on waitlist</p>
                   <div className="flex items-center">
                     {[1, 2, 3, 4, 5].map((i) => (
-                      <svg key={i} className="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                      <svg key={i} className="w-5 h-5 text-gray-300" fill="currentColor" viewBox="0 0 20 20">
                         <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                       </svg>
                     ))}
-                    <span className="ml-2 text-gray-600">4.8/5 (2,500+ reviews)</span>
+                    <span className="ml-2 text-gray-600">Coming soon</span>
                   </div>
                 </div>
               </div>
             </div>
             
             <div className="lg:w-1/2 relative">
+              {/* Coming Soon Badge on Mockup */}
+              <div className="absolute -top-4 right-4 z-10">
+                <div className="bg-gradient-to-r from-amber-500 to-orange-600 text-white px-4 py-2 rounded-full text-sm font-bold shadow-lg">
+                  🔧 PREVIEW
+                </div>
+              </div>
+              
               {/* Mockup Phone */}
-              <div className="relative mx-auto w-80">
-                <div className="absolute -top-6 -right-6 w-64 h-64 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full opacity-20 blur-3xl"></div>
-                <div className="absolute -bottom-6 -left-6 w-64 h-64 bg-gradient-to-r from-pink-400 to-orange-400 rounded-full opacity-20 blur-3xl"></div>
+              <div className="relative mx-auto w-80 opacity-90">
+                <div className="absolute -top-6 -right-6 w-64 h-64 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full opacity-10 blur-3xl"></div>
+                <div className="absolute -bottom-6 -left-6 w-64 h-64 bg-gradient-to-r from-pink-400 to-orange-400 rounded-full opacity-10 blur-3xl"></div>
                 
                 <div className="relative bg-gray-900 rounded-[3rem] p-6 shadow-2xl">
                   {/* Phone notch */}
@@ -165,44 +321,73 @@ const Home = () => {
                       <div className="flex items-center justify-between mb-6">
                         <div className="flex items-center">
                           <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-                            <Mail className="w-5 h-5 text-white" />
+                            <Brain className="w-5 h-5 text-white" />
                           </div>
                           <span className="ml-2 font-bold text-gray-900">InboxAI</span>
+                          <div className="ml-2 w-2 h-2 bg-amber-500 rounded-full animate-pulse"></div>
                         </div>
                         <div className="text-sm text-gray-500">2:45 PM</div>
                       </div>
                       
-                      {/* Email list */}
-                      <div className="space-y-4 flex-1">
-                        {[
-                          { name: "Alex Johnson", subject: "Meeting Tomorrow", time: "10:30 AM", unread: true },
-                          { name: "Sarah Miller", subject: "Project Update", time: "9:15 AM", unread: false },
-                          { name: "Team", subject: "Weekly Report", time: "Yesterday", unread: true },
-                          { name: "GitHub", subject: "Repository Activity", time: "Yesterday", unread: false }
-                        ].map((email, idx) => (
-                          <div key={idx} className={`p-3 rounded-xl ${email.unread ? 'bg-blue-50 border border-blue-100' : 'bg-gray-50'}`}>
-                            <div className="flex justify-between items-start">
-                              <div className="flex items-start">
-                                <div className="w-8 h-8 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full flex items-center justify-center text-white text-sm font-bold">
-                                  {email.name.charAt(0)}
-                                </div>
-                                <div className="ml-3">
-                                  <p className={`font-medium ${email.unread ? 'text-gray-900' : 'text-gray-700'}`}>
-                                    {email.name}
-                                  </p>
-                                  <p className="text-sm text-gray-600">{email.subject}</p>
-                                </div>
-                              </div>
-                              <span className="text-xs text-gray-500">{email.time}</span>
-                            </div>
+                      {/* AI Assistant Interface */}
+                      <div className="flex-1 space-y-4">
+                        {/* AI Summary */}
+                        <div className="bg-blue-50 rounded-xl p-4 border border-blue-100">
+                          <div className="flex items-center mb-2">
+                            <Brain className="h-4 w-4 text-blue-600 mr-2" />
+                            <span className="font-medium text-blue-700">AI Summary</span>
                           </div>
-                        ))}
+                          <p className="text-sm text-gray-700">
+                            You have <span className="font-bold text-blue-600">12 new emails</span>. 
+                            3 are urgent, 5 are newsletters, and 4 are promotional.
+                          </p>
+                        </div>
+                        
+                        {/* Smart Actions */}
+                        <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-4 border border-purple-100">
+                          <div className="flex items-center mb-2">
+                            <Sparkles className="h-4 w-4 text-purple-600 mr-2" />
+                            <span className="font-medium text-purple-700">Suggested Actions</span>
+                          </div>
+                          <div className="flex space-x-2">
+                            <button className="flex-1 bg-white text-purple-600 py-2 rounded-lg text-sm border border-purple-200 hover:bg-purple-50">
+                              Auto-Reply
+                            </button>
+                            <button className="flex-1 bg-white text-purple-600 py-2 rounded-lg text-sm border border-purple-200 hover:bg-purple-50">
+                              Categorize
+                            </button>
+                          </div>
+                        </div>
+                        
+                        {/* Email Preview */}
+                        <div className="space-y-3">
+                          {[
+                            { name: "Work Team", subject: "Project Update - Urgent", priority: "high", ai: true },
+                            { name: "Newsletter", subject: "Weekly Tech Digest", priority: "low", ai: false },
+                            { name: "Sarah", subject: "Meeting Notes", priority: "medium", ai: true }
+                          ].map((email, idx) => (
+                            <div key={idx} className={`p-3 rounded-xl ${email.priority === 'high' ? 'bg-red-50 border border-red-100' : 'bg-gray-50'}`}>
+                              <div className="flex justify-between items-start">
+                                <div className="flex items-start">
+                                  {email.ai && <Sparkles className="h-3 w-3 text-blue-500 mr-2 mt-1" />}
+                                  <div>
+                                    <p className="font-medium text-gray-900">{email.name}</p>
+                                    <p className="text-sm text-gray-600">{email.subject}</p>
+                                  </div>
+                                </div>
+                                <span className={`text-xs px-2 py-1 rounded-full ${email.priority === 'high' ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-700'}`}>
+                                  {email.priority}
+                                </span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
                       </div>
                       
                       {/* Bottom nav */}
                       <div className="flex justify-around items-center pt-4 border-t border-gray-200">
-                        {['Inbox', 'Compose', 'AI', 'Teams', 'More'].map((item) => (
-                          <button key={item} className="text-gray-600 hover:text-blue-600">
+                        {['Inbox', 'AI', 'Temp Mail', 'Analytics'].map((item) => (
+                          <button key={item} className="text-gray-600 hover:text-blue-600 text-sm">
                             {item}
                           </button>
                         ))}
@@ -216,77 +401,87 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Features Section */}
-      <section className="py-20 bg-white">
+      {/* Main Features Highlight */}
+      <section className="py-16 md:py-20 bg-white">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-16">
+          <div className="text-center mb-12 md:mb-16">
+            <div className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-full text-sm font-medium mb-4">
+              <Sparkles className="h-4 w-4 mr-2" />
+              ONE APP, MULTIPLE SOLUTIONS
+            </div>
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              Why Choose InboxAI Mobile?
+              The Complete Email Experience
             </h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Experience email management reimagined for the mobile era with our Flutter-powered Android app
+              AI-powered intelligence meets privacy protection in a single, powerful application
             </p>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {features.map((feature, index) => (
-              <div key={index} className="bg-gradient-to-br from-gray-50 to-white p-6 rounded-2xl border border-gray-200 hover:border-blue-200 hover:shadow-xl transition-all duration-300">
-                <div className="w-14 h-14 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center text-white mb-6">
-                  {feature.icon}
-                </div>
-                <h3 className="text-xl font-bold text-gray-900 mb-3">{feature.title}</h3>
-                <p className="text-gray-600">{feature.description}</p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
+            {mainFeatures.map((feature, index) => (
+              <div key={index} className={`bg-gradient-to-br ${feature.color} p-8 rounded-2xl text-white transform hover:-translate-y-2 transition-transform duration-300`}>
+                <div className="text-4xl mb-4">{feature.icon}</div>
+                <h3 className="text-xl font-bold mb-3">{feature.title}</h3>
+                <p className="opacity-90">{feature.description}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Screenshots Section */}
-      <section className="py-20 bg-gradient-to-b from-gray-50 to-white">
+      {/* Screenshots Section - Added Here */}
+      <section id="screenshots" className="py-16 md:py-20 bg-gradient-to-b from-gray-50 to-white">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-16">
+          <div className="text-center mb-12 md:mb-16">
+            <div className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-full text-sm font-medium mb-4">
+              <Eye className="h-4 w-4 mr-2" />
+              APP SCREENSHOTS
+            </div>
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              App Screenshots
+              See InboxAI in Action
             </h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              See how InboxAI looks and feels on your Android device
+              Preview of the beautiful and intuitive interface we're building
             </p>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
             {screenshots.map((screenshot) => (
               <div key={screenshot.id} className="group relative">
                 <div className={`absolute inset-0 bg-gradient-to-br ${screenshot.color} rounded-3xl opacity-0 group-hover:opacity-10 transition-opacity duration-300`}></div>
-                <div className="relative bg-gray-900 rounded-[2rem] p-4 shadow-2xl transform group-hover:-translate-y-2 transition-transform duration-300">
-                  <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl p-1">
-                    <div className="bg-gradient-to-br from-gray-100 to-white rounded-[1.5rem] p-6 min-h-[400px] flex flex-col">
+                <div className="relative bg-gray-900 rounded-2xl md:rounded-[2rem] p-3 md:p-4 shadow-xl md:shadow-2xl transform group-hover:-translate-y-1 md:group-hover:-translate-y-2 transition-transform duration-300">
+                  <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl md:rounded-2xl p-1">
+                    <div className="bg-gradient-to-br from-gray-100 to-white rounded-xl md:rounded-[1.5rem] p-4 md:p-6 min-h-[350px] md:min-h-[400px] flex flex-col">
                       {/* Phone status bar */}
                       <div className="flex justify-between items-center mb-4 text-xs text-gray-600">
                         <span>9:41</span>
                         <div className="flex items-center space-x-1">
-                          <div className="w-4 h-1 bg-gray-400 rounded"></div>
-                          <div className="w-4 h-1 bg-gray-400 rounded"></div>
-                          <div className="w-4 h-1 bg-gray-400 rounded"></div>
+                          <div className="w-3 h-1 md:w-4 md:h-1 bg-gray-400 rounded"></div>
+                          <div className="w-3 h-1 md:w-4 md:h-1 bg-gray-400 rounded"></div>
+                          <div className="w-3 h-1 md:w-4 md:h-1 bg-gray-400 rounded"></div>
                         </div>
                       </div>
                       
                       {/* Screen content */}
                       <div className="flex-1 flex items-center justify-center">
                         <div className="text-center">
-                          <div className={`w-20 h-20 mx-auto mb-4 rounded-2xl bg-gradient-to-br ${screenshot.color} flex items-center justify-center`}>
-                            <Mail className="w-10 h-10 text-white" />
+                          <div className={`w-16 h-16 md:w-20 md:h-20 mx-auto mb-4 rounded-xl md:rounded-2xl bg-gradient-to-br ${screenshot.color} flex items-center justify-center`}>
+                            {screenshot.icon}
                           </div>
-                          <h3 className="font-bold text-gray-900 text-lg mb-2">{screenshot.title}</h3>
-                          <p className="text-sm text-gray-600">{screenshot.description}</p>
+                          <h3 className="font-bold text-gray-900 text-base md:text-lg mb-2">{screenshot.title}</h3>
+                          <p className="text-xs md:text-sm text-gray-600">{screenshot.description}</p>
+                          <div className="mt-4 inline-flex items-center px-3 py-1 bg-amber-100 text-amber-800 rounded-full text-xs">
+                            <Clock className="h-3 w-3 mr-1" />
+                            Preview
+                          </div>
                         </div>
                       </div>
                     </div>
                   </div>
                 </div>
-                <div className="mt-4 text-center">
-                  <h3 className="font-bold text-gray-900">{screenshot.title}</h3>
-                  <p className="text-gray-600 text-sm">{screenshot.description}</p>
+                <div className="mt-3 md:mt-4 text-center">
+                  <h3 className="font-bold text-gray-900 text-sm md:text-base">{screenshot.title}</h3>
+                  <p className="text-gray-600 text-xs md:text-sm">{screenshot.description}</p>
                 </div>
               </div>
             ))}
@@ -294,58 +489,87 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Tech Stack Section */}
-      <section className="py-20 bg-white">
+      {/* AI Features Section */}
+      <section id="ai" className="py-16 md:py-20 bg-gradient-to-b from-blue-50 to-white">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-16">
+          <div className="text-center mb-12 md:mb-16">
+            <div className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-blue-500 to-cyan-600 text-white rounded-full text-sm font-medium mb-4">
+              <Brain className="h-4 w-4 mr-2" />
+              AI-POWERED INTELLIGENCE
+            </div>
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              Built with Modern Technology
+              Smart Email Assistant
             </h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Powered by Flutter and cutting-edge tools for the best mobile experience
+              Let artificial intelligence handle the heavy lifting of email management
             </p>
           </div>
           
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6 mb-12">
-            {techStack.map((tech, index) => (
-              <div key={index} className="bg-gray-50 rounded-xl p-6 text-center hover:bg-gray-100 transition-colors">
-                <div className="w-12 h-12 mx-auto mb-4 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-                  <Mobile className="w-6 h-6 text-white" />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 items-center">
+            <div>
+              <h3 className="text-2xl md:text-3xl font-bold text-gray-900 mb-6">
+                Your AI Email Co-pilot
+              </h3>
+              
+              <div className="space-y-4">
+                {[
+                  "Smart email categorization and priority sorting",
+                  "AI-generated email summaries and responses",
+                  "Automated follow-up reminders and scheduling",
+                  "Spam detection with 99.9% accuracy",
+                  "Sentiment analysis for important conversations",
+                  "Smart templates based on your writing style"
+                ].map((item, index) => (
+                  <div key={index} className="flex items-start">
+                    <CheckCircle className="h-5 w-5 text-blue-500 mr-3 mt-0.5 flex-shrink-0" />
+                    <span className="text-gray-700">{item}</span>
+                  </div>
+                ))}
+              </div>
+              
+              <div className="mt-8">
+                <a href="#waitlist" className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-lg hover:from-blue-700 hover:to-cyan-700 transition-all">
+                  <Brain className="h-5 w-5 mr-2" />
+                  Get Early Access to AI Features
+                </a>
+              </div>
+            </div>
+            
+            <div className="bg-white rounded-2xl p-6 shadow-xl">
+              <div className="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-xl p-6">
+                <div className="flex items-center mb-4">
+                  <Brain className="h-8 w-8 text-blue-600 mr-3" />
+                  <div>
+                    <h4 className="font-bold text-gray-900">AI Assistant Active</h4>
+                    <p className="text-sm text-gray-600">Processing your emails</p>
+                  </div>
                 </div>
-                <h3 className="font-bold text-gray-900 mb-2">{tech.name}</h3>
-                <p className="text-sm text-gray-600">{tech.desc}</p>
-              </div>
-            ))}
-          </div>
-          
-          <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-2xl p-8 md:p-12">
-            <div className="flex flex-col lg:flex-row items-center">
-              <div className="lg:w-2/3 mb-8 lg:mb-0">
-                <h3 className="text-2xl font-bold text-gray-900 mb-4">
-                  Why Flutter for Android?
-                </h3>
-                <ul className="space-y-3">
-                  {[
-                    "Native performance with 60fps smooth animations",
-                    "Single codebase for Android, iOS, Web, and Desktop",
-                    "Hot reload for instant development updates",
-                    "Beautiful Material Design and Cupertino widgets",
-                    "Access to native device features and APIs"
-                  ].map((point, index) => (
-                    <li key={index} className="flex items-start">
-                      <CheckCircle className="h-5 w-5 text-green-500 mr-3 mt-0.5 flex-shrink-0" />
-                      <span className="text-gray-700">{point}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-              <div className="lg:w-1/3 flex justify-center">
-                <div className="relative">
-                  <div className="w-48 h-48 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-                    <div className="text-center text-white">
-                      <div className="text-4xl font-bold">100%</div>
-                      <div className="text-lg">Native Performance</div>
+                
+                <div className="space-y-4">
+                  <div className="bg-white rounded-lg p-4 border border-blue-100">
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="font-medium text-gray-900">Email Analysis</span>
+                      <span className="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded">92%</span>
                     </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div className="bg-blue-600 h-2 rounded-full" style={{ width: '92%' }}></div>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-white rounded-lg p-4 border border-blue-100">
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="font-medium text-gray-900">Priority Sorting</span>
+                      <span className="text-xs bg-green-100 text-green-600 px-2 py-1 rounded">Active</span>
+                    </div>
+                    <p className="text-sm text-gray-600">12 emails organized by priority</p>
+                  </div>
+                  
+                  <div className="bg-white rounded-lg p-4 border border-blue-100">
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="font-medium text-gray-900">Auto-Responses</span>
+                      <span className="text-xs bg-purple-100 text-purple-600 px-2 py-1 rounded">3 ready</span>
+                    </div>
+                    <p className="text-sm text-gray-600">AI-generated replies prepared</p>
                   </div>
                 </div>
               </div>
@@ -354,47 +578,176 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Download CTA */}
-      <section id="download" className="py-20 bg-gradient-to-r from-blue-600 to-purple-600">
-        <div className="container mx-auto px-4 text-center">
-          <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
-            Ready to Transform Your Email Experience?
-          </h2>
-          <p className="text-xl text-blue-100 mb-8 max-w-2xl mx-auto">
-            Download InboxAI for Android today and experience intelligent email management on the go.
-          </p>
-          
-          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
-            <a
-              href="#"
-              className="inline-flex items-center justify-center px-8 py-3 bg-white text-blue-600 rounded-lg hover:bg-gray-100 transition-all shadow-lg"
-            >
-              <Download className="h-5 w-5 mr-2" />
-              Download for Android
-            </a>
-            <a
-              href="#"
-              className="inline-flex items-center justify-center px-8 py-3 border-2 border-white text-white rounded-lg hover:bg-white hover:text-blue-600 transition-all"
-            >
-              <PlayCircle className="h-5 w-5 mr-2" />
-              Watch Demo
-            </a>
+      {/* Temp Email Section */}
+      <section id="temp-email" className="py-16 md:py-20 bg-white">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12 md:mb-16">
+            <div className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-600 text-white rounded-full text-sm font-medium mb-4">
+              <RefreshCw className="h-4 w-4 mr-2" />
+              BONUS FEATURE
+            </div>
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+              Temporary Email Service
+            </h2>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              Protect your privacy with disposable emails - included with every account
+            </p>
           </div>
           
-          <div className="text-blue-100">
-            <p className="mb-2">Android 8.0+ • Free Download • No Ads • Privacy First</p>
-            <div className="flex items-center justify-center space-x-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 items-center">
+            <div className="order-2 md:order-1">
+              <div className="bg-white rounded-2xl p-6 shadow-xl">
+                <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-6">
+                  <h4 className="font-bold text-gray-900 mb-4 text-lg">Generate Temp Email</h4>
+                  
+                  <div className="mb-6">
+                    <div className="flex items-center justify-between bg-white p-3 rounded-lg border border-purple-200">
+                      <code className="font-mono text-purple-600">random7482@temp.inboxai.com</code>
+                      <div className="flex space-x-2">
+                        <button className="text-purple-600 hover:text-purple-700">
+                          📋
+                        </button>
+                        <button className="text-green-600 hover:text-green-700">
+                          🔄
+                        </button>
+                      </div>
+                    </div>
+                    <p className="text-xs text-gray-500 mt-2">Expires in 24 hours • Unlimited generations</p>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-3">
+                    <button className="bg-purple-100 text-purple-600 py-2 rounded-lg text-sm hover:bg-purple-200">
+                      Copy Email
+                    </button>
+                    <button className="bg-pink-100 text-pink-600 py-2 rounded-lg text-sm hover:bg-pink-200">
+                      View Inbox
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="order-1 md:order-2">
+              <h3 className="text-2xl md:text-3xl font-bold text-gray-900 mb-6">
+                Privacy Protection Included
+              </h3>
+              
+              <div className="space-y-4">
+                {[
+                  "Generate unlimited disposable email addresses",
+                  "Receive emails without revealing your real address",
+                  "Perfect for signups, verifications, and testing",
+                  "Auto-expiring emails for enhanced security",
+                  "Integrated with your main AI inbox",
+                  "No additional cost - included with your account"
+                ].map((item, index) => (
+                  <div key={index} className="flex items-start">
+                    <CheckCircle className="h-5 w-5 text-purple-500 mr-3 mt-0.5 flex-shrink-0" />
+                    <span className="text-gray-700">{item}</span>
+                  </div>
+                ))}
+              </div>
+              
+              <div className="mt-8">
+                <p className="text-gray-600 mb-4">
+                  <span className="font-bold text-purple-600">Bonus:</span> Every InboxAI account comes with 
+                  free temporary email service at no extra cost.
+                </p>
+                <a href="#waitlist" className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:from-purple-700 hover:to-pink-700 transition-all">
+                  <RefreshCw className="h-5 w-5 mr-2" />
+                  Get Temp Mail + AI Assistant
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* All Features Section */}
+      <section id="features" className="py-16 md:py-20 bg-gradient-to-b from-gray-50 to-white">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12 md:mb-16">
+            <div className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-full text-sm font-medium mb-4">
+              <Sparkles className="h-4 w-4 mr-2" />
+              COMPLETE FEATURE SET
+            </div>
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+              Everything You Need
+            </h2>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              A comprehensive email solution packed with powerful features
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+            {features.map((feature, index) => (
+              <div key={index} className={`bg-gradient-to-br from-white to-gray-50 p-6 rounded-2xl border ${feature.highlight ? 'border-blue-200 shadow-lg' : 'border-gray-200'} hover:border-blue-300 hover:shadow-xl transition-all duration-300`}>
+                <div className={`w-12 h-12 md:w-14 md:h-14 rounded-xl flex items-center justify-center text-white mb-4 md:mb-6 ${feature.highlight ? 'bg-gradient-to-r from-blue-500 to-purple-600' : 'bg-gradient-to-r from-gray-400 to-gray-600'}`}>
+                  {feature.icon}
+                </div>
+                <h3 className="text-lg md:text-xl font-bold text-gray-900 mb-2 md:mb-3">{feature.title}</h3>
+                <p className="text-gray-600 text-sm md:text-base">{feature.description}</p>
+                {feature.highlight && (
+                  <div className="mt-4 inline-flex items-center px-3 py-1 bg-blue-100 text-blue-600 rounded-full text-xs">
+                    ⭐ Featured
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Waitlist CTA */}
+      <section id="waitlist" className="py-16 md:py-20 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600">
+        <div className="container mx-auto px-4 text-center">
+          <div className="inline-flex items-center px-4 py-2 md:px-6 md:py-2 bg-white/20 backdrop-blur-sm rounded-full text-white text-xs md:text-sm font-medium mb-4 md:mb-6">
+            <Rocket className="h-3 w-3 md:h-4 md:w-4 mr-2 animate-pulse" />
+            🚀 LIMITED EARLY ACCESS AVAILABLE
+          </div>
+          
+          <h2 className="text-2xl md:text-4xl font-bold text-white mb-4 md:mb-6">
+            Join the Email Revolution
+          </h2>
+          <p className="text-lg md:text-xl text-blue-100 mb-6 md:mb-8 max-w-2xl mx-auto">
+            Be among the first to experience AI-powered email management with built-in privacy protection.
+            First 500 signups get lifetime premium features!
+          </p>
+          
+          {/* Waitlist Form */}
+          <div className="max-w-md mx-auto mb-8 md:mb-12">
+            <form className="flex flex-col sm:flex-row gap-3">
+              <input
+                type="email"
+                placeholder="Enter your email for early access"
+                className="flex-1 px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300"
+                required
+              />
+              <button
+                type="submit"
+                className="px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-lg hover:from-amber-600 hover:to-orange-700 transition-all shadow-lg font-medium"
+              >
+                Join Waitlist
+              </button>
+            </form>
+            <p className="text-blue-100 text-sm mt-3">
+              We'll only email you about important updates. No spam, ever.
+            </p>
+          </div>
+          
+          <div className="text-blue-100 text-sm md:text-base">
+            <div className="flex flex-wrap items-center justify-center gap-3 md:gap-6">
               <div className="flex items-center">
-                <Shield className="h-5 w-5 mr-2" />
-                <span>GDPR Compliant</span>
+                <Brain className="h-4 w-4 md:h-5 md:w-5 mr-1 md:mr-2" />
+                <span>AI Email Assistant</span>
               </div>
               <div className="flex items-center">
-                <Sparkles className="h-5 w-5 mr-2" />
-                <span>Offline AI</span>
+                <RefreshCw className="h-4 w-4 md:h-5 md:w-5 mr-1 md:mr-2" />
+                <span>Temporary Emails</span>
               </div>
               <div className="flex items-center">
-                <Zap className="h-5 w-5 mr-2" />
-                <span>Instant Sync</span>
+                <Shield className="h-4 w-4 md:h-5 md:w-5 mr-1 md:mr-2" />
+                <span>Privacy Protection</span>
               </div>
             </div>
           </div>
@@ -402,30 +755,44 @@ const Home = () => {
       </section>
 
       {/* Footer */}
-      <footer className="bg-gray-900 text-gray-400 py-12">
+      <footer className="bg-gray-900 text-gray-400 py-8 md:py-12">
         <div className="container mx-auto px-4">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="mb-6 md:mb-0">
               <div className="flex items-center">
                 <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-                  <Mail className="w-5 h-5 text-white" />
+                  <Brain className="w-5 h-5 text-white" />
                 </div>
-                <span className="ml-2 text-xl font-bold text-white">InboxAI</span>
+                <div className="ml-3">
+                  <span className="text-xl font-bold text-white">InboxAI</span>
+                  <div className="flex items-center space-x-1 mt-1">
+                    <div className="w-2 h-2 bg-amber-500 rounded-full animate-pulse"></div>
+                    <span className="text-xs text-amber-400">AI + Temp Mail</span>
+                  </div>
+                </div>
               </div>
-              <p className="mt-2">Intelligent Email Assistant for Android</p>
+              <p className="mt-2 text-sm md:text-base">Intelligent Email with Privacy Protection</p>
             </div>
             
-            <div className="flex space-x-6">
-              <a href="#" className="hover:text-white transition-colors">Privacy Policy</a>
-              <a href="#" className="hover:text-white transition-colors">Terms of Service</a>
-              <a href="#" className="hover:text-white transition-colors">Contact</a>
-              <a href="#" className="hover:text-white transition-colors">GitHub</a>
+            <div className="flex flex-wrap justify-center gap-4 md:gap-6 text-sm md:text-base">
+              <a href="#screenshots" className="hover:text-white transition-colors">Screenshots</a>
+              <a href="#ai" className="hover:text-white transition-colors">AI Assistant</a>
+              <a href="#temp-email" className="hover:text-white transition-colors">Temp Mail</a>
+              <a href="#features" className="hover:text-white transition-colors">Features</a>
+              <a href="#waitlist" className="hover:text-white transition-colors">Waitlist</a>
             </div>
           </div>
           
-          <div className="mt-8 pt-8 border-t border-gray-800 text-center">
-            <p>© 2026 InboxAI. Built By Humen with ❤️ using Flutter & Mern. All rights reserved.</p>
-            <p className="mt-2 text-sm">The app icon and interface are property of InboxAI.</p>
+          <div className="mt-6 md:mt-8 pt-6 md:pt-8 border-t border-gray-800 text-center">
+            <p className="text-sm md:text-base">© 2026 InboxAI. Built By Alien with ❤️ using Flutter & Mern.</p>
+            <p className="mt-2 text-xs md:text-sm">AI Email Assistant with temporary email service. Currently in development.</p>
+            <div className="mt-4 flex flex-wrap items-center justify-center gap-2 md:gap-4 text-xs md:text-sm">
+              <span className="text-amber-400">🚧 Status: In Development</span>
+              <span className="hidden md:inline">•</span>
+              <span>🎯 Target Launch: Q2 2026</span>
+              <span className="hidden md:inline">•</span>
+              <span>📧 Contact: jaykashyap283125@gmail.com</span>
+            </div>
           </div>
         </div>
       </footer>

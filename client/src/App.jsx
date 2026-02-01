@@ -16,7 +16,7 @@ import Analytics from './pages/Analytics';
 import Team from './pages/Team';
 import Settings from './pages/Settings';
 import EmailAccounts from './pages/EmailAccounts';
-import Home from './pages/Home';
+import Home from './pages/homepage';
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
