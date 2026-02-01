@@ -16,6 +16,7 @@ import Analytics from './pages/Analytics';
 import Team from './pages/Team';
 import Settings from './pages/Settings';
 import EmailAccounts from './pages/EmailAccounts';
+import Home from './pages/Home';
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
@@ -63,17 +64,16 @@ const PublicRoute = ({ children }) => {
   return children;
 };
 
-// Layout with EmailProvider (only for authenticated routes)
-const ProtectedLayout = () => {
-  return (
-    <EmailProvider>
-      <Layout />
-    </EmailProvider>
-  );
-};
-
 // Create router
 const router = createBrowserRouter([
+  {
+    path: '/',
+    element: (
+      <PublicRoute>
+        <Home />
+      </PublicRoute>
+    ),
+  },
   {
     path: '/login',
     element: (
@@ -91,16 +91,18 @@ const router = createBrowserRouter([
     ),
   },
   {
-    path: '/',
+    path: '/app',
     element: (
       <ProtectedRoute>
-        <ProtectedLayout />
+        <EmailProvider>
+          <Layout />
+        </EmailProvider>
       </ProtectedRoute>
     ),
     children: [
       {
         index: true,
-        element: <Navigate to="/dashboard" replace />,
+        element: <Navigate to="/app/dashboard" replace />,
       },
       {
         path: 'dashboard',
@@ -144,6 +146,7 @@ const router = createBrowserRouter([
       },
     ],
   },
+  // Redirect all unmatched routes
   {
     path: '*',
     element: <Navigate to="/" replace />,
