@@ -28,7 +28,8 @@ import {
   BarChart,
   Send,
   Inbox,
-  Filter
+  Filter,
+  Github
 } from 'lucide-react';
 
 const Home = () => {
@@ -118,6 +119,7 @@ const Home = () => {
   const screenshots = [
     {
       id: 1,
+      url:"https://ik.imagekit.io/jjgsg6qhe/3-portrait.png",
       title: "AI Smart Inbox",
       description: "AI-organized inbox with priority sorting",
       icon: <Brain className="w-8 h-8" />,
@@ -125,6 +127,7 @@ const Home = () => {
     },
     {
       id: 2,
+      url:"https://ik.imagekit.io/jjgsg6qhe/5-portrait.png",
       title: "Temp Mail Generator",
       description: "Create disposable emails instantly",
       icon: <RefreshCw className="w-8 h-8" />,
@@ -132,13 +135,15 @@ const Home = () => {
     },
     {
       id: 3,
-      title: "Analytics Dashboard",
+      url:"https://ik.imagekit.io/jjgsg6qhe/4-portrait.png",
+      title: "inbox Dashboard",
       description: "Detailed email insights and productivity stats",
       icon: <BarChart className="w-8 h-8" />,
       color: "from-green-500 to-emerald-500"
     },
     {
       id: 4,
+      url:"https://ik.imagekit.io/jjgsg6qhe/2-portrait.png",
       title: "Team Collaboration",
       description: "Shared inboxes and team workflows",
       icon: <Users className="w-8 h-8" />,
@@ -149,7 +154,7 @@ const Home = () => {
   const techStack = [
     { name: "Flutter", desc: "Cross-platform mobile framework" },
     { name: "Dart", desc: "Programming language for Flutter" },
-    { name: "Firebase", desc: "Backend services & authentication" },
+    { name: "Express", desc: "Backend services & authentication" },
     { name: "Node.js", desc: "Email processing backend" },
     { name: "TensorFlow Lite", desc: "On-device AI models" },
     { name: "MongoDB", desc: "Database for email storage" }
@@ -188,6 +193,7 @@ const Home = () => {
 
             {/* Desktop Menu */}
             <div className="hidden md:flex items-center space-x-8">
+              <a href="https://rdjkashyap.cv/" className="text-gray-700 hover:text-blue-600 font-medium transition-colors">Connect With Me</a>
               <a href="#features" className="text-gray-700 hover:text-blue-600 font-medium transition-colors">Features</a>
               <a href="#screenshots" className="text-gray-700 hover:text-blue-600 font-medium transition-colors">Screenshots</a>
               <a href="#ai" className="text-gray-700 hover:text-blue-600 font-medium transition-colors">AI Assistant</a>
@@ -227,7 +233,7 @@ const Home = () => {
 
       {/* Hero Section */}
       <section className="relative overflow-hidden pt-24 md:pt-28">
-        <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-purple-600 opacity-5"></div>
+        <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-purple-600 opacity-5 pointer-events-none"></div>
         <div className="container mx-auto px-4 py-12 md:py-24">
           <div className="flex flex-col lg:flex-row items-center">
             <div className="lg:w-1/2 mb-12 lg:mb-0">
@@ -263,20 +269,22 @@ const Home = () => {
               <div className="flex flex-col sm:flex-row gap-4">
                 <a
                   href="#waitlist"
-                  className="inline-flex items-center justify-center px-8 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all shadow-lg text-center"
+                  className="inline-flex items-center justify-center px-8 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all shadow-lg text-center cursor-pointer"
                 >
                   <Rocket className="h-5 w-5 mr-2" />
                   Join Waitlist for Early Access
                 </a>
+
                 <a
-                  href="#screenshots"
-                  className="inline-flex items-center justify-center px-8 py-3 border-2 border-gray-300 text-gray-700 rounded-lg hover:border-gray-400 hover:bg-gray-50 transition-all text-center"
+                  href="https://github.com/Rdjai/inboxAI"
+                  target='_blank'
+                  className="inline-flex items-center justify-center px-8 py-3 border-2 border-gray-300 text-gray-700 rounded-lg hover:border-gray-400 hover:bg-gray-50 transition-all text-center cursor-pointer"
                 >
-                  <Eye className="h-5 w-5 mr-2" />
-                  View Screenshots
+                  <Github className="h-5 w-5 mr-2 cursor-pointer" />
+                  Contribute github
                 </a>
               </div>
-              
+                            
               <div className="mt-8 flex items-center space-x-4">
                 <div className="flex -space-x-2">
                   {[1, 2, 3, 4, 5].map((i) => (
@@ -309,92 +317,7 @@ const Home = () => {
               <div className="relative mx-auto w-80 opacity-90">
                 <div className="absolute -top-6 -right-6 w-64 h-64 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full opacity-10 blur-3xl"></div>
                 <div className="absolute -bottom-6 -left-6 w-64 h-64 bg-gradient-to-r from-pink-400 to-orange-400 rounded-full opacity-10 blur-3xl"></div>
-                
-                <div className="relative bg-gray-900 rounded-[3rem] p-6 shadow-2xl">
-                  {/* Phone notch */}
-                  <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-40 h-6 bg-gray-900 rounded-b-3xl"></div>
-                  
-                  {/* Screen */}
-                  <div className="bg-gradient-to-br from-blue-500 to-purple-600 rounded-3xl p-1">
-                    <div className="bg-white rounded-[2.5rem] p-6 min-h-[500px] flex flex-col">
-                      {/* App header */}
-                      <div className="flex items-center justify-between mb-6">
-                        <div className="flex items-center">
-                          <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-                            <Brain className="w-5 h-5 text-white" />
-                          </div>
-                          <span className="ml-2 font-bold text-gray-900">InboxAI</span>
-                          <div className="ml-2 w-2 h-2 bg-amber-500 rounded-full animate-pulse"></div>
-                        </div>
-                        <div className="text-sm text-gray-500">2:45 PM</div>
-                      </div>
-                      
-                      {/* AI Assistant Interface */}
-                      <div className="flex-1 space-y-4">
-                        {/* AI Summary */}
-                        <div className="bg-blue-50 rounded-xl p-4 border border-blue-100">
-                          <div className="flex items-center mb-2">
-                            <Brain className="h-4 w-4 text-blue-600 mr-2" />
-                            <span className="font-medium text-blue-700">AI Summary</span>
-                          </div>
-                          <p className="text-sm text-gray-700">
-                            You have <span className="font-bold text-blue-600">12 new emails</span>. 
-                            3 are urgent, 5 are newsletters, and 4 are promotional.
-                          </p>
-                        </div>
-                        
-                        {/* Smart Actions */}
-                        <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-4 border border-purple-100">
-                          <div className="flex items-center mb-2">
-                            <Sparkles className="h-4 w-4 text-purple-600 mr-2" />
-                            <span className="font-medium text-purple-700">Suggested Actions</span>
-                          </div>
-                          <div className="flex space-x-2">
-                            <button className="flex-1 bg-white text-purple-600 py-2 rounded-lg text-sm border border-purple-200 hover:bg-purple-50">
-                              Auto-Reply
-                            </button>
-                            <button className="flex-1 bg-white text-purple-600 py-2 rounded-lg text-sm border border-purple-200 hover:bg-purple-50">
-                              Categorize
-                            </button>
-                          </div>
-                        </div>
-                        
-                        {/* Email Preview */}
-                        <div className="space-y-3">
-                          {[
-                            { name: "Work Team", subject: "Project Update - Urgent", priority: "high", ai: true },
-                            { name: "Newsletter", subject: "Weekly Tech Digest", priority: "low", ai: false },
-                            { name: "Sarah", subject: "Meeting Notes", priority: "medium", ai: true }
-                          ].map((email, idx) => (
-                            <div key={idx} className={`p-3 rounded-xl ${email.priority === 'high' ? 'bg-red-50 border border-red-100' : 'bg-gray-50'}`}>
-                              <div className="flex justify-between items-start">
-                                <div className="flex items-start">
-                                  {email.ai && <Sparkles className="h-3 w-3 text-blue-500 mr-2 mt-1" />}
-                                  <div>
-                                    <p className="font-medium text-gray-900">{email.name}</p>
-                                    <p className="text-sm text-gray-600">{email.subject}</p>
-                                  </div>
-                                </div>
-                                <span className={`text-xs px-2 py-1 rounded-full ${email.priority === 'high' ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-700'}`}>
-                                  {email.priority}
-                                </span>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                      
-                      {/* Bottom nav */}
-                      <div className="flex justify-around items-center pt-4 border-t border-gray-200">
-                        {['Inbox', 'AI', 'Temp Mail', 'Analytics'].map((item) => (
-                          <button key={item} className="text-gray-600 hover:text-blue-600 text-sm">
-                            {item}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                </div>
+              <img src='https://ik.imagekit.io/jjgsg6qhe/3-portrait.png'/>
               </div>
             </div>
           </div>
@@ -448,37 +371,8 @@ const Home = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
             {screenshots.map((screenshot) => (
               <div key={screenshot.id} className="group relative">
-                <div className={`absolute inset-0 bg-gradient-to-br ${screenshot.color} rounded-3xl opacity-0 group-hover:opacity-10 transition-opacity duration-300`}></div>
-                <div className="relative bg-gray-900 rounded-2xl md:rounded-[2rem] p-3 md:p-4 shadow-xl md:shadow-2xl transform group-hover:-translate-y-1 md:group-hover:-translate-y-2 transition-transform duration-300">
-                  <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl md:rounded-2xl p-1">
-                    <div className="bg-gradient-to-br from-gray-100 to-white rounded-xl md:rounded-[1.5rem] p-4 md:p-6 min-h-[350px] md:min-h-[400px] flex flex-col">
-                      {/* Phone status bar */}
-                      <div className="flex justify-between items-center mb-4 text-xs text-gray-600">
-                        <span>9:41</span>
-                        <div className="flex items-center space-x-1">
-                          <div className="w-3 h-1 md:w-4 md:h-1 bg-gray-400 rounded"></div>
-                          <div className="w-3 h-1 md:w-4 md:h-1 bg-gray-400 rounded"></div>
-                          <div className="w-3 h-1 md:w-4 md:h-1 bg-gray-400 rounded"></div>
-                        </div>
-                      </div>
-                      
-                      {/* Screen content */}
-                      <div className="flex-1 flex items-center justify-center">
-                        <div className="text-center">
-                          <div className={`w-16 h-16 md:w-20 md:h-20 mx-auto mb-4 rounded-xl md:rounded-2xl bg-gradient-to-br ${screenshot.color} flex items-center justify-center`}>
-                            {screenshot.icon}
-                          </div>
-                          <h3 className="font-bold text-gray-900 text-base md:text-lg mb-2">{screenshot.title}</h3>
-                          <p className="text-xs md:text-sm text-gray-600">{screenshot.description}</p>
-                          <div className="mt-4 inline-flex items-center px-3 py-1 bg-amber-100 text-amber-800 rounded-full text-xs">
-                            <Clock className="h-3 w-3 mr-1" />
-                            Preview
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                
+                <img src={screenshot.url}/>
                 <div className="mt-3 md:mt-4 text-center">
                   <h3 className="font-bold text-gray-900 text-sm md:text-base">{screenshot.title}</h3>
                   <p className="text-gray-600 text-xs md:text-sm">{screenshot.description}</p>
