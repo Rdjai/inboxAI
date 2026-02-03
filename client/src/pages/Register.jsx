@@ -46,10 +46,12 @@ const Register = () => {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-primary-50 to-blue-50 flex items-center justify-center p-4">
-            <div className="max-w-md w-full">
+        <div className="min-h-screen bg-gradient-to-br from-primary-50 to-blue-50 px-4 py-6 sm:px-6 sm:py-10 lg:px-8 lg:py-12">
+            <div className="mx-auto w-full max-w-6xl">
+                <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:gap-10 lg:items-start">
+                    <div className="order-2 lg:order-1">
                 {/* Logo */}
-                <div className="text-center mb-8">
+                <div className="text-center mb-6 sm:mb-8">
                     <div className="flex items-center justify-center space-x-2 mb-4">
                         <div className="h-12 w-12 bg-primary-600 rounded-xl flex items-center justify-center">
                             <Sparkles className="h-8 w-8 text-white" />
@@ -59,13 +61,13 @@ const Register = () => {
                             <p className="text-gray-600">AI Email Assistant</p>
                         </div>
                     </div>
-                    <h2 className="text-2xl font-bold text-gray-900">Create Account</h2>
-                    <p className="text-gray-600 mt-2">Start automating your email workflow</p>
+                    <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Create Account</h2>
+                    <p className="text-sm sm:text-base text-gray-600 mt-2">Start automating your email workflow</p>
                 </div>
 
                 {/* Register Form */}
-                <div className="card">
-                    <form onSubmit={handleSubmit} className="space-y-6">
+                <div className="card p-4 sm:p-6">
+                    <form onSubmit={handleSubmit} className="space-y-5 sm:space-y-6">
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">
                                 Full Name
@@ -201,8 +203,11 @@ const Register = () => {
                     </div>
                 </div>
 
+                    </div>
+
                 {/* Benefits */}
-                <div className="mt-8 p-4 bg-white rounded-lg">
+                    <div className="order-1 lg:order-2">
+                <div className="p-4 sm:p-5 bg-white rounded-lg shadow-sm">
                     <h4 className="font-medium text-gray-900 mb-3">Why join InboxAI?</h4>
                     <ul className="space-y-2 text-sm text-gray-600">
                         <li className="flex items-center">
@@ -222,6 +227,8 @@ const Register = () => {
                             Real-time analytics dashboard
                         </li>
                     </ul>
+                </div>
+            </div>
                 </div>
             </div>
         </div>

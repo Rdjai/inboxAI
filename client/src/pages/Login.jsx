@@ -90,10 +90,12 @@ const Login = () => {
 
     // Rest of your Login component JSX (keep your existing design)
     return (
-        <div className="min-h-screen bg-gradient-to-br from-primary-50 to-blue-50 flex items-center justify-center p-4">
-            <div className="max-w-md w-full">
+        <div className="min-h-screen bg-gradient-to-br from-primary-50 to-blue-50 px-4 py-6 sm:px-6 sm:py-10 lg:px-8 lg:py-12">
+            <div className="mx-auto w-full max-w-6xl">
+                <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:gap-10 lg:items-start">
+                    <div className="order-2 lg:order-1">
                 {/* Logo */}
-                <div className="text-center mb-8">
+                <div className="text-center mb-6 sm:mb-8">
                     <div className="flex items-center justify-center space-x-2 mb-4">
                         <div className="h-12 w-12 bg-primary-600 rounded-xl flex items-center justify-center">
                             <Sparkles className="h-8 w-8 text-white" />
@@ -103,13 +105,13 @@ const Login = () => {
                             <p className="text-gray-600">AI Email Assistant</p>
                         </div>
                     </div>
-                    <h2 className="text-2xl font-bold text-gray-900">Welcome back</h2>
-                    <p className="text-gray-600 mt-2">Sign in to your account to continue</p>
+                    <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Welcome back</h2>
+                    <p className="text-sm sm:text-base text-gray-600 mt-2">Sign in to your account to continue</p>
                 </div>
 
                 {/* Login Form */}
-                <div className="card">
-                    <form onSubmit={handleSubmit} className="space-y-6">
+                <div className="card p-4 sm:p-6">
+                    <form onSubmit={handleSubmit} className="space-y-5 sm:space-y-6">
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">
                                 Email Address
@@ -180,12 +182,12 @@ const Login = () => {
                     </form>
 
                     {/* Demo Credentials */}
-                    <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+                        <div className="mt-6 p-3 sm:p-4 bg-gray-50 rounded-lg">
                         <p className="text-sm font-medium text-gray-700 mb-2">Demo Credentials:</p>
                         <div className="space-y-1 text-sm text-gray-600">
-                            <p><span className="font-medium">Admin:</span> admin@inboxai.com / admin123</p>
-                            <p><span className="font-medium">Reviewer:</span> reviewer@inboxai.com / reviewer123</p>
-                            <p><span className="font-medium">Agent:</span> agent@inboxai.com / agent123</p>
+                                <p className="break-all"><span className="font-medium">Admin:</span> admin@inboxai.com / admin123</p>
+                                <p className="break-all"><span className="font-medium">Reviewer:</span> reviewer@inboxai.com / reviewer123</p>
+                                <p className="break-all"><span className="font-medium">Agent:</span> agent@inboxai.com / agent123</p>
                         </div>
                         <p className="text-xs text-gray-500 mt-2">Try any of these demo accounts</p>
                     </div>
@@ -200,8 +202,11 @@ const Login = () => {
                     </div>
                 </div>
 
+                    </div>
+
                 {/* Features */}
-                <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="order-1 lg:order-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-4">
                     <div className="text-center p-4 bg-white rounded-lg shadow-sm">
                         <div className="h-10 w-10 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-3">
                             <Sparkles className="h-5 w-5 text-primary-600" />
@@ -225,6 +230,8 @@ const Login = () => {
                         <h4 className="font-medium text-gray-900">Secure</h4>
                         <p className="text-sm text-gray-600 mt-1">Enterprise-grade security</p>
                     </div>
+                </div>
+            </div>
                 </div>
             </div>
         </div>
