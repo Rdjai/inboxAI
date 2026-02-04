@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Clock, CheckCircle, AlertCircle, RefreshCw, Eye } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { emailsAPI } from '../services/api';
+import { PageLayout, PageHeader, SectionCard } from '../components/layout/PageLayout';
 
 const REVIEW_STATUSES = ['DRAFTED', 'REVIEWED'];
 
@@ -109,21 +110,21 @@ const Review = () => {
     };
 
     return (
-        <div className="space-y-6">
-            <div className="flex items-start justify-between">
-                <div>
-                    <h1 className="text-3xl font-bold text-gray-900">Review Queue</h1>
-                    <p className="text-gray-600 mt-2">Emails waiting for human review</p>
-                </div>
-                <button
-                    onClick={fetchReviewQueue}
-                    className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center gap-2"
-                    disabled={loading}
-                >
-                    <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-                    Refresh
-                </button>
-            </div>
+        <PageLayout>
+            <PageHeader
+                title="Review Queue"
+                description="Emails waiting for human review"
+                actions={(
+                    <button
+                        onClick={fetchReviewQueue}
+                        className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center gap-2"
+                        disabled={loading}
+                    >
+                        <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+                        Refresh
+                    </button>
+                )}
+            />
 
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div className="bg-white rounded-xl border border-gray-200 p-5">
@@ -175,7 +176,7 @@ const Review = () => {
                 </div>
             </div>
 
-            <div className="bg-white rounded-xl border border-gray-200 p-6">
+            <SectionCard>
                 <div className="flex items-center justify-between mb-6">
                     <h2 className="text-xl font-bold">Pending Reviews ({pendingReviews.length})</h2>
                     <button
@@ -249,8 +250,8 @@ const Review = () => {
                         })}
                     </div>
                 )}
-            </div>
-        </div>
+            </SectionCard>
+        </PageLayout>
     );
 };
 

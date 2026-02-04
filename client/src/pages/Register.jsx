@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Mail, Lock, User, Building, Sparkles } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import LoadingSpinner from '../components/common/LoadingSpinner';
+import AuthLayout from '../components/layout/AuthLayout';
 
 const Register = () => {
     const [formData, setFormData] = useState({
@@ -45,11 +46,32 @@ const Register = () => {
         }
     };
 
+    const benefitsContent = (
+        <div className="p-4 sm:p-5 bg-white rounded-lg shadow-sm">
+            <h4 className="font-medium text-gray-900 mb-3">Why join InboxAI?</h4>
+            <ul className="space-y-2 text-sm text-gray-600">
+                <li className="flex items-center">
+                    <Sparkles className="h-4 w-4 text-primary-600 mr-2" />
+                    AI-powered email classification
+                </li>
+                <li className="flex items-center">
+                    <Sparkles className="h-4 w-4 text-primary-600 mr-2" />
+                    Automatic draft generation
+                </li>
+                <li className="flex items-center">
+                    <Sparkles className="h-4 w-4 text-primary-600 mr-2" />
+                    Team collaboration tools
+                </li>
+                <li className="flex items-center">
+                    <Sparkles className="h-4 w-4 text-primary-600 mr-2" />
+                    Real-time analytics dashboard
+                </li>
+            </ul>
+        </div>
+    );
+
     return (
-        <div className="min-h-screen bg-gradient-to-br from-primary-50 to-blue-50 px-4 py-6 sm:px-6 sm:py-10 lg:px-8 lg:py-12">
-            <div className="mx-auto w-full max-w-6xl">
-                <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:gap-10 lg:items-start">
-                    <div className="order-2 lg:order-1">
+        <AuthLayout sideContent={benefitsContent}>
                 {/* Logo */}
                 <div className="text-center mb-6 sm:mb-8">
                     <div className="flex items-center justify-center space-x-2 mb-4">
@@ -202,36 +224,7 @@ const Register = () => {
                         </p>
                     </div>
                 </div>
-
-                    </div>
-
-                {/* Benefits */}
-                    <div className="order-1 lg:order-2">
-                <div className="p-4 sm:p-5 bg-white rounded-lg shadow-sm">
-                    <h4 className="font-medium text-gray-900 mb-3">Why join InboxAI?</h4>
-                    <ul className="space-y-2 text-sm text-gray-600">
-                        <li className="flex items-center">
-                            <Sparkles className="h-4 w-4 text-primary-600 mr-2" />
-                            AI-powered email classification
-                        </li>
-                        <li className="flex items-center">
-                            <Sparkles className="h-4 w-4 text-primary-600 mr-2" />
-                            Automatic draft generation
-                        </li>
-                        <li className="flex items-center">
-                            <Sparkles className="h-4 w-4 text-primary-600 mr-2" />
-                            Team collaboration tools
-                        </li>
-                        <li className="flex items-center">
-                            <Sparkles className="h-4 w-4 text-primary-600 mr-2" />
-                            Real-time analytics dashboard
-                        </li>
-                    </ul>
-                </div>
-            </div>
-                </div>
-            </div>
-        </div>
+        </AuthLayout>
     );
 };
 

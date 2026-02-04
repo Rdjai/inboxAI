@@ -4,6 +4,7 @@ import { Mail, Lock, LogIn, Sparkles } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import toast from 'react-hot-toast';
+import AuthLayout from '../components/layout/AuthLayout';
 
 const Login = () => {
     const [email, setEmail] = useState('');
@@ -89,11 +90,36 @@ const Login = () => {
     }
 
     // Rest of your Login component JSX (keep your existing design)
+    const featureContent = (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-4">
+            <div className="text-center p-4 bg-white rounded-lg shadow-sm">
+                <div className="h-10 w-10 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <Sparkles className="h-5 w-5 text-primary-600" />
+                </div>
+                <h4 className="font-medium text-gray-900">AI Classification</h4>
+                <p className="text-sm text-gray-600 mt-1">Smart email categorization</p>
+            </div>
+
+            <div className="text-center p-4 bg-white rounded-lg shadow-sm">
+                <div className="h-10 w-10 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <LogIn className="h-5 w-5 text-green-600" />
+                </div>
+                <h4 className="font-medium text-gray-900">Auto Drafting</h4>
+                <p className="text-sm text-gray-600 mt-1">Instant response generation</p>
+            </div>
+
+            <div className="text-center p-4 bg-white rounded-lg shadow-sm">
+                <div className="h-10 w-10 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <Lock className="h-5 w-5 text-blue-600" />
+                </div>
+                <h4 className="font-medium text-gray-900">Secure</h4>
+                <p className="text-sm text-gray-600 mt-1">Enterprise-grade security</p>
+            </div>
+        </div>
+    );
+
     return (
-        <div className="min-h-screen bg-gradient-to-br from-primary-50 to-blue-50 px-4 py-6 sm:px-6 sm:py-10 lg:px-8 lg:py-12">
-            <div className="mx-auto w-full max-w-6xl">
-                <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:gap-10 lg:items-start">
-                    <div className="order-2 lg:order-1">
+        <AuthLayout sideContent={featureContent}>
                 {/* Logo */}
                 <div className="text-center mb-6 sm:mb-8">
                     <div className="flex items-center justify-center space-x-2 mb-4">
@@ -201,40 +227,7 @@ const Login = () => {
                         </p>
                     </div>
                 </div>
-
-                    </div>
-
-                {/* Features */}
-                    <div className="order-1 lg:order-2">
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-4">
-                    <div className="text-center p-4 bg-white rounded-lg shadow-sm">
-                        <div className="h-10 w-10 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                            <Sparkles className="h-5 w-5 text-primary-600" />
-                        </div>
-                        <h4 className="font-medium text-gray-900">AI Classification</h4>
-                        <p className="text-sm text-gray-600 mt-1">Smart email categorization</p>
-                    </div>
-
-                    <div className="text-center p-4 bg-white rounded-lg shadow-sm">
-                        <div className="h-10 w-10 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                            <LogIn className="h-5 w-5 text-green-600" />
-                        </div>
-                        <h4 className="font-medium text-gray-900">Auto Drafting</h4>
-                        <p className="text-sm text-gray-600 mt-1">Instant response generation</p>
-                    </div>
-
-                    <div className="text-center p-4 bg-white rounded-lg shadow-sm">
-                        <div className="h-10 w-10 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                            <Lock className="h-5 w-5 text-blue-600" />
-                        </div>
-                        <h4 className="font-medium text-gray-900">Secure</h4>
-                        <p className="text-sm text-gray-600 mt-1">Enterprise-grade security</p>
-                    </div>
-                </div>
-            </div>
-                </div>
-            </div>
-        </div>
+        </AuthLayout>
     );
 };
 

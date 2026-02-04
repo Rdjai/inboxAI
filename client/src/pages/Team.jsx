@@ -1,5 +1,6 @@
 import React from 'react';
 import { Users, Mail, Clock, Award, Plus, MoreVertical } from 'lucide-react';
+import { PageLayout, PageHeader } from '../components/layout/PageLayout';
 
 const Team = () => {
     const teamMembers = [
@@ -62,17 +63,17 @@ const Team = () => {
     ];
 
     return (
-        <div className="space-y-6">
-            <div className="flex items-center justify-between">
-                <div>
-                    <h1 className="text-3xl font-bold text-gray-900">Team</h1>
-                    <p className="text-gray-600 mt-2">Manage your team members and roles</p>
-                </div>
-                <button className="btn-primary">
-                    <Plus className="h-5 w-5 mr-2" />
-                    Add Team Member
-                </button>
-            </div>
+        <PageLayout>
+            <PageHeader
+                title="Team"
+                description="Manage your team members and roles"
+                actions={(
+                    <button className="btn-primary">
+                        <Plus className="h-5 w-5 mr-2" />
+                        Add Team Member
+                    </button>
+                )}
+            />
 
             {/* Role Stats */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -240,7 +241,7 @@ const Team = () => {
                     </div>
                 </div>
             </div>
-        </div>
+        </PageLayout>
     );
 };
 
