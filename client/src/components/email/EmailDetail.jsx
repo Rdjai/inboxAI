@@ -14,13 +14,12 @@ import {
     RefreshCw
 } from 'lucide-react';
 import { useEmail } from '../../context/EmailContext';
-import { useAuth } from '../../context/AuthContext'; // Fixed import
+import toast from 'react-hot-toast';
 import StatusBadge from '../common/StatusBadge';
 import LoadingSpinner from '../common/LoadingSpinner';
 
 const EmailDetail = ({ email, onClose }) => {
-    const { updateEmail, approveEmail, sendEmail } = useEmail();
-    const { user } = useAuth();
+    const { updateEmail, approveEmail, sendEmail, replyToEmail } = useEmail();
     const [editing, setEditing] = useState(false);
     const [draft, setDraft] = useState(email.draft || '');
     const [saving, setSaving] = useState(false);
@@ -46,8 +45,15 @@ const EmailDetail = ({ email, onClose }) => {
     };
 
     const handleReply = async () => {
-        // Implementation for reply
-        setReplying(false);
+        if (!reply.trim()) {
+            toast.error('Reply content is required');
+            return;
+        }
+        const result = await replyToEmail(email._id, reply);
+        if (result.success) {
+            setReply('');
+            setReplying(false);
+        }
     };
 
     const canEdit = ['drafted', 'reviewed'].includes(email.status);
@@ -134,8 +140,8 @@ const EmailDetail = ({ email, onClose }) => {
                                 <User className="h-6 w-6 text-primary-600" />
                             </div>
                             <div>
-                                <p className="font-medium">{email.from}</p>
-                                <p className="text-sm text-gray-500">to {email.to}</p>
+                                <p className="font-medium">{email.from || email.fromAddress}</p>
+                                <p className="text-sm text-gray-500">to {email.to || email.toAddress}</p>
                             </div>
                         </div>
                         <div className="text-right">
@@ -155,7 +161,7 @@ const EmailDetail = ({ email, onClose }) => {
                 <div className="mb-6">
                     <h3 className="font-semibold mb-2">Original Message</h3>
                     <div className="p-4 bg-gray-50 rounded-lg whitespace-pre-wrap">
-                        {email.body}
+                        {email.body || email.bodyText}
                     </div>
                 </div>
 

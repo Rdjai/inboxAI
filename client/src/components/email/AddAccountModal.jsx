@@ -10,6 +10,8 @@ const AddAccountModal = ({ onClose, onSuccess }) => {
         email: '',
         displayName: '',
         provider: 'gmail',
+        imapHost: 'imap.gmail.com',
+        imapPort: '993',
         smtpHost: '',
         smtpPort: '',
         smtpUsername: '',
@@ -60,26 +62,41 @@ const AddAccountModal = ({ onClose, onSuccess }) => {
         });
     };
 
-
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
 
         try {
+            const normalizedProvider = formData.provider === 'custom' ? 'other' : formData.provider;
             const accountData = {
-                ...formData,
-                smtpPort: parseInt(formData.smtpPort),
-                displayName: formData.displayName || formData.email.split('@')[0],
-                smtpHost: 'smtp.example.com',
-                smtpUsername: 'test@example.com',
-                smtpPassword: 'testpassword',
-                useSSL: true,
-                isTest: true
+                name: formData.displayName || formData.email.split('@')[0],
+                email: formData.email.trim().toLowerCase(),
+                provider: normalizedProvider,
+                imapConfig: {
+                    host: formData.imapHost?.trim(),
+                    port: parseInt(formData.imapPort, 10),
+                    secure: !!formData.useSSL,
+                    auth: {
+                        user: formData.smtpUsername?.trim(),
+                        pass: formData.smtpPassword
+                    }
+                },
+                smtpConfig: {
+                    host: formData.smtpHost?.trim(),
+                    port: parseInt(formData.smtpPort, 10),
+                    secure: !!formData.useSSL,
+                    auth: {
+                        user: formData.smtpUsername?.trim(),
+                        pass: formData.smtpPassword
+                    }
+                },
+                isDefault: false,
+                isActive: true
             };
 
             const result = await addAccount(accountData);
             if (result.success) {
-                toast.success('Demo email account added successfully!');
+                toast.success('Email account added successfully!');
                 onSuccess?.();
             }
         } catch (error) {
@@ -207,6 +224,34 @@ const AddAccountModal = ({ onClose, onSuccess }) => {
 
                                     {formData.provider === 'custom' && (
                                         <>
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                    IMAP Host
+                                                </label>
+                                                <input
+                                                    type="text"
+                                                    required={formData.provider === 'custom'}
+                                                    value={formData.imapHost}
+                                                    onChange={(e) => setFormData({ ...formData, imapHost: e.target.value })}
+                                                    className="w-full p-2 border border-gray-300 rounded-lg"
+                                                    placeholder="imap.yourdomain.com"
+                                                />
+                                            </div>
+
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                    IMAP Port
+                                                </label>
+                                                <input
+                                                    type="number"
+                                                    required={formData.provider === 'custom'}
+                                                    value={formData.imapPort}
+                                                    onChange={(e) => setFormData({ ...formData, imapPort: e.target.value })}
+                                                    className="w-full p-2 border border-gray-300 rounded-lg"
+                                                    placeholder="993"
+                                                />
+                                            </div>
+
                                             <div>
                                                 <label className="block text-sm font-medium text-gray-700 mb-1">
                                                     SMTP Host

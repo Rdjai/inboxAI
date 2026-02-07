@@ -5,9 +5,10 @@ import AddAccountModal from '../components/email/AddAccountModal';
 import toast from 'react-hot-toast';
 
 const EmailAccounts = () => {
-    const { accounts, loading, error, fetchAccounts, addAccount, deleteAccount } = useEmail();
+    const { accounts, loading, error, fetchAccounts, addAccount, deleteAccount, fixGmailSettings } = useEmail();
     const [showAddModal, setShowAddModal] = useState(false);
     const [isRefreshing, setIsRefreshing] = useState(false);
+    const [isFixingGmail, setIsFixingGmail] = useState(false);
 
     // Load accounts on component mount
     useEffect(() => {
@@ -53,6 +54,20 @@ const EmailAccounts = () => {
         }
     };
 
+    const handleFixGmail = async () => {
+        setIsFixingGmail(true);
+        try {
+            const result = await fixGmailSettings();
+            if (result.success) {
+                toast.success('Gmail settings fixed');
+            }
+        } catch (error) {
+            console.error('Failed to fix Gmail settings:', error);
+        } finally {
+            setIsFixingGmail(false);
+        }
+    };
+
     if (loading && accounts.length === 0) {
         return (
             <div className="flex justify-center items-center h-64">
@@ -89,6 +104,27 @@ const EmailAccounts = () => {
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                                 </svg>
                                 Refresh
+                            </>
+                        )}
+                    </button>
+
+                    <button
+                        onClick={handleFixGmail}
+                        disabled={isFixingGmail}
+                        className="bg-yellow-100 text-yellow-800 px-4 py-2 rounded-lg hover:bg-yellow-200 disabled:opacity-50 flex items-center"
+                        title="Fix Gmail SMTP/IMAP settings"
+                    >
+                        {isFixingGmail ? (
+                            <>
+                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-yellow-700 mr-2"></div>
+                                Fixing Gmail...
+                            </>
+                        ) : (
+                            <>
+                                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6l4 2m6-2a10 10 0 11-20 0 10 10 0 0120 0z" />
+                                </svg>
+                                Fix Gmail
                             </>
                         )}
                     </button>
@@ -190,11 +226,11 @@ const EmailAccounts = () => {
                                                 <span className="font-medium">{account.unreadCount} emails</span>
                                             </div>
                                         )}
-                                        {account.lastSynced && (
+                                        {(account.lastSynced || account.lastSyncedAt) && (
                                             <div className="flex justify-between">
                                                 <span>Last Synced:</span>
                                                 <span className="font-medium">
-                                                    {new Date(account.lastSynced).toLocaleDateString()}
+                                                    {new Date(account.lastSynced || account.lastSyncedAt).toLocaleDateString()}
                                                 </span>
                                             </div>
                                         )}

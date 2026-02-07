@@ -4,6 +4,7 @@ import { useEmail } from '../context/EmailContext';
 import { useAuth } from '../context/AuthContext';
 import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import EmailDetail from '../components/email/EmailDetail';
 
 const Inbox = () => {
     const {
@@ -22,6 +23,7 @@ const Inbox = () => {
     const { user } = useAuth();
     const [filter, setFilter] = useState('all');
     const [search, setSearch] = useState('');
+    const [selectedEmail, setSelectedEmail] = useState(null);
 
     // Load accounts on mount
     useEffect(() => {
@@ -59,7 +61,10 @@ const Inbox = () => {
             email.subject?.toLowerCase().includes(searchLower) ||
             email.from?.name?.toLowerCase().includes(searchLower) ||
             email.from?.email?.toLowerCase().includes(searchLower) ||
-            email.body?.text?.toLowerCase().includes(searchLower)
+            email.fromAddress?.toLowerCase().includes(searchLower) ||
+            email.bodyText?.toLowerCase().includes(searchLower) ||
+            email.body?.text?.toLowerCase().includes(searchLower) ||
+            email.body?.toLowerCase().includes(searchLower)
         );
     });
 
@@ -235,13 +240,18 @@ const Inbox = () => {
                             <div
                                 key={email._id}
                                 className={`px-6 py-4 hover:bg-gray-50 cursor-pointer transition-colors ${!email.isRead ? 'bg-blue-50' : ''}`}
+                                onClick={() => setSelectedEmail(email)}
                             >
                                 <div className="flex items-start">
                                     {/* Sender Avatar */}
                                     <div className="flex-shrink-0 mr-4">
                                         <div className="w-10 h-10 bg-gradient-to-r from-blue-100 to-purple-100 rounded-full flex items-center justify-center">
                                             <span className="text-blue-600 font-bold">
-                                                {email.from?.name?.charAt(0) || email.from?.email?.charAt(0) || '?'}
+                                                {email.from?.name?.charAt(0) ||
+                                                    email.from?.email?.charAt(0) ||
+                                                    email.fromAddress?.charAt(0) ||
+                                                    email.from?.charAt(0) ||
+                                                    '?'}
                                             </span>
                                         </div>
                                     </div>
@@ -252,7 +262,7 @@ const Inbox = () => {
                                             <div className="flex-1">
                                                 <div className="flex items-center space-x-2">
                                                     <p className={`font-medium truncate ${!email.isRead ? 'text-gray-900 font-semibold' : 'text-gray-700'}`}>
-                                                        {email.from?.name || email.from?.email || 'Unknown Sender'}
+                                                        {email.from?.name || email.from?.email || email.fromAddress || 'Unknown Sender'}
                                                     </p>
                                                     {!email.isRead && (
                                                         <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
@@ -267,12 +277,12 @@ const Inbox = () => {
                                                     {email.subject || '(No Subject)'}
                                                 </p>
                                                 <p className="text-sm text-gray-600 mt-1 line-clamp-2">
-                                                    {email.body?.text || 'No preview available'}
+                                                    {email.bodyText || email.body?.text || email.body || 'No preview available'}
                                                 </p>
                                             </div>
                                             <div className="ml-4 flex-shrink-0">
                                                 <span className="text-xs text-gray-500">
-                                                    {new Date(email.receivedAt).toLocaleTimeString([], {
+                                                    {new Date(email.receivedAt || email.createdAt).toLocaleTimeString([], {
                                                         hour: '2-digit',
                                                         minute: '2-digit'
                                                     })}
@@ -283,23 +293,28 @@ const Inbox = () => {
                                         {/* Email Actions */}
                                         <div className="mt-3 flex items-center space-x-3">
                                             <button
-                                                onClick={() => {
-                                                    // Toggle read status
-                                                    console.log('Marking email as read:', email._id);
+                                                onClick={(event) => {
+                                                    event.stopPropagation();
+                                                    markEmail(email._id, !email.isRead);
                                                 }}
                                                 className="text-xs text-blue-600 hover:text-blue-800"
                                             >
                                                 {email.isRead ? 'Mark unread' : 'Mark read'}
                                             </button>
                                             <button
-                                                onClick={() => {
-                                                    console.log('Deleting email:', email._id);
+                                                onClick={(event) => {
+                                                    event.stopPropagation();
+                                                    deleteEmail(email._id);
                                                 }}
                                                 className="text-xs text-red-600 hover:text-red-800"
                                             >
                                                 Delete
                                             </button>
                                             <button
+                                                onClick={(event) => {
+                                                    event.stopPropagation();
+                                                    setSelectedEmail(email);
+                                                }}
                                                 className="text-xs text-green-600 hover:text-green-800"
                                             >
                                                 Reply
@@ -309,6 +324,17 @@ const Inbox = () => {
                                 </div>
                             </div>
                         ))}
+                    </div>
+                </div>
+            )}
+
+            {selectedEmail && (
+                <div className="fixed inset-0 bg-black/30 flex items-center justify-center p-4 z-50">
+                    <div className="bg-white rounded-xl shadow-lg w-full max-w-4xl h-[85vh] overflow-hidden">
+                        <EmailDetail
+                            email={selectedEmail}
+                            onClose={() => setSelectedEmail(null)}
+                        />
                     </div>
                 </div>
             )}

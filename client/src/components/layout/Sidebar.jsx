@@ -40,16 +40,6 @@ const Sidebar = ({ isOpen, onClose }) => {
                 md:relative md:translate-x-0 md:flex md:flex-col
             `}>
                 <div className="flex-1 flex flex-col pt-5 pb-4 overflow-y-auto">
-                    {/* Logo */}
-                    <div className="flex items-center justify-center px-4 mb-8">
-                        <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-                            <span className="text-white font-bold text-xl">I</span>
-                        </div>
-                        <span className="ml-3 text-xl font-bold text-gray-900">
-                            InboxFlow
-                        </span>
-                    </div>
-
                     {/* Navigation */}
                     <nav className="mt-5 flex-1 px-2 space-y-1">
                         {filteredItems.map((item) => (

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { emailAccountsAPI, emailsAPI, authAPI } from '../services/api';
+import { emailAccountsAPI, emailsAPI, dashboardAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { Link } from 'react-router-dom';
 import { format, isValid } from 'date-fns';
@@ -33,35 +33,30 @@ const Dashboard = () => {
 
             // Fetch accounts
             const accountsRes = await emailAccountsAPI.getAccounts();
-            setAccounts(accountsRes.accounts || []);
+            const accountsData = accountsRes?.data || accountsRes;
+            const accountsList = accountsData?.data || accountsData?.accounts || accountsData || [];
+            setAccounts(accountsList);
 
-            // Calculate stats
-            let totalEmails = 0;
-            let unreadEmails = 0;
-            const accountsList = accountsRes.accounts || [];
+            // Fetch dashboard stats
+            const dashboardRes = await dashboardAPI.getDashboard();
+            const dashboardData = dashboardRes?.data || dashboardRes;
+            const dashboardPayload = dashboardData?.data || dashboardData;
+            const overview = dashboardPayload?.overview || {};
 
-            // Fetch emails for each account
-            const emailPromises = accountsList.map(async (account) => {
-                try {
-                    const emailsRes = await emailsAPI.getEmails(account._id, { limit: 5 });
-                    return emailsRes.emails || [];
-                } catch (error) {
-                    return [];
-                }
-            });
+            // Fetch recent emails (fallback to API list)
+            let recentList = dashboardPayload?.recentActivity || [];
+            if (!Array.isArray(recentList) || recentList.length === 0) {
+                const emailsRes = await emailsAPI.getAllEmails({ limit: 10, sortBy: 'createdAt', sortOrder: 'desc' });
+                const emailsData = emailsRes?.data || emailsRes;
+                recentList = emailsData?.emails || emailsData?.data || emailsData || [];
+            }
+            setRecentEmails(recentList);
 
-            const allEmails = await Promise.all(emailPromises);
-            const flattenedEmails = allEmails.flat();
-
-            // Update recent emails
-            setRecentEmails(flattenedEmails.slice(0, 10));
-
-            // Calculate stats
             setStats({
                 totalAccounts: accountsList.length,
-                totalEmails: flattenedEmails.length,
-                unreadEmails: flattenedEmails.filter(email => !email.isRead).length,
-                sentToday: 0 // You'll need to implement this based on your data
+                totalEmails: overview.totalEmails ?? recentList.length,
+                unreadEmails: overview.unprocessedEmails ?? 0,
+                sentToday: 0
             });
 
         } catch (error) {
@@ -92,7 +87,7 @@ const Dashboard = () => {
                         {user?.role.charAt(0).toUpperCase() + user?.role.slice(1)}
                     </div>
                     <div className="text-sm opacity-80">
-                        Last login: {user?.lastLogin ? format(new Date(user.lastLogin), 'MMM d, h:mm a') : 'Never'}
+                        Last login: {user?.lastLoginAt || user?.lastLogin ? format(new Date(user.lastLoginAt || user.lastLogin), 'MMM d, h:mm a') : 'Never'}
                     </div>
                 </div>
             </div>
@@ -186,12 +181,16 @@ const Dashboard = () => {
                                 <div className="flex items-center space-x-3">
                                     <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
                                         <span className="text-gray-600 text-sm font-medium">
-                                            {email.from?.name?.charAt(0) || email.from?.email?.charAt(0) || '?'}
+                                            {email.from?.name?.charAt(0) ||
+                                                email.from?.email?.charAt(0) ||
+                                                email.fromAddress?.charAt(0) ||
+                                                email.from?.charAt(0) ||
+                                                '?'}
                                         </span>
                                     </div>
                                     <div className="min-w-0 flex-1">
-                                        <p className={`text-sm font-medium truncate ${!email.isRead ? 'text-gray-900' : 'text-gray-600'}`}>
-                                            {email.from?.name || email.from?.email || 'Unknown'}
+                                        <p className={`text-sm font-medium truncate ${email.isRead === false || email.status === 'NEW' ? 'text-gray-900' : 'text-gray-600'}`}>
+                                            {email.from?.name || email.from?.email || email.fromAddress || email.from || 'Unknown'}
                                         </p>
                                         <p className="text-sm text-gray-500 truncate">{email.subject || '(No subject)'}</p>
                                     </div>
@@ -200,7 +199,7 @@ const Dashboard = () => {
                                     <span className="text-xs text-gray-500">
                                         {getEmailDateLabel(email)}
                                     </span>
-                                    {!email.isRead && (
+                                    {(email.isRead === false || email.status === 'NEW') && (
                                         <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
                                     )}
                                 </div>

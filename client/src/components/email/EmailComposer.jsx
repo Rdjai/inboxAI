@@ -22,9 +22,11 @@ const EmailComposer = ({ onSend, onCancel }) => {
     const fetchAccounts = async () => {
         try {
             const response = await emailAccountsAPI.getAccounts();
-            setAccounts(response.accounts || []);
-            if (response.accounts?.length > 0) {
-                setFormData(prev => ({ ...prev, accountId: response.accounts[0]._id }));
+            const data = response?.data || response;
+            const accountsData = data?.data || data?.accounts || data || [];
+            setAccounts(accountsData);
+            if (accountsData.length > 0) {
+                setFormData(prev => ({ ...prev, accountId: accountsData[0]._id }));
             }
         } catch (error) {
             toast.error('Failed to load email accounts');
@@ -46,17 +48,17 @@ const EmailComposer = ({ onSend, onCancel }) => {
 
         setLoading(true);
         try {
-            const data = {
-                to: formData.to.split(',').map(email => email.trim()),
+            const selectedAccount = accounts.find(acc => acc._id === formData.accountId);
+
+            const payload = {
+                fromAddress: selectedAccount?.email || selectedAccount?.address || selectedAccount?.fromAddress,
+                toAddress: formData.to,
                 subject: formData.subject,
-                body: formData.body,
-                ...(formData.cc && { cc: formData.cc.split(',').map(email => email.trim()) }),
-                ...(formData.bcc && { bcc: formData.bcc.split(',').map(email => email.trim()) }),
-                ...(formData.attachments.length > 0 && { attachments: formData.attachments })
+                bodyText: formData.body,
             };
 
-            await emailsAPI.sendEmail(formData.accountId, data);
-            toast.success('Email sent successfully!');
+            await emailsAPI.createEmail(payload);
+            toast.success('Email queued successfully!');
 
             if (onSend) {
                 onSend();

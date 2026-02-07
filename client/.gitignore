@@ -1,27 +1,49 @@
 # Dependencies
 node_modules/
-
-# Logs
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
+.pnpm-store/
 
-# Environment files
+# Production builds
+dist/
+build/
+.out/
+.next/
+.nuxt/
+
+# Environment variables
 .env
-.env.*
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
 
-# Build outputs
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
 
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+logs
+*.log
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
 
 # Coverage
 coverage/
+*.lcov
 
-# OS / editor
-.DS_Store
-Thumbs.db
-.vscode/
-.idea/
-
-# Misc
-*.local
+# Optional
+.cache/
+.parcel-cache/

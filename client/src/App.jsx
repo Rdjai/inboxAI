@@ -16,6 +16,9 @@ import Analytics from './pages/Analytics';
 import Team from './pages/Team';
 import Settings from './pages/Settings';
 import EmailAccounts from './pages/EmailAccounts';
+import InboxPage from './pages/InboxPage';
+import EmailDetailPage from './pages/EmailDetailPage';
+import EmailComposePage from './pages/Compose';
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
@@ -108,11 +111,23 @@ const router = createBrowserRouter([
       },
       {
         path: 'inbox',
-        element: <Inbox />,
+        element: <InboxPage />,
       },
       {
         path: 'compose',
-        element: <Compose />,
+        element: <EmailComposePage />,
+      },
+      {
+        path: 'email/:id',
+        element: <EmailDetailPage />,
+      },
+      {
+        path: 'email/:id/reply',
+        element: <EmailComposePage />,
+      },
+      {
+        path: 'email/:id/forward',
+        element: <EmailComposePage />,
       },
       {
         path: 'accounts',

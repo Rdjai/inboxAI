@@ -3,9 +3,14 @@
 // Get status color based on email status
 export const getStatusColor = (status) => {
     const colors = {
+        'new': 'bg-gray-100 text-gray-800',
+        'classified': 'bg-blue-100 text-blue-800',
+        'drafted': 'bg-yellow-100 text-yellow-800',
+        'reviewed': 'bg-purple-100 text-purple-800',
+        'approved': 'bg-green-100 text-green-800',
         'sent': 'bg-green-100 text-green-800',
-        'draft': 'bg-yellow-100 text-yellow-800',
         'failed': 'bg-red-100 text-red-800',
+        'draft': 'bg-yellow-100 text-yellow-800',
         'scheduled': 'bg-blue-100 text-blue-800',
         'processing': 'bg-purple-100 text-purple-800',
         'pending': 'bg-gray-100 text-gray-800',

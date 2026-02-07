@@ -29,9 +29,14 @@ export const AuthProvider = ({ children }) => {
                     const parsedUser = JSON.parse(storedUser);
                     setUser(parsedUser);
 
-                    // Optionally verify token with backend
+                    // Verify token with backend by loading profile
                     try {
-                        await authAPI.verifyToken();
+                        const profileRes = await authAPI.getProfile();
+                        const profileData = profileRes?.data || profileRes;
+                        if (profileData?.success && profileData?.data) {
+                            setUser(profileData.data);
+                            localStorage.setItem('user', JSON.stringify(profileData.data));
+                        }
                     } catch (error) {
                         console.log('Token verification failed, clearing auth');
                         localStorage.removeItem('user');
@@ -67,26 +72,24 @@ export const AuthProvider = ({ children }) => {
 
             // Check if response has data property or is the data itself
             const responseData = response.data || response;
+            const payload = responseData?.data || responseData;
+            const token = payload?.token || responseData?.token;
+            const userData = payload?.user || responseData?.user;
 
-            if (responseData.success) {
-                const { token, user: userData } = responseData;
-
-                if (!token || !userData) {
-                    throw new Error('Invalid response from server');
-                }
+            if (responseData?.success !== false && token && userData) {
 
                 localStorage.setItem('token', token);
                 localStorage.setItem('user', JSON.stringify(userData));
                 setUser(userData);
 
-                toast.success('✅ Login successful!');
+                toast.success('✅ Login successful!', { duration: 2000 });
                 return {
                     success: true,
                     user: userData,
                     token: token
                 };
             } else {
-                const errorMsg = responseData.error || responseData.message || 'Login failed';
+                const errorMsg = responseData?.error || responseData?.message || 'Login failed';
                 toast.error(`❌ ${errorMsg}`);
                 return {
                     success: false,
@@ -115,19 +118,17 @@ export const AuthProvider = ({ children }) => {
             console.log('📝 [AuthContext] Register response:', response);
 
             const responseData = response.data || response;
+            const payload = responseData?.data || responseData;
+            const token = payload?.token || responseData?.token;
+            const userData = payload?.user || responseData?.user;
 
-            if (responseData.success) {
-                const { token, user: userData } = responseData;
-
-                if (!token || !userData) {
-                    throw new Error('Invalid response from server');
-                }
+            if (responseData?.success !== false && token && userData) {
 
                 localStorage.setItem('token', token);
                 localStorage.setItem('user', JSON.stringify(userData));
                 setUser(userData);
 
-                toast.success('✅ Registration successful!');
+                toast.success('✅ Registration successful!', { duration: 2000 });
                 return {
                     success: true,
                     user: userData,
@@ -158,7 +159,7 @@ export const AuthProvider = ({ children }) => {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
         setUser(null);
-        toast.success('👋 Logged out successfully');
+        toast.success('👋 Logged out successfully', { duration: 2000 });
         // Let components handle navigation via useEffect
     };
 
@@ -166,14 +167,15 @@ export const AuthProvider = ({ children }) => {
         try {
             const response = await authAPI.updateProfile(updates);
             const responseData = response.data || response;
+            const payload = responseData?.data || responseData;
 
-            if (responseData.success) {
-                setUser(responseData.user);
-                localStorage.setItem('user', JSON.stringify(responseData.user));
-                toast.success('✅ Profile updated successfully!');
+            if (responseData.success && payload) {
+                setUser(payload);
+                localStorage.setItem('user', JSON.stringify(payload));
+                toast.success('✅ Profile updated successfully!', { duration: 2000 });
                 return {
                     success: true,
-                    user: responseData.user
+                    user: payload
                 };
             } else {
                 const errorMsg = responseData.error || responseData.message || 'Failed to update profile';

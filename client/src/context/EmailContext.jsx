@@ -1,12 +1,21 @@
 import React, { createContext, useState, useContext, useEffect, useCallback } from 'react';
-import { emailAccountsAPI, emailsAPI } from '../services/api';
+import { emailAccountsAPI, emailsAPI, setupSocket } from '../services/api';
 import { useAuth } from './AuthContext';
 import toast from 'react-hot-toast';
 
-const EmailContext = createContext({});
+// Create context
+const EmailContext = createContext(null);
 
-export const useEmail = () => useContext(EmailContext);
+// Custom hook - must be exported separately
+export const useEmail = () => {
+    const context = useContext(EmailContext);
+    if (!context) {
+        throw new Error('useEmail must be used within EmailProvider');
+    }
+    return context;
+};
 
+// Provider component - must be exported separately
 export const EmailProvider = ({ children }) => {
     const [accounts, setAccounts] = useState([]);
     const [emails, setEmails] = useState([]);
@@ -14,22 +23,58 @@ export const EmailProvider = ({ children }) => {
     const [accountsLoading, setAccountsLoading] = useState(false);
     const [selectedAccount, setSelectedAccount] = useState(null);
     const [error, setError] = useState(null);
-
+    
     const { isAuthenticated, isLoading: authLoading } = useAuth();
+
+    const extractData = (response) => {
+        if (!response) return null;
+        if (response.data) return response.data;
+        if (response.success && response.data) return response.data;
+        return response;
+    };
+
+    const normalizeEmail = (email) => {
+        if (!email) return email;
+
+        const fromAddress = email.fromAddress || email.from?.email || email.from;
+        const toAddress = email.toAddress || email.to?.email || email.to;
+        const bodyText = email.bodyText || email.body?.text || email.body;
+        const draftText = email.draftText || email.draft;
+        const priority = email.priority ? String(email.priority).toLowerCase() : 'low';
+        const status = email.status ? String(email.status).toLowerCase() : email.state;
+
+        const isRead = email.isRead ?? email.read ?? (email.status ? String(email.status).toLowerCase() !== 'new' : false);
+
+        return {
+            ...email,
+            fromAddress,
+            toAddress,
+            bodyText,
+            draftText,
+            status,
+            priority,
+            from: email.from || fromAddress,
+            to: email.to || toAddress,
+            body: email.body || bodyText,
+            draft: email.draft || draftText,
+            receivedAt: email.receivedAt || email.createdAt,
+            isRead,
+        };
+    };
 
     // Load accounts only when authenticated
     useEffect(() => {
-        console.log('📧 EmailProvider useEffect - Auth state:', {
+        console.log('📧 [EmailProvider] Auth state changed:', {
             isAuthenticated,
             authLoading,
-            token: localStorage.getItem('token')
+            token: localStorage.getItem('token') ? 'exists' : 'missing'
         });
-
+        
         if (isAuthenticated && !authLoading) {
-            console.log('🔄 Fetching accounts - user authenticated');
+            console.log('🔄 [EmailProvider] Fetching accounts...');
             fetchAccounts();
         } else if (!authLoading) {
-            console.log('👤 User not authenticated, clearing email data');
+            console.log('👤 [EmailProvider] User not authenticated, clearing data');
             setAccounts([]);
             setEmails([]);
             setSelectedAccount(null);
@@ -37,11 +82,41 @@ export const EmailProvider = ({ children }) => {
         }
     }, [isAuthenticated, authLoading]);
 
-    const fetchAccounts = useCallback(async () => {
-        console.log('📧 fetchAccounts called - isAuthenticated:', isAuthenticated);
+    useEffect(() => {
+        if (!isAuthenticated || authLoading) {
+            return;
+        }
 
+        const token = localStorage.getItem('token');
+        const socket = setupSocket(token);
+
+        if (!socket) return;
+
+        const handleEmailUpdated = (payload) => {
+            const updatedEmail = normalizeEmail(payload?.email || payload);
+            if (!updatedEmail?._id) return;
+
+            setEmails(prev => {
+                const index = prev.findIndex(e => e._id === updatedEmail._id);
+                if (index === -1) return [updatedEmail, ...prev];
+                const next = [...prev];
+                next[index] = { ...prev[index], ...updatedEmail };
+                return next;
+            });
+        };
+
+        socket.on('email:updated', handleEmailUpdated);
+
+        return () => {
+            socket.off('email:updated', handleEmailUpdated);
+        };
+    }, [isAuthenticated, authLoading]);
+
+    const fetchAccounts = useCallback(async () => {
+        console.log('📧 [fetchAccounts] Called, isAuthenticated:', isAuthenticated);
+        
         if (!isAuthenticated) {
-            console.log('⛔ Skipping fetchAccounts - user not authenticated');
+            console.log('⛔ [fetchAccounts] User not authenticated, skipping');
             setAccountsLoading(false);
             return [];
         }
@@ -49,33 +124,25 @@ export const EmailProvider = ({ children }) => {
         try {
             setAccountsLoading(true);
             setError(null);
-            console.log('📧 Fetching accounts from API...');
-
+            
+            console.log('📧 [fetchAccounts] Calling API...');
             const response = await emailAccountsAPI.getAccounts();
-            console.log('📧 Accounts API response:', response);
+            console.log('📧 [fetchAccounts] API response:', response);
 
             let accountsData = [];
-
-            if (response) {
-                if (response.success && response.accounts) {
-                    accountsData = response.accounts;
-                } else if (response.success && response.data) {
-                    accountsData = response.data;
-                } else if (Array.isArray(response.accounts)) {
-                    accountsData = response.accounts;
-                } else if (Array.isArray(response.data)) {
-                    accountsData = response.data;
-                } else if (Array.isArray(response)) {
-                    accountsData = response;
-                } else if (response.account) {
-                    accountsData = [response.account];
-                }
+            const data = extractData(response);
+            if (Array.isArray(data)) {
+                accountsData = data;
+            } else if (data?.accounts) {
+                accountsData = data.accounts;
+            } else if (data?.data && Array.isArray(data.data)) {
+                accountsData = data.data;
             }
 
-            console.log('📧 Processed accounts data:', accountsData);
+            console.log('✅ [fetchAccounts] Processed accounts:', accountsData.length);
             setAccounts(accountsData);
 
-            // Auto-select first account if none selected and we have accounts
+            // Auto-select first account
             if (accountsData.length > 0 && !selectedAccount) {
                 setSelectedAccount(accountsData[0]._id);
             }
@@ -83,16 +150,14 @@ export const EmailProvider = ({ children }) => {
             return accountsData;
 
         } catch (error) {
-            console.error('❌ Failed to fetch accounts:', error);
+            console.error('❌ [fetchAccounts] Error:', error);
             setError(error.message || 'Failed to load email accounts');
-
-            // Only show error if it's not a 401 (unauthorized)
-            if (error.status !== 401 && error.message !== 'Please authenticate') {
-                if (typeof toast !== 'undefined' && toast.error) {
-                    toast.error('Failed to load email accounts');
-                }
+            
+            // Only show error if it's not a 401
+            if (error.status !== 401) {
+                toast.error('Failed to load email accounts');
             }
-
+            
             return [];
 
         } finally {
@@ -101,13 +166,13 @@ export const EmailProvider = ({ children }) => {
     }, [isAuthenticated, selectedAccount]);
 
     const addAccount = async (accountData) => {
-        console.log('📤 addAccount called with:', accountData);
-
+        console.log('📤 [addAccount] Starting with data:', accountData);
+        console.log('📤 [addAccount] Current token:', localStorage.getItem('token') ? 'exists' : 'missing');
+        console.log('📤 [addAccount] isAuthenticated:', isAuthenticated);
+        
         if (!isAuthenticated) {
             const errorMsg = 'Please login to add email accounts';
-            if (typeof toast !== 'undefined' && toast.error) {
-                toast.error(`❌ ${errorMsg}`);
-            }
+            toast.error(`❌ ${errorMsg}`);
             return {
                 success: false,
                 error: errorMsg
@@ -116,22 +181,19 @@ export const EmailProvider = ({ children }) => {
 
         try {
             setLoading(true);
-            console.log('📤 Adding account to API:', accountData);
-
+            console.log('📤 [addAccount] Calling createAccount API...');
+            
             const response = await emailAccountsAPI.createAccount(accountData);
-            console.log('📤 Add account API response:', response);
+            console.log('📤 [addAccount] API response:', response);
 
             let newAccount;
-
-            // Handle different response formats
-            if (response.account) {
-                newAccount = response.account;
-            } else if (response.data) {
-                newAccount = response.data;
-            } else if (response.success && response.account) {
-                newAccount = response.account;
+            const data = extractData(response);
+            if (data?.account) {
+                newAccount = data.account;
+            } else if (data) {
+                newAccount = data;
             } else {
-                // Fallback mock account for development
+                // Fallback for development
                 newAccount = {
                     _id: Date.now().toString(),
                     ...accountData,
@@ -141,16 +203,14 @@ export const EmailProvider = ({ children }) => {
                 };
             }
 
-            console.log('📤 New account created:', newAccount);
+            console.log('✅ [addAccount] New account:', newAccount);
 
             // Update state
             setAccounts(prev => [...prev, newAccount]);
             setSelectedAccount(newAccount._id);
 
-            if (typeof toast !== 'undefined' && toast.success) {
-                toast.success('✅ Email account added successfully!');
-            }
-
+            toast.success('✅ Email account added successfully!');
+            
             return {
                 success: true,
                 data: newAccount,
@@ -158,11 +218,19 @@ export const EmailProvider = ({ children }) => {
             };
 
         } catch (error) {
-            console.error('❌ Add account error:', error);
+            console.error('❌ [addAccount] Error:', {
+                message: error.message,
+                status: error.status,
+                response: error.response
+            });
+            
             const errorMsg = error.message || 'Failed to add account';
-            if (typeof toast !== 'undefined' && toast.error) {
+            
+            // Don't show toast for 401 - let auth system handle it
+            if (error.status !== 401) {
                 toast.error(`❌ ${errorMsg}`);
             }
+            
             return {
                 success: false,
                 error: errorMsg
@@ -173,152 +241,251 @@ export const EmailProvider = ({ children }) => {
     };
 
     const deleteAccount = async (accountId) => {
-        console.log('🗑️ deleteAccount called for:', accountId);
-
+        console.log('🗑️ [deleteAccount] Deleting:', accountId);
+        
         if (!isAuthenticated) {
-            const errorMsg = 'Please login to delete accounts';
-            if (typeof toast !== 'undefined' && toast.error) {
-                toast.error(`❌ ${errorMsg}`);
-            }
-            return { success: false, error: errorMsg };
+            toast.error('Please login to delete accounts');
+            return { success: false, error: 'Not authenticated' };
         }
 
         try {
-            console.log('🗑️ Deleting account via API:', accountId);
-
             await emailAccountsAPI.deleteAccount(accountId);
 
-            // Update local state
+            // Update state
             setAccounts(prev => prev.filter(account => account._id !== accountId));
 
             // Update selected account if needed
             if (selectedAccount === accountId) {
                 const remainingAccounts = accounts.filter(acc => acc._id !== accountId);
-                if (remainingAccounts.length > 0) {
-                    setSelectedAccount(remainingAccounts[0]._id);
-                } else {
-                    setSelectedAccount(null);
-                }
+                setSelectedAccount(remainingAccounts.length > 0 ? remainingAccounts[0]._id : null);
             }
 
-            if (typeof toast !== 'undefined' && toast.success) {
-                toast.success('✅ Account deleted successfully!');
-            }
-
+            toast.success('✅ Account deleted successfully!');
             return { success: true };
 
         } catch (error) {
-            console.error('❌ Delete account error:', error);
-            const errorMsg = error.message || 'Failed to delete account';
+            console.error('❌ [deleteAccount] Error:', error);
+            toast.error(error.message || 'Failed to delete account');
+            return { success: false, error: error.message };
+        }
+    };
 
-            if (typeof toast !== 'undefined' && toast.error) {
-                toast.error(`❌ ${errorMsg}`);
+    const fetchEmails = async (accountId, params = {}) => {
+        console.log('📥 [fetchEmails] For account:', accountId);
+        
+        if (!isAuthenticated) {
+            console.log('⛔ [fetchEmails] Not authenticated');
+            return [];
+        }
+
+        try {
+            setLoading(true);
+            const query = { ...params };
+            if (accountId && accountId !== 'all') {
+                query.accountId = accountId;
             }
 
-            return {
-                success: false,
-                error: errorMsg
+            const response = await emailsAPI.getAllEmails(query);
+            
+            let emailsData = [];
+            const data = extractData(response);
+            if (Array.isArray(data)) {
+                emailsData = data;
+            } else if (data?.emails) {
+                emailsData = data.emails;
+            } else if (data?.data && Array.isArray(data.data)) {
+                emailsData = data.data;
+            }
+
+            emailsData = emailsData.map(normalizeEmail);
+            
+            console.log('✅ [fetchEmails] Setting emails:', emailsData.length);
+            setEmails(emailsData);
+            
+            return emailsData;
+
+        } catch (error) {
+            console.error('❌ [fetchEmails] Error:', error);
+            toast.error('Failed to load emails');
+            return [];
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const sendEmail = async (idOrAccountId, emailData) => {
+        console.log('📤 [sendEmail] Sending email...');
+        
+        if (!isAuthenticated) {
+            toast.error('Please login to send emails');
+            return { success: false, error: 'Not authenticated' };
+        }
+
+        try {
+            // If emailData is provided, create new email(s) from compose flow
+            if (emailData) {
+                const account = accounts.find(acc => acc._id === idOrAccountId);
+                const fromAddress = account?.email || account?.address || account?.fromAddress;
+                const recipients = Array.isArray(emailData.to)
+                    ? emailData.to.map((item) => String(item).trim()).filter(Boolean)
+                    : [String(emailData.to || '').trim()].filter(Boolean);
+
+                if (!fromAddress) {
+                    throw new Error('Selected account is missing a from address');
+                }
+
+                if (recipients.length === 0) {
+                    throw new Error('Recipient address is required');
+                }
+
+                const requests = recipients.map((toAddress) => emailsAPI.createEmail({
+                    fromAddress,
+                    toAddress,
+                    subject: emailData.subject || '(No Subject)',
+                    bodyText: emailData.body || emailData.bodyText || ''
+                }));
+
+                const responses = await Promise.all(requests);
+                toast.success(`✅ ${responses.length} email(s) queued for processing!`);
+                return { success: true, data: responses };
+            }
+
+            // Otherwise, send an approved email by id
+            const response = await emailsAPI.sendEmail(idOrAccountId);
+            setEmails(prev => prev.map(e => e._id === idOrAccountId ? { ...e, status: 'sent', sentAt: new Date().toISOString() } : e));
+            toast.success('✅ Email sent successfully!');
+            return { success: true, data: response };
+
+        } catch (error) {
+            console.error('❌ [sendEmail] Error:', error);
+            toast.error(error.message || 'Failed to send email');
+            return { success: false, error: error.message };
+        }
+    };
+
+    const updateEmail = async (emailId, data) => {
+        try {
+            const payload = {
+                draftText: data.draft ?? data.draftText ?? data.body,
+                category: data.category
             };
+
+            const response = await emailsAPI.updateDraft(emailId, payload);
+            const updated = normalizeEmail(extractData(response));
+
+            setEmails(prev => prev.map(e => e._id === emailId ? { ...e, ...updated } : e));
+
+            toast.success('✅ Draft updated');
+            return { success: true, data: updated };
+        } catch (error) {
+            console.error('❌ [updateEmail] Error:', error);
+            toast.error(error.message || 'Failed to update draft');
+            return { success: false, error: error.message };
+        }
+    };
+
+    const approveEmail = async (emailId) => {
+        try {
+            const response = await emailsAPI.approveEmail(emailId);
+            const updated = normalizeEmail(extractData(response));
+            setEmails(prev => prev.map(e => e._id === emailId ? { ...e, ...updated } : e));
+            toast.success('✅ Email approved');
+            return { success: true, data: updated };
+        } catch (error) {
+            console.error('❌ [approveEmail] Error:', error);
+            toast.error(error.message || 'Failed to approve email');
+            return { success: false, error: error.message };
+        }
+    };
+
+    const replyToEmail = async (emailId, content, sendImmediately = false, attachments = []) => {
+        try {
+            const response = await emailsAPI.replyToEmail(emailId, {
+                content,
+                sendImmediately,
+                attachments
+            });
+            const created = normalizeEmail(extractData(response));
+            if (created?._id) {
+                setEmails(prev => [created, ...prev]);
+            }
+            toast.success('✅ Reply created successfully');
+            return { success: true, data: created };
+        } catch (error) {
+            console.error('❌ [replyToEmail] Error:', error);
+            toast.error(error.message || 'Failed to create reply');
+            return { success: false, error: error.message };
+        }
+    };
+
+    const forwardEmail = async (emailId, toAddress, message = '', attachments = []) => {
+        try {
+            const response = await emailsAPI.forwardEmail(emailId, {
+                toAddress,
+                message,
+                attachments
+            });
+            const created = normalizeEmail(extractData(response));
+            if (created?._id) {
+                setEmails(prev => [created, ...prev]);
+            }
+            toast.success('✅ Email forwarded successfully');
+            return { success: true, data: created };
+        } catch (error) {
+            console.error('❌ [forwardEmail] Error:', error);
+            toast.error(error.message || 'Failed to forward email');
+            return { success: false, error: error.message };
         }
     };
 
     const syncAccount = async (accountId, limit = 50) => {
+        console.log('🔄 [syncAccount] Syncing:', accountId);
+        
         if (!isAuthenticated) {
-            if (typeof toast !== 'undefined' && toast.error) {
-                toast.error('Please login to sync emails');
-            }
+            toast.error('Please login to sync emails');
             return { success: false, error: 'Not authenticated' };
         }
 
         try {
             setLoading(true);
             await emailAccountsAPI.syncAccount(accountId, limit);
-            if (typeof toast !== 'undefined' && toast.success) {
-                toast.success('✅ Emails synced successfully!');
-            }
+            toast.success('✅ Emails synced successfully!');
             return { success: true };
+
         } catch (error) {
-            console.error('❌ Sync error:', error);
-            const errorMsg = error.message || 'Failed to sync emails';
-            if (typeof toast !== 'undefined' && toast.error) {
-                toast.error(errorMsg);
-            }
-            return { success: false, error: errorMsg };
+            console.error('❌ [syncAccount] Error:', error);
+            toast.error(error.message || 'Failed to sync emails');
+            return { success: false, error: error.message };
         } finally {
             setLoading(false);
         }
     };
 
-    const fetchEmails = async (accountId, params = {}) => {
-    if (!isAuthenticated) {
-        console.log('??? Skipping fetchEmails - not authenticated');
-        return [];
-    }
-
-    try {
-        setLoading(true);
-        console.log('???? fetchEmails called for account:', accountId, 'params:', params);
-
-        const response = accountId === 'all'
-            ? await emailsAPI.getAllEmails(params)
-            : await emailsAPI.getEmails(accountId, params);
-
-        const emailsData = response.emails || response.data || response || [];
-
-        console.log('???? Emails fetched:', Array.isArray(emailsData) ? emailsData.length : 0);
-        setEmails(Array.isArray(emailsData) ? emailsData : []);
-
-        return Array.isArray(emailsData) ? emailsData : [];
-
-    } catch (error) {
-        console.error('??? fetchEmails error:', error);
-        if (typeof toast !== 'undefined' && toast.error) {
-            toast.error('Failed to load emails');
-        }
-        return [];
-    } finally {
-        setLoading(false);
-    }
-};
-
-    const sendEmail = async (accountId, emailData) => {
+    const fixGmailSettings = async () => {
         if (!isAuthenticated) {
-            const errorMsg = 'Please login to send emails';
-            if (typeof toast !== 'undefined' && toast.error) {
-                toast.error(`❌ ${errorMsg}`);
-            }
-            return {
-                success: false,
-                error: errorMsg
-            };
-        }
-
-        console.log('📤 Sending email (mock):', { accountId, emailData });
-
-        // Simulate API delay
-        await new Promise(resolve => setTimeout(resolve, 1000));
-
-        if (typeof toast !== 'undefined' && toast.success) {
-            toast.success('✅ Email sent successfully (development mode)');
-        }
-
-        return {
-            success: true,
-            data: {
-                messageId: `dev-${Date.now()}`,
-                preview: `To: ${emailData.to}, Subject: ${emailData.subject}`
-            }
-        };
-    };
-
-    const markEmail = async (emailId, read = true) => {
-        if (!isAuthenticated) {
+            toast.error('Please login to update Gmail settings');
             return { success: false, error: 'Not authenticated' };
         }
 
         try {
-            console.log('📌 Marking email:', emailId, 'as read:', read);
+            setLoading(true);
+            const response = await emailAccountsAPI.fixGmailSettings();
+            toast.success('✅ Gmail settings updated');
+            await fetchAccounts();
+            return { success: true, data: response };
+        } catch (error) {
+            console.error('❌ [fixGmailSettings] Error:', error);
+            toast.error(error.message || 'Failed to update Gmail settings');
+            return { success: false, error: error.message };
+        } finally {
+            setLoading(false);
+        }
+    };
 
+    const markEmail = async (emailId, read = true) => {
+        try {
+            console.log('📌 [markEmail] Marking:', emailId, 'as read:', read);
+            
             if (read) {
                 await emailsAPI.markAsRead(emailId);
             } else {
@@ -333,43 +500,32 @@ export const EmailProvider = ({ children }) => {
             return { success: true };
 
         } catch (error) {
-            console.error('❌ Mark email error:', error);
-            const errorMsg = error.message || 'Failed to update email';
-            if (typeof toast !== 'undefined' && toast.error) {
-                toast.error(errorMsg);
-            }
-            return { success: false, error: errorMsg };
+            console.error('❌ [markEmail] Error:', error);
+            toast.error(error.message || 'Failed to update email');
+            return { success: false, error: error.message };
         }
     };
 
     const deleteEmail = async (emailId) => {
-        if (!isAuthenticated) {
-            return { success: false, error: 'Not authenticated' };
-        }
-
         try {
-            console.log('🗑️ Deleting email:', emailId);
-
+            console.log('🗑️ [deleteEmail] Deleting:', emailId);
+            
             await emailsAPI.deleteEmail(emailId);
 
             // Update local state
             setEmails(prev => prev.filter(email => email._id !== emailId));
 
-            if (typeof toast !== 'undefined' && toast.success) {
-                toast.success('✅ Email deleted successfully!');
-            }
+            toast.success('✅ Email deleted successfully!');
             return { success: true };
 
         } catch (error) {
-            console.error('❌ Delete email error:', error);
-            const errorMsg = error.message || 'Failed to delete email';
-            if (typeof toast !== 'undefined' && toast.error) {
-                toast.error(errorMsg);
-            }
-            return { success: false, error: errorMsg };
+            console.error('❌ [deleteEmail] Error:', error);
+            toast.error(error.message || 'Failed to delete email');
+            return { success: false, error: error.message };
         }
     };
 
+    // Context value
     const value = {
         accounts,
         emails,
@@ -384,17 +540,20 @@ export const EmailProvider = ({ children }) => {
         syncAccount,
         fetchEmails,
         sendEmail,
+        updateEmail,
+        approveEmail,
+        replyToEmail,
+        forwardEmail,
         markEmail,
         deleteEmail,
+        fixGmailSettings,
         refreshAccounts: fetchAccounts,
-        isAuthenticated,
     };
 
-    console.log('📧 EmailProvider value:', {
+    console.log('📧 [EmailProvider] Rendering with:', {
         accountsCount: accounts.length,
-        loading: loading || accountsLoading,
         selectedAccount,
-        isAuthenticated
+        loading: loading || accountsLoading
     });
 
     return (
@@ -403,3 +562,6 @@ export const EmailProvider = ({ children }) => {
         </EmailContext.Provider>
     );
 };
+
+// Export both as named exports
+export { EmailContext };

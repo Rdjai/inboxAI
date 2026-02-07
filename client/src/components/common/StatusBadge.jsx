@@ -3,6 +3,11 @@ import { getStatusColor } from '../../utils/helpers';
 
 const StatusBadge = ({ status, showIcon = false }) => {
     const statusConfig = {
+        'new': { icon: '✉️', label: 'New' },
+        'classified': { icon: '🏷️', label: 'Classified' },
+        'drafted': { icon: '📝', label: 'Drafted' },
+        'reviewed': { icon: '👀', label: 'Reviewed' },
+        'approved': { icon: '✅', label: 'Approved' },
         'sent': { icon: '✓', label: 'Sent' },
         'draft': { icon: '📝', label: 'Draft' },
         'failed': { icon: '✗', label: 'Failed' },

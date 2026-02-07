@@ -1,0 +1,34 @@
+name: processmail_app
+description: ProcessMail - Email Management App
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.6
+  provider: ^6.1.1
+  http: ^1.1.0
+  intl: ^0.19.0
+  shimmer: ^3.0.0
+  google_fonts: ^6.1.0
+  liquid_pull_to_refresh: ^3.0.0
+  badges: ^3.0.1
+  flutter_svg: ^2.0.9
+  animated_text_kit: ^4.2.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.1
+
+flutter:
+  # uses-material-design: true
+  # assets:
+    # - assets/images/
+    # - assets/icons/
+    # - assets/svgs/
+  uses-material-design: true
