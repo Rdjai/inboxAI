@@ -29,7 +29,8 @@ class EmailController {
                 sortBy = 'createdAt',
                 sortOrder = 'desc',
                 fromDate,
-                toDate
+                toDate,
+                includeStats = false
             } = req.query;
 
             // Build query
@@ -55,48 +56,69 @@ class EmailController {
                 ];
             }
 
+            const parsedPage = Math.max(1, parseInt(page, 10) || 1);
+            const parsedLimit = Math.max(1, Math.min(100, parseInt(limit, 10) || 20));
+            const shouldIncludeStats = includeStats === true || includeStats === 'true';
+
             // Sorting
             const sort = {};
             sort[sortBy] = sortOrder === 'desc' ? -1 : 1;
 
             // Pagination
-            const skip = (page - 1) * limit;
+            const skip = (parsedPage - 1) * parsedLimit;
 
-            // Execute queries
+            // Inbox list does not need heavy fields (e.g. full html body) on initial load.
+            const emailListProjection = {
+                fromAddress: 1,
+                toAddress: 1,
+                subject: 1,
+                bodyText: 1,
+                category: 1,
+                confidence: 1,
+                status: 1,
+                assignedUserId: 1,
+                priority: 1,
+                createdAt: 1,
+                sentAt: 1
+            };
+
+            // Execute primary list + count first for lower first-paint latency.
             const [emails, total] = await Promise.all([
-                Email.find(query)
+                Email.find(query, emailListProjection)
                     .sort(sort)
                     .skip(skip)
-                    .limit(parseInt(limit))
+                    .limit(parsedLimit)
                     .populate('assignedUserId', 'name email')
                     .lean(),
                 Email.countDocuments(query)
             ]);
 
-            // Get stats
-            const stats = await Email.aggregate([
-                { $match: query },
-                {
-                    $group: {
-                        _id: '$status',
-                        count: { $sum: 1 }
+            let statusCounts = undefined;
+            if (shouldIncludeStats) {
+                const stats = await Email.aggregate([
+                    { $match: query },
+                    {
+                        $group: {
+                            _id: '$status',
+                            count: { $sum: 1 }
+                        }
                     }
-                }
-            ]);
+                ]);
 
-            const statusCounts = {};
-            stats.forEach(stat => {
-                statusCounts[stat._id] = stat.count;
-            });
+                statusCounts = {};
+                stats.forEach(stat => {
+                    statusCounts[stat._id] = stat.count;
+                });
+            }
 
             res.json({
                 success: true,
                 data: emails,
                 pagination: {
-                    page: parseInt(page),
-                    limit: parseInt(limit),
+                    page: parsedPage,
+                    limit: parsedLimit,
                     total,
-                    pages: Math.ceil(total / limit)
+                    pages: Math.ceil(total / parsedLimit)
                 },
                 stats: statusCounts
             });

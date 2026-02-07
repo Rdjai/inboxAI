@@ -91,7 +91,8 @@ const emailSchemas = {
         sortBy: Joi.string().valid('createdAt', 'priority', 'status', 'category', 'updatedAt'),
         sortOrder: Joi.string().valid('asc', 'desc').default('desc'),
         fromDate: Joi.date().iso(),
-        toDate: Joi.date().iso().greater(Joi.ref('fromDate'))
+        toDate: Joi.date().iso().greater(Joi.ref('fromDate')),
+        includeStats: Joi.boolean().default(false)
     })
 };
 

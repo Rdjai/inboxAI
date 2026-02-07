@@ -134,5 +134,6 @@ emailSchema.index({ category: 1, createdAt: -1 });
 emailSchema.index({ assignedUserId: 1, status: 1 });
 emailSchema.index({ priority: 1, createdAt: -1 });
 emailSchema.index({ fromAddress: 1, createdAt: -1 });
+emailSchema.index({ createdAt: -1 });
 
 module.exports = mongoose.model('Email', emailSchema);
