@@ -7,7 +7,6 @@ import Layout from './components/layout/Layout';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
-import Inbox from './pages/Inbox';
 import Compose from './pages/Compose';
 import Drafts from './pages/Drafts';
 import Review from './pages/Review';
@@ -16,19 +15,11 @@ import Analytics from './pages/Analytics';
 import Team from './pages/Team';
 import Settings from './pages/Settings';
 import EmailAccounts from './pages/EmailAccounts';
-<<<<<<< HEAD
 import InboxPage from './pages/InboxPage';
 import EmailDetailPage from './pages/EmailDetailPage';
-import EmailComposePage from './pages/Compose';
-=======
-import Home from './pages/homepage';
->>>>>>> f43e3f23c9484f9a0cfbe458a5385f771f91e9b0
 
-// Protected Route Component
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated, isLoading } = useAuth();
-
-  console.log('🔒 ProtectedRoute - Auth state:', { isAuthenticated, isLoading });
 
   if (isLoading) {
     return (
@@ -39,19 +30,14 @@ const ProtectedRoute = ({ children }) => {
   }
 
   if (!isAuthenticated) {
-    console.log('🚫 Not authenticated, redirecting to login');
     return <Navigate to="/login" replace />;
   }
 
-  console.log('✅ User authenticated, allowing access');
   return children;
 };
 
-// Public Route Component (for login/register)
 const PublicRoute = ({ children }) => {
   const { isAuthenticated, isLoading } = useAuth();
-
-  console.log('👤 PublicRoute - Auth state:', { isAuthenticated, isLoading });
 
   if (isLoading) {
     return (
@@ -62,24 +48,21 @@ const PublicRoute = ({ children }) => {
   }
 
   if (isAuthenticated) {
-    console.log('🔄 Already authenticated, redirecting to dashboard');
     return <Navigate to="/dashboard" replace />;
   }
 
-  console.log('👤 Showing public route');
   return children;
 };
 
-// Create router
+const ProtectedLayout = () => {
+  return (
+    <EmailProvider>
+      <Layout />
+    </EmailProvider>
+  );
+};
+
 const router = createBrowserRouter([
-  {
-    path: '/',
-    element: (
-      <PublicRoute>
-        <Home />
-      </PublicRoute>
-    ),
-  },
   {
     path: '/login',
     element: (
@@ -97,18 +80,16 @@ const router = createBrowserRouter([
     ),
   },
   {
-    path: '/app',
+    path: '/',
     element: (
       <ProtectedRoute>
-        <EmailProvider>
-          <Layout />
-        </EmailProvider>
+        <ProtectedLayout />
       </ProtectedRoute>
     ),
     children: [
       {
         index: true,
-        element: <Navigate to="/app/dashboard" replace />,
+        element: <Navigate to="/dashboard" replace />,
       },
       {
         path: 'dashboard',
@@ -120,7 +101,7 @@ const router = createBrowserRouter([
       },
       {
         path: 'compose',
-        element: <EmailComposePage />,
+        element: <Compose />,
       },
       {
         path: 'email/:id',
@@ -128,11 +109,11 @@ const router = createBrowserRouter([
       },
       {
         path: 'email/:id/reply',
-        element: <EmailComposePage />,
+        element: <Compose />,
       },
       {
         path: 'email/:id/forward',
-        element: <EmailComposePage />,
+        element: <Compose />,
       },
       {
         path: 'accounts',
@@ -164,7 +145,6 @@ const router = createBrowserRouter([
       },
     ],
   },
-  // Redirect all unmatched routes
   {
     path: '*',
     element: <Navigate to="/" replace />,
@@ -177,8 +157,6 @@ const router = createBrowserRouter([
 });
 
 function App() {
-  console.log('🚀 App component rendering');
-
   return (
     <>
       <Toaster

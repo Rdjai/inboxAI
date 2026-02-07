@@ -34,12 +34,12 @@ const Sidebar = ({ isOpen, onClose }) => {
 
             {/* Sidebar */}
             <aside className={`
-                fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-gray-200 
+                fixed top-16 bottom-0 left-0 z-50 w-64 bg-white border-r border-gray-200 
                 transform transition-transform duration-300 ease-in-out
                 ${isOpen ? 'translate-x-0' : '-translate-x-full'}
-                md:relative md:translate-x-0 md:flex md:flex-col
+                md:relative md:top-0 md:bottom-0 md:translate-x-0 md:flex md:flex-col md:h-full
             `}>
-                <div className="flex-1 flex flex-col pt-5 pb-4 overflow-y-auto">
+                <div className="h-full flex flex-col pt-5 pb-4 overflow-hidden">
                     {/* Navigation */}
                     <nav className="mt-5 flex-1 px-2 space-y-1">
                         {filteredItems.map((item) => (

@@ -17,11 +17,8 @@
     "@radix-ui/react-toast": "^1.2.15",
     "axios": "^1.5.0",
     "chart.js": "^4.5.1",
-<<<<<<< HEAD
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-=======
->>>>>>> f43e3f23c9484f9a0cfbe458a5385f771f91e9b0
     "date-fns": "^2.30.0",
     "lucide-react": "^0.309.0",
     "react": "^18.2.0",
