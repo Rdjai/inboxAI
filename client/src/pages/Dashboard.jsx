@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { emailAccountsAPI, emailsAPI, dashboardAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { format, isValid } from 'date-fns';
 
 const Dashboard = () => {
     const { user } = useAuth();
+    const navigate = useNavigate();
     const [stats, setStats] = useState({
         totalAccounts: 0,
         totalEmails: 0,
@@ -19,6 +20,14 @@ const Dashboard = () => {
     useEffect(() => {
         fetchDashboardData();
     }, []);
+
+    const extractEmailList = (payload) => {
+        if (Array.isArray(payload)) return payload;
+        if (Array.isArray(payload?.emails)) return payload.emails;
+        if (Array.isArray(payload?.data)) return payload.data;
+        if (Array.isArray(payload?.items)) return payload.items;
+        return [];
+    };
 
     const getEmailDateLabel = (email) => {
         const dateValue = email?.receivedAt || email?.sentAt || email?.createdAt;
@@ -43,13 +52,10 @@ const Dashboard = () => {
             const dashboardPayload = dashboardData?.data || dashboardData;
             const overview = dashboardPayload?.overview || {};
 
-            // Fetch recent emails (fallback to API list)
-            let recentList = dashboardPayload?.recentActivity || [];
-            if (!Array.isArray(recentList) || recentList.length === 0) {
-                const emailsRes = await emailsAPI.getAllEmails({ limit: 10, sortBy: 'createdAt', sortOrder: 'desc' });
-                const emailsData = emailsRes?.data || emailsRes;
-                recentList = emailsData?.emails || emailsData?.data || emailsData || [];
-            }
+            // Fetch recent emails from email list API.
+            // analytics.recentActivity is audit-log shaped, not email shaped.
+            const emailsRes = await emailsAPI.getAllEmails({ limit: 10, sortBy: 'createdAt', sortOrder: 'desc' });
+            const recentList = extractEmailList(emailsRes);
             setRecentEmails(recentList);
 
             setStats({
@@ -176,8 +182,17 @@ const Dashboard = () => {
                     </div>
                 ) : (
                     <div className="space-y-3">
-                        {recentEmails.map((email) => (
-                            <div key={email._id} className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg">
+                        {recentEmails.map((email, index) => (
+                            <div
+                                key={email._id || email.id || email.messageId || `${email.subject || 'email'}-${index}`}
+                                className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg cursor-pointer"
+                                onClick={() => {
+                                    const emailId = email._id || email.id;
+                                    if (emailId) {
+                                        navigate(`/email/${emailId}`);
+                                    }
+                                }}
+                            >
                                 <div className="flex items-center space-x-3">
                                     <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
                                         <span className="text-gray-600 text-sm font-medium">

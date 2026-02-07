@@ -177,6 +177,42 @@ const EmailDetailPage = () => {
         });
     };
 
+    const renderTextWithLinks = (text) => {
+        if (!text) return null;
+        const urlRegex = /(https?:\/\/[^\s<>"']+|www\.[^\s<>"']+)/gi;
+        const lines = String(text).split('\n');
+
+        return lines.map((line, lineIndex) => {
+            const parts = line.split(urlRegex);
+            return (
+                <React.Fragment key={`line-${lineIndex}`}>
+                    {parts.map((part, partIndex) => {
+                        const isUrl = urlRegex.test(part);
+                        urlRegex.lastIndex = 0;
+
+                        if (!isUrl) {
+                            return <React.Fragment key={`part-${lineIndex}-${partIndex}`}>{part}</React.Fragment>;
+                        }
+
+                        const href = part.startsWith('http') ? part : `https://${part}`;
+                        return (
+                            <a
+                                key={`part-${lineIndex}-${partIndex}`}
+                                href={href}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-blue-600 underline break-all hover:text-blue-800"
+                            >
+                                {part}
+                            </a>
+                        );
+                    })}
+                    {lineIndex < lines.length - 1 && <br />}
+                </React.Fragment>
+            );
+        });
+    };
+
     if (loading) {
         return (
             <div className="container mx-auto p-6 text-center">
@@ -242,15 +278,17 @@ const EmailDetailPage = () => {
                         <CardHeader>
                             <div className="flex justify-between items-start">
                                 <div>
-                                    <CardTitle className="text-xl">{email.subject || '(No Subject)'}</CardTitle>
+                                    <CardTitle className="text-xl break-words">{email.subject || '(No Subject)'}</CardTitle>
                                     <CardDescription className="mt-2">
                                         <div className="flex items-center gap-2">
                                             <Mail className="h-4 w-4" />
-                                            <span className="font-medium">From:</span> {email.fromAddress}
+                                            <span className="font-medium">From:</span>
+                                            <span className="break-all">{email.fromAddress}</span>
                                         </div>
                                         <div className="flex items-center gap-2 mt-1">
                                             <User className="h-4 w-4" />
-                                            <span className="font-medium">To:</span> {email.toAddress}
+                                            <span className="font-medium">To:</span>
+                                            <span className="break-all">{email.toAddress}</span>
                                         </div>
                                     </CardDescription>
                                 </div>
@@ -309,7 +347,9 @@ const EmailDetailPage = () => {
                             {/* Email Body */}
                             <div className="border rounded-lg p-4 bg-gray-50">
                                 <div className="prose max-w-none">
-                                    <p className="whitespace-pre-wrap">{email.bodyText}</p>
+                                    <div className="whitespace-pre-wrap break-words">
+                                        {renderTextWithLinks(email.bodyText)}
+                                    </div>
                                 </div>
 
                                 {email.attachments?.length > 0 && (
