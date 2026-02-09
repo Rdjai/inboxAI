@@ -48,6 +48,22 @@ const InboxPage = () => {
         return selectedAccount;
     };
 
+    const getEmailIdentity = (email) =>
+        email?._id ||
+        email?.id ||
+        email?.messageId ||
+        `${email?.fromAddress || ''}-${email?.subject || ''}-${email?.createdAt || ''}`;
+
+    const dedupeEmails = (items = []) => {
+        const unique = new Map();
+        for (const email of items) {
+            const identity = getEmailIdentity(email);
+            if (!identity || unique.has(identity)) continue;
+            unique.set(identity, email);
+        }
+        return Array.from(unique.values());
+    };
+
     useEffect(() => {
         fetchEmails();
     }, [filters, pagination.page]);
@@ -70,7 +86,7 @@ const InboxPage = () => {
                     ? response.emails
                     : [];
 
-            setEmails(emailsData);
+            setEmails(dedupeEmails(emailsData));
             setPagination(prev => ({
                 ...prev,
                 ...(response?.pagination || {})
@@ -400,11 +416,15 @@ const InboxPage = () => {
                                     </tr>
                                 </thead>
                                 <tbody className="bg-white divide-y divide-gray-200">
-                                    {emails.map((email) => (
+                                    {emails.map((email, index) => {
+                                        const emailIdentity = getEmailIdentity(email) || `email-row-${index}`;
+                                        const emailIdForRoute = email._id || email.id;
+
+                                        return (
                                         <tr
-                                            key={email._id}
+                                            key={emailIdentity}
                                             className="hover:bg-gray-50 cursor-pointer"
-                                            onClick={() => handleEmailClick(email._id)}
+                                            onClick={() => emailIdForRoute && handleEmailClick(emailIdForRoute)}
                                         >
                                             <td className="px-6 py-4">
                                                 <div className="font-medium text-gray-900">{email.fromAddress}</div>
@@ -456,14 +476,14 @@ const InboxPage = () => {
                                             <td className="px-6 py-4">
                                                 <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
                                                     <button
-                                                        onClick={() => handleEmailClick(email._id)}
+                                                        onClick={() => emailIdForRoute && handleEmailClick(emailIdForRoute)}
                                                         className="px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
                                                     >
                                                         View
                                                     </button>
                                                     {!email.assignedUserId && (
                                                         <button
-                                                            onClick={() => handleBulkAction('assign', email._id)}
+                                                            onClick={() => emailIdForRoute && handleBulkAction('assign', emailIdForRoute)}
                                                             className="px-3 py-1 text-xs bg-gray-200 text-gray-800 rounded hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500"
                                                         >
                                                             Assign
@@ -472,7 +492,8 @@ const InboxPage = () => {
                                                 </div>
                                             </td>
                                         </tr>
-                                    ))}
+                                        );
+                                    })}
                                 </tbody>
                             </table>
                         </div>
