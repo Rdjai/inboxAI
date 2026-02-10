@@ -10,6 +10,7 @@ const mailService = require('../services/mail.service');
 const ImapService = require('../services/imap.service');
 const EmailAccount = require('../models/emailAccount.model');
 const Email = require('../models/email.model');
+const mongoose = require('mongoose');
 
 
 // Manual sync endpoint
@@ -313,13 +314,42 @@ router.post('/email/accounts/quick-create', authMiddleware, async (req, res) => 
         });
     }
 });
+const DB_STATES = {
+    0: 'disconnected',
+    1: 'connected',
+    2: 'connecting',
+    3: 'disconnecting'
+};
+
+const buildHealthPayload = () => {
+    const dbStateCode = mongoose.connection.readyState;
+    const dbState = DB_STATES[dbStateCode] || 'unknown';
+
+    return {
+        success: dbState === 'connected',
+        message: 'ProcessMail API health check',
+        timestamp: new Date().toISOString(),
+        uptimeSeconds: Math.floor(process.uptime()),
+        service: 'processmail-api',
+        database: {
+            state: dbState,
+            readyState: dbStateCode
+        }
+    };
+};
+
 // Health check
 router.get('/health', (req, res) => {
-    res.json({
-        success: true,
-        message: 'ProcessMail API is running',
-        timestamp: new Date().toISOString()
-    });
+    const payload = buildHealthPayload();
+    const statusCode = payload.success ? 200 : 503;
+    res.status(statusCode).json(payload);
+});
+
+// Common alias used by external monitors/load balancers.
+router.get('/health-check', (req, res) => {
+    const payload = buildHealthPayload();
+    const statusCode = payload.success ? 200 : 503;
+    res.status(statusCode).json(payload);
 });
 
 // API Routes
