@@ -97,6 +97,7 @@ export const emailsAPI = {
 export const emailAccountsAPI = {
     getAccounts: () => api.get('/email/accounts'),
     getStats: () => api.get('/email/accounts/stats'),
+    getGoogleOAuthUrl: () => api.post('/email/accounts/google/oauth-url'),
     getAccount: (id) => api.get(`/email/accounts/${id}`),
     createAccount: (data) => api.post('/email/accounts', data),
     quickCreate: (data) => api.post('/email/accounts/quick-create', data),

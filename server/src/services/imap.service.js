@@ -1,10 +1,12 @@
 // src/services/imap.service.js
 const Imap = require('imap');
+const axios = require('axios');
 const { simpleParser } = require('mailparser');
 const logger = require('../utils/logger');
 
 class ImapService {
     constructor(config) {
+        this.oauth = config.oauth || null;
         this.config = {
             host: config.host,
             port: config.port || 993,
@@ -18,12 +20,48 @@ class ImapService {
         this.imap = null;
     }
 
+    async getImapConfig() {
+        if (!this.oauth || this.oauth.provider !== 'google' || !this.oauth.refreshToken) {
+            return this.config;
+        }
+
+        const tokenResponse = await axios.post(
+            'https://oauth2.googleapis.com/token',
+            new URLSearchParams({
+                client_id: this.oauth.clientId,
+                client_secret: this.oauth.clientSecret,
+                refresh_token: this.oauth.refreshToken,
+                grant_type: 'refresh_token'
+            }).toString(),
+            {
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+            }
+        );
+
+        const accessToken = tokenResponse?.data?.access_token;
+        if (!accessToken) {
+            throw new Error('Unable to refresh Google access token for IMAP');
+        }
+
+        const xoauth2 = Buffer.from(
+            `user=${this.config.user}\x01auth=Bearer ${accessToken}\x01\x01`,
+            'utf-8'
+        ).toString('base64');
+
+        return {
+            ...this.config,
+            password: undefined,
+            xoauth2
+        };
+    }
+
     async connect() {
+        const runtimeConfig = await this.getImapConfig();
         return new Promise((resolve, reject) => {
-            this.imap = new Imap(this.config);
+            this.imap = new Imap(runtimeConfig);
 
             this.imap.once('ready', () => {
-                logger.debug(`IMAP connected to ${this.config.host}`);
+                logger.debug(`IMAP connected to ${runtimeConfig.host}`);
                 resolve();
             });
 

@@ -1,19 +1,41 @@
 // client/src/pages/EmailAccounts.jsx
 import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useEmail } from '../context/EmailContext';
 import AddAccountModal from '../components/email/AddAccountModal';
 import toast from 'react-hot-toast';
+import { emailAccountsAPI } from '../services/api';
 
 const EmailAccounts = () => {
     const { accounts, loading, error, fetchAccounts, addAccount, deleteAccount, fixGmailSettings } = useEmail();
+    const [searchParams, setSearchParams] = useSearchParams();
     const [showAddModal, setShowAddModal] = useState(false);
     const [isRefreshing, setIsRefreshing] = useState(false);
     const [isFixingGmail, setIsFixingGmail] = useState(false);
+    const [isConnectingGoogle, setIsConnectingGoogle] = useState(false);
 
     // Load accounts on component mount
     useEffect(() => {
         fetchAccounts();
     }, []);
+
+    useEffect(() => {
+        const oauthStatus = searchParams.get('google_oauth');
+        const reason = searchParams.get('reason');
+        if (!oauthStatus) return;
+
+        if (oauthStatus === 'success') {
+            toast.success('Gmail account connected successfully');
+            fetchAccounts();
+        } else {
+            toast.error(`Gmail OAuth failed${reason ? `: ${reason}` : ''}`);
+        }
+
+        const nextParams = new URLSearchParams(searchParams);
+        nextParams.delete('google_oauth');
+        nextParams.delete('reason');
+        setSearchParams(nextParams, { replace: true });
+    }, [searchParams, setSearchParams, fetchAccounts]);
 
     const handleAddAccount = async (accountData) => {
         try {
@@ -68,6 +90,25 @@ const EmailAccounts = () => {
         }
     };
 
+    const handleConnectGoogleOAuth = async () => {
+        try {
+            setIsConnectingGoogle(true);
+            const response = await emailAccountsAPI.getGoogleOAuthUrl();
+            const oauthUrl = response?.data?.url;
+
+            if (!oauthUrl) {
+                throw new Error('Failed to initialize Google OAuth');
+            }
+
+            window.location.href = oauthUrl;
+        } catch (error) {
+            console.error('Failed to start Google OAuth:', error);
+            toast.error(error.message || 'Failed to start Google OAuth');
+        } finally {
+            setIsConnectingGoogle(false);
+        }
+    };
+
     if (loading && accounts.length === 0) {
         return (
             <div className="flex justify-center items-center h-64">
@@ -88,6 +129,27 @@ const EmailAccounts = () => {
                 </div>
 
                 <div className="flex space-x-3">
+                    <button
+                        onClick={handleConnectGoogleOAuth}
+                        disabled={isConnectingGoogle}
+                        className="bg-red-100 text-red-700 px-4 py-2 rounded-lg hover:bg-red-200 disabled:opacity-50 flex items-center"
+                        title="Connect Gmail with OAuth"
+                    >
+                        {isConnectingGoogle ? (
+                            <>
+                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-700 mr-2"></div>
+                                Connecting...
+                            </>
+                        ) : (
+                            <>
+                                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                                </svg>
+                                Connect Gmail
+                            </>
+                        )}
+                    </button>
+
                     <button
                         onClick={handleRefresh}
                         disabled={isRefreshing}

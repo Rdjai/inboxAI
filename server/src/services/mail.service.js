@@ -2,6 +2,7 @@
 const nodemailer = require('nodemailer');
 const EmailAccount = require('../models/emailAccount.model');
 const logger = require('../utils/logger');
+const { GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET } = require('../config/env');
 
 class MailService {
     constructor() {
@@ -21,20 +22,32 @@ class MailService {
 
         const smtpPort = Number(account.smtpConfig.port) || 587;
         let secure = Boolean(account.smtpConfig.secure);
+        const oauthConfig = account.metadata?.oauth;
 
         // Normalize common SMTP TLS modes to avoid SSL "wrong version number" errors.
         if (smtpPort === 587 && secure) secure = false;
         if (smtpPort === 465 && !secure) secure = true;
+
+        const authConfig = (oauthConfig?.provider === 'google' && oauthConfig?.refreshToken)
+            ? {
+                type: 'OAuth2',
+                user: account.smtpConfig.auth.user,
+                clientId: GOOGLE_CLIENT_ID,
+                clientSecret: GOOGLE_CLIENT_SECRET,
+                refreshToken: oauthConfig.refreshToken,
+                accessToken: oauthConfig.accessToken
+            }
+            : {
+                user: account.smtpConfig.auth.user,
+                pass: account.smtpConfig.auth.pass
+            };
 
         const transporter = nodemailer.createTransport({
             host: account.smtpConfig.host,
             port: smtpPort,
             secure,
             requireTLS: smtpPort === 587,
-            auth: {
-                user: account.smtpConfig.auth.user,
-                pass: account.smtpConfig.auth.pass
-            },
+            auth: authConfig,
             // Additional Gmail-specific options
             ...(account.provider === 'gmail' && {
                 tls: {

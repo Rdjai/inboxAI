@@ -2,9 +2,11 @@
 const express = require('express');
 const router = express.Router();
 const emailAccountController = require('../controllers/emailAccount.controller');
-const { authMiddleware, roleMiddleware } = require('../middleware/auth.middleware');
+const { authMiddleware } = require('../middleware/auth.middleware');
 const { validate, emailAccountSchemas } = require('../middleware/validation.middleware');
-const { ROLES } = require('../utils/constants');
+
+// OAuth callback must be public (state token is validated server-side).
+router.get('/google/callback', emailAccountController.connectGoogleOAuth);
 
 // All routes require authentication
 router.use(authMiddleware);
@@ -12,6 +14,7 @@ router.use(authMiddleware);
 // Email account routes
 router.get('/', emailAccountController.getAccounts);
 router.get('/stats', emailAccountController.getAccountStats);
+router.post('/google/oauth-url', emailAccountController.getGoogleOAuthUrl);
 router.get('/:id', emailAccountController.getAccount);
 
 // Create account with proper validation

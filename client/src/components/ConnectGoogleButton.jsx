@@ -2,11 +2,20 @@
 import React from 'react';
 import { Mail } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { emailAccountsAPI } from '../services/api';
 
 const ConnectGoogleButton = () => {
-    const handleConnectGoogle = () => {
-        // Redirect to backend Google OAuth
-        window.location.href = 'http://localhost:5000/api/auth/google';
+    const handleConnectGoogle = async () => {
+        try {
+            const response = await emailAccountsAPI.getGoogleOAuthUrl();
+            const oauthUrl = response?.data?.url;
+            if (!oauthUrl) {
+                throw new Error('Unable to initialize Google OAuth');
+            }
+            window.location.href = oauthUrl;
+        } catch (error) {
+            toast.error(error.message || 'Failed to connect Gmail');
+        }
     };
 
     return (

@@ -24,6 +24,12 @@ module.exports = {
     AI_SERVICE_ENABLED: process.env.AI_SERVICE_ENABLED === 'true',
     OPENAI_API_KEY: process.env.OPENAI_API_KEY || '',
 
+    // OAuth (Google)
+    GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID || '',
+    GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET || '',
+    GOOGLE_OAUTH_REDIRECT_URI: process.env.GOOGLE_OAUTH_REDIRECT_URI || 'http://localhost:3000/api/email/accounts/google/callback',
+    CLIENT_BASE_URL: process.env.CLIENT_BASE_URL || 'http://localhost:5173',
+
     // Rate Limiting
     RATE_LIMIT_WINDOW_MS: process.env.RATE_LIMIT_WINDOW_MS || 15 * 60 * 1000,
     RATE_LIMIT_MAX_REQUESTS: process.env.RATE_LIMIT_MAX_REQUESTS || 100
