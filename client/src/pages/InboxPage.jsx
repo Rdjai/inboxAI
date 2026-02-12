@@ -1,5 +1,5 @@
 // src/pages/InboxPage.jsx (Fixed Version)
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { SyncLoader } from 'react-spinners';
 import { emailsAPI, emailAccountsAPI } from '../services/api';
@@ -26,6 +26,8 @@ const InboxPage = () => {
     const [emails, setEmails] = useState([]);
     const [loading, setLoading] = useState(true);
     const [syncing, setSyncing] = useState(false);
+    const [isLoadingMore, setIsLoadingMore] = useState(false);
+    const loaderRef = useRef(null);
     const [syncResult, setSyncResult] = useState(null);
     const [pagination, setPagination] = useState({
         page: 1,
@@ -64,13 +66,20 @@ const InboxPage = () => {
         return Array.from(unique.values());
     };
 
+    const hasMore = pagination.page < pagination.pages;
+
     useEffect(() => {
         fetchEmails();
-    }, [filters, pagination.page]);
+    }, [filters, pagination.page, pagination.limit]);
 
     const fetchEmails = async () => {
         try {
-            setLoading(true);
+            const shouldAppend = pagination.page > 1;
+            if (shouldAppend) {
+                setIsLoadingMore(true);
+            } else {
+                setLoading(true);
+            }
             const params = {
                 page: pagination.page,
                 limit: pagination.limit
@@ -86,7 +95,9 @@ const InboxPage = () => {
                     ? response.emails
                     : [];
 
-            setEmails(dedupeEmails(emailsData));
+            setEmails((prev) => (shouldAppend
+                ? dedupeEmails([...prev, ...emailsData])
+                : dedupeEmails(emailsData)));
             setPagination(prev => ({
                 ...prev,
                 ...(response?.pagination || {})
@@ -95,9 +106,39 @@ const InboxPage = () => {
             console.error('Error fetching emails:', error);
             toast.error(error.message || 'Failed to fetch emails');
         } finally {
-            setLoading(false);
+            if (shouldAppend) {
+                setIsLoadingMore(false);
+            } else {
+                setLoading(false);
+            }
         }
     };
+
+    const loadNextPage = useCallback(() => {
+        if (loading || isLoadingMore || !hasMore) return;
+        setPagination((prev) => ({ ...prev, page: prev.page + 1 }));
+    }, [loading, isLoadingMore, hasMore]);
+
+    useEffect(() => {
+        const node = loaderRef.current;
+        if (!node) return;
+
+        const observer = new IntersectionObserver(
+            (entries) => {
+                if (entries[0]?.isIntersecting) {
+                    loadNextPage();
+                }
+            },
+            {
+                root: null,
+                rootMargin: '200px 0px',
+                threshold: 0.1
+            }
+        );
+
+        observer.observe(node);
+        return () => observer.disconnect();
+    }, [loadNextPage]);
     const handleSyncGmail = async () => {
         try {
             setSyncing(true);
@@ -153,12 +194,12 @@ const InboxPage = () => {
 
     const handleSearch = (e) => {
         setFilters(prev => ({ ...prev, search: e.target.value }));
-        setPagination(prev => ({ ...prev, page: 1 }));
+        setPagination(prev => ({ ...prev, page: 1, pages: 1, total: 0 }));
     };
 
     const handleStatusChange = (e) => {
         setFilters(prev => ({ ...prev, status: e.target.value }));
-        setPagination(prev => ({ ...prev, page: 1 }));
+        setPagination(prev => ({ ...prev, page: 1, pages: 1, total: 0 }));
     };
 
     const getStatusColor = (status) => {
@@ -374,7 +415,7 @@ const InboxPage = () => {
                             <span className="text-sm text-gray-600">Show:</span>
                             <select
                                 value={pagination.limit}
-                                onChange={(e) => setPagination(prev => ({ ...prev, limit: parseInt(e.target.value), page: 1 }))}
+                                onChange={(e) => setPagination(prev => ({ ...prev, limit: parseInt(e.target.value), page: 1, pages: 1, total: 0 }))}
                                 className="text-sm border border-gray-300 rounded px-2 py-1"
                             >
                                 <option value="10">10</option>
@@ -500,58 +541,36 @@ const InboxPage = () => {
                     )}
                 </div>
 
-                {/* Pagination */}
+                {/* Pagination / Lazy Loading */}
                 {!loading && emails.length > 0 && (
                     <div className="px-6 py-4 border-t border-gray-200 flex flex-col sm:flex-row justify-between items-center gap-4">
                         <div className="text-sm text-gray-600">
-                            Showing {(pagination.page - 1) * pagination.limit + 1} to{' '}
-                            {Math.min(pagination.page * pagination.limit, pagination.total)} of{' '}
+                            Showing 1 to {Math.min(emails.length, pagination.total)} of{' '}
                             {pagination.total} emails
                         </div>
-                        <div className="flex items-center gap-2">
-                            <button
-                                onClick={() => setPagination(prev => ({ ...prev, page: prev.page - 1 }))}
-                                disabled={pagination.page === 1}
-                                className="px-3 py-1.5 border border-gray-300 rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 flex items-center gap-1"
-                            >
-                                <ChevronLeft className="h-4 w-4" />
-                                Previous
-                            </button>
-
-                            <div className="flex items-center gap-1">
-                                {[...Array(Math.min(5, pagination.pages))].map((_, idx) => {
-                                    const pageNum = pagination.page <= 3
-                                        ? idx + 1
-                                        : pagination.page >= pagination.pages - 2
-                                            ? pagination.pages - 4 + idx
-                                            : pagination.page - 2 + idx;
-
-                                    if (pageNum < 1 || pageNum > pagination.pages) return null;
-
-                                    return (
-                                        <button
-                                            key={idx}
-                                            onClick={() => setPagination(prev => ({ ...prev, page: pageNum }))}
-                                            className={`w-8 h-8 flex items-center justify-center text-sm rounded ${pagination.page === pageNum
-                                                ? 'bg-blue-600 text-white'
-                                                : 'border border-gray-300 hover:bg-gray-50'
-                                                }`}
-                                        >
-                                            {pageNum}
-                                        </button>
-                                    );
-                                })}
-                            </div>
-
-                            <button
-                                onClick={() => setPagination(prev => ({ ...prev, page: prev.page + 1 }))}
-                                disabled={pagination.page === pagination.pages}
-                                className="px-3 py-1.5 border border-gray-300 rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 flex items-center gap-1"
-                            >
-                                Next
-                                <ChevronRight className="h-4 w-4" />
-                            </button>
+                        <div className="text-sm text-gray-500">
+                            Page {pagination.page} of {pagination.pages}
                         </div>
+                    </div>
+                )}
+
+                {!loading && emails.length > 0 && (
+                    <div ref={loaderRef} className="py-6 flex justify-center">
+                        {isLoadingMore ? (
+                            <div className="flex items-center gap-2 text-gray-600">
+                                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-500"></div>
+                                Loading more emails...
+                            </div>
+                        ) : hasMore ? (
+                            <button
+                                onClick={loadNextPage}
+                                className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 text-sm text-gray-700"
+                            >
+                                Load more
+                            </button>
+                        ) : (
+                            <p className="text-sm text-gray-500">You have reached the end of the inbox.</p>
+                        )}
                     </div>
                 )}
             </div>
