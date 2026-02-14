@@ -129,11 +129,18 @@ const emailSchema = new mongoose.Schema({
     minimize: false
 });
 
+// Primary mailbox list/index patterns (filter + default sort by newest first).
+emailSchema.index({ createdAt: -1 });
 emailSchema.index({ status: 1, createdAt: -1 });
 emailSchema.index({ category: 1, createdAt: -1 });
-emailSchema.index({ assignedUserId: 1, status: 1 });
 emailSchema.index({ priority: 1, createdAt: -1 });
+emailSchema.index({ assignedUserId: 1, createdAt: -1 });
+
+// Frequent multi-filter combinations used by inbox/review screens.
+emailSchema.index({ assignedUserId: 1, status: 1, createdAt: -1 });
+emailSchema.index({ status: 1, priority: 1, createdAt: -1 });
+
+// Support sender-based list filtering.
 emailSchema.index({ fromAddress: 1, createdAt: -1 });
-emailSchema.index({ createdAt: -1 });
 
 module.exports = mongoose.model('Email', emailSchema);
