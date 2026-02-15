@@ -16,6 +16,9 @@ router.get(
 
 router.get('/:id', emailController.getEmailById);
 
+router.patch('/:id/read', emailController.markAsRead);
+router.patch('/:id/unread', emailController.markAsUnread);
+
 router.put(
     '/:id/draft',
     roleMiddleware(ROLES.REVIEWER, ROLES.AGENT, ROLES.ADMIN),

@@ -494,7 +494,9 @@ export const EmailProvider = ({ children }) => {
 
             // Update local state
             setEmails(prev => prev.map(email =>
-                email._id === emailId ? { ...email, isRead: read } : email
+                (email._id === emailId || email.id === emailId)
+                    ? { ...email, isRead: read, readAt: read ? new Date().toISOString() : null }
+                    : email
             ));
 
             return { success: true };

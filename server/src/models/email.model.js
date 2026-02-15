@@ -80,6 +80,15 @@ const emailSchema = new mongoose.Schema({
         default: EMAIL_STATUS.NEW,
         index: true
     },
+    isRead: {
+        type: Boolean,
+        default: false,
+        index: true
+    },
+    readAt: {
+        type: Date,
+        default: null
+    },
 
     assignedUserId: {
         type: mongoose.Schema.Types.ObjectId,
@@ -132,6 +141,7 @@ const emailSchema = new mongoose.Schema({
 // Primary mailbox list/index patterns (filter + default sort by newest first).
 emailSchema.index({ createdAt: -1 });
 emailSchema.index({ status: 1, createdAt: -1 });
+emailSchema.index({ isRead: 1, createdAt: -1 });
 emailSchema.index({ category: 1, createdAt: -1 });
 emailSchema.index({ priority: 1, createdAt: -1 });
 emailSchema.index({ assignedUserId: 1, createdAt: -1 });

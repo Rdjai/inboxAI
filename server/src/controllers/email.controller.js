@@ -24,6 +24,7 @@ class EmailController {
                 status,
                 category,
                 priority,
+                isRead,
                 assignedTo,
                 search,
                 sortBy = 'createdAt',
@@ -39,6 +40,9 @@ class EmailController {
             if (status) query.status = status;
             if (category) query.category = category;
             if (priority) query.priority = priority;
+            if (typeof isRead !== 'undefined') {
+                query.isRead = isRead === true || isRead === 'true';
+            }
             if (assignedTo) query.assignedUserId = assignedTo;
 
             if (fromDate || toDate) {
@@ -76,6 +80,8 @@ class EmailController {
                 category: 1,
                 confidence: 1,
                 status: 1,
+                isRead: 1,
+                readAt: 1,
                 assignedUserId: 1,
                 priority: 1,
                 createdAt: 1,
@@ -555,6 +561,7 @@ class EmailController {
                 subject,
                 bodyText,
                 status: EMAIL_STATUS.NEW,
+                isRead: false,
                 assignedUserId: userId
             });
 
@@ -572,6 +579,70 @@ class EmailController {
                 success: true,
                 message: 'Email created and queued for processing',
                 data: email
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    async markAsRead(req, res, next) {
+        try {
+            const { id } = req.params;
+            const email = await Email.findById(id);
+
+            if (!email) {
+                throw new AppError('Email not found', 404);
+            }
+
+            email.isRead = true;
+            email.readAt = email.readAt || new Date();
+            await email.save();
+
+            emitEmailUpdate(id, {
+                type: 'read_status_updated',
+                data: { isRead: true, readAt: email.readAt }
+            });
+
+            res.json({
+                success: true,
+                message: 'Email marked as read',
+                data: {
+                    id: email._id,
+                    isRead: email.isRead,
+                    readAt: email.readAt
+                }
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    async markAsUnread(req, res, next) {
+        try {
+            const { id } = req.params;
+            const email = await Email.findById(id);
+
+            if (!email) {
+                throw new AppError('Email not found', 404);
+            }
+
+            email.isRead = false;
+            email.readAt = null;
+            await email.save();
+
+            emitEmailUpdate(id, {
+                type: 'read_status_updated',
+                data: { isRead: false, readAt: null }
+            });
+
+            res.json({
+                success: true,
+                message: 'Email marked as unread',
+                data: {
+                    id: email._id,
+                    isRead: email.isRead,
+                    readAt: email.readAt
+                }
             });
         } catch (error) {
             next(error);

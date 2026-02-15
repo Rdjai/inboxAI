@@ -89,8 +89,8 @@ export const emailsAPI = {
     forwardEmail: (id, data) => api.post(`/emails/${id}/forward`, data),
     bulkAction: (data) => api.post('/emails/bulk', data),
     createEmail: (data) => api.post('/emails', data),
-    markAsRead: (emailId) => Promise.resolve({ success: true, data: { emailId, isRead: true } }),
-    markAsUnread: (emailId) => Promise.resolve({ success: true, data: { emailId, isRead: false } }),
+    markAsRead: (emailId) => api.patch(`/emails/${emailId}/read`),
+    markAsUnread: (emailId) => api.patch(`/emails/${emailId}/unread`),
     deleteEmail: (emailId) => Promise.resolve({ success: true, data: { emailId } }),
 };
 

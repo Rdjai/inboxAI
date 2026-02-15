@@ -86,6 +86,7 @@ const emailSchemas = {
         status: Joi.string().valid('NEW', 'CLASSIFIED', 'DRAFTED', 'REVIEWED', 'APPROVED', 'SENT', 'FAILED'),
         category: Joi.string().valid('Complaint', 'Issue', 'Refund', 'Billing', 'Feedback', 'Sales', 'Other'),
         priority: Joi.string().valid('LOW', 'MEDIUM', 'HIGH', 'URGENT'),
+        isRead: Joi.boolean(),
         assignedTo: Joi.string().pattern(/^[0-9a-fA-F]{24}$/),
         search: Joi.string().max(100),
         sortBy: Joi.string().valid('createdAt', 'priority', 'status', 'category', 'updatedAt'),
