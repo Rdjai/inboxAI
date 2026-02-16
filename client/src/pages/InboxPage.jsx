@@ -253,6 +253,17 @@ const InboxPage = () => {
         }
     };
 
+    const getSentimentTone = (sentiment) => {
+        switch (sentiment) {
+            case 'POSITIVE':
+                return 'bg-green-100 text-green-800';
+            case 'NEGATIVE':
+                return 'bg-red-100 text-red-800';
+            default:
+                return 'bg-gray-100 text-gray-700';
+        }
+    };
+
     const handleBulkAction = async (action, emailId) => {
         try {
             if (action === 'assign') {
@@ -468,6 +479,7 @@ const InboxPage = () => {
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">From</th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Subject</th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sentiment</th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Received</th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
@@ -512,6 +524,11 @@ const InboxPage = () => {
                                                         {Math.round(email.confidence * 100)}% confident
                                                     </div>
                                                 )}
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${getSentimentTone(email.sentiment)}`}>
+                                                    {(email.sentiment || 'NEUTRAL').toLowerCase()}
+                                                </span>
                                             </td>
                                             <td className="px-6 py-4">
                                                 <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(email.status)}`}>

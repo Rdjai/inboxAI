@@ -28,6 +28,12 @@ module.exports = {
         URGENT: 'URGENT'
     },
 
+    SENTIMENT: {
+        POSITIVE: 'POSITIVE',
+        NEUTRAL: 'NEUTRAL',
+        NEGATIVE: 'NEGATIVE'
+    },
+
 
     AUDIT_ACTIONS: {
         CREATED: 'CREATED',

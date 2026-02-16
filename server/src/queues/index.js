@@ -112,6 +112,8 @@ class QueueService {
             // Update email
             email.category = classification.category;
             email.confidence = classification.confidence;
+            email.sentiment = classification.sentiment;
+            email.sentimentScore = classification.sentimentScore;
             email.status = EMAIL_STATUS.CLASSIFIED;
             email.processedAt = new Date();
             await email.save();
@@ -122,7 +124,9 @@ class QueueService {
                 action: 'CLASSIFIED',
                 details: {
                     category: classification.category,
-                    confidence: classification.confidence
+                    confidence: classification.confidence,
+                    sentiment: classification.sentiment,
+                    sentimentScore: classification.sentimentScore
                 }
             });
 

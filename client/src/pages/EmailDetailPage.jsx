@@ -330,6 +330,21 @@ const EmailDetailPage = () => {
                                 </div>
 
                                 <div>
+                                    <p className="text-sm text-gray-500">Sentiment</p>
+                                    <Badge
+                                        variant="outline"
+                                        className={`mt-1 ${email.sentiment === 'POSITIVE'
+                                            ? 'bg-green-50 text-green-700 border-green-200'
+                                            : email.sentiment === 'NEGATIVE'
+                                                ? 'bg-red-50 text-red-700 border-red-200'
+                                                : 'bg-gray-50 text-gray-700 border-gray-200'
+                                            }`}
+                                    >
+                                        {(email.sentiment || 'NEUTRAL').toLowerCase()}
+                                    </Badge>
+                                </div>
+
+                                <div>
                                     <p className="text-sm text-gray-500">Assigned To</p>
                                     <p className="font-medium mt-1">
                                         {email.assignedUserId?.name || 'Unassigned'}

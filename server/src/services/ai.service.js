@@ -1,4 +1,4 @@
-const { EMAIL_CATEGORIES } = require('../utils/constants');
+const { EMAIL_CATEGORIES, SENTIMENT } = require('../utils/constants');
 const logger = require('../utils/logger');
 
 class LLMService {
@@ -10,6 +10,12 @@ class LLMService {
             Billing: ['invoice', 'payment', 'charge', 'bill', 'price', 'cost', 'subscription'],
             Feedback: ['suggestion', 'feedback', 'improve', 'idea', 'feature request', 'could be better'],
             Sales: ['buy', 'purchase', 'price', 'demo', 'trial', 'sales', 'quote', 'pricing']
+        };
+
+        this.sentimentPatterns = {
+            positive: ['thank you', 'great', 'awesome', 'excellent', 'happy', 'love', 'satisfied', 'appreciate', 'fantastic'],
+            negative: ['angry', 'upset', 'terrible', 'awful', 'frustrated', 'disappointed', 'hate', 'worst', 'unacceptable', 'refund'],
+            neutral: ['question', 'inquiry', 'request', 'update', 'information', 'details', 'status', 'confirm']
         };
 
         this.draftTemplates = {
@@ -48,24 +54,67 @@ class LLMService {
 
             const confidence = Math.min(maxScore / 20, 0.95);
 
+            const sentiment = this.analyzeSentiment(subject, body);
+
             if (maxScore < 2) {
                 return {
                     category: 'Other',
-                    confidence: 0.3
+                    confidence: 0.3,
+                    sentiment: sentiment.sentiment,
+                    sentimentScore: sentiment.score
                 };
             }
 
             return {
                 category: bestCategory,
-                confidence: confidence
+                confidence: confidence,
+                sentiment: sentiment.sentiment,
+                sentimentScore: sentiment.score
             };
         } catch (error) {
             logger.error('Classification error:', error);
             return {
                 category: 'Other',
-                confidence: 0.1
+                confidence: 0.1,
+                sentiment: SENTIMENT.NEUTRAL,
+                sentimentScore: 0
             };
         }
+    }
+
+    analyzeSentiment(subject, body) {
+        const text = `${subject || ''} ${body || ''}`.toLowerCase();
+        let positiveScore = 0;
+        let negativeScore = 0;
+        let neutralScore = 0;
+
+        for (const keyword of this.sentimentPatterns.positive) {
+            if (text.includes(keyword)) positiveScore += 1;
+        }
+
+        for (const keyword of this.sentimentPatterns.negative) {
+            if (text.includes(keyword)) negativeScore += 1;
+        }
+
+        for (const keyword of this.sentimentPatterns.neutral) {
+            if (text.includes(keyword)) neutralScore += 1;
+        }
+
+        const totalSignal = positiveScore + negativeScore + neutralScore;
+        if (totalSignal === 0) {
+            return { sentiment: SENTIMENT.NEUTRAL, score: 0 };
+        }
+
+        const rawScore = (positiveScore - negativeScore) / Math.max(totalSignal, 1);
+        const score = Math.max(-1, Math.min(1, Number(rawScore.toFixed(2))));
+
+        if (score >= 0.2) {
+            return { sentiment: SENTIMENT.POSITIVE, score };
+        }
+        if (score <= -0.2) {
+            return { sentiment: SENTIMENT.NEGATIVE, score };
+        }
+        return { sentiment: SENTIMENT.NEUTRAL, score };
     }
 
     async generateDraft(category, originalText) {

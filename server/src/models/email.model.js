@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const { EMAIL_STATUS, EMAIL_CATEGORIES, PRIORITY } = require('../utils/constants');
+const { EMAIL_STATUS, EMAIL_CATEGORIES, PRIORITY, SENTIMENT } = require('../utils/constants');
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -70,6 +70,18 @@ const emailSchema = new mongoose.Schema({
         type: Number,
         min: 0,
         max: 1
+    },
+    sentiment: {
+        type: String,
+        enum: Object.values(SENTIMENT),
+        default: SENTIMENT.NEUTRAL,
+        index: true
+    },
+    sentimentScore: {
+        type: Number,
+        min: -1,
+        max: 1,
+        default: 0
     },
     draftText: {
         type: String
@@ -144,6 +156,7 @@ emailSchema.index({ status: 1, createdAt: -1 });
 emailSchema.index({ isRead: 1, createdAt: -1 });
 emailSchema.index({ category: 1, createdAt: -1 });
 emailSchema.index({ priority: 1, createdAt: -1 });
+emailSchema.index({ sentiment: 1, createdAt: -1 });
 emailSchema.index({ assignedUserId: 1, createdAt: -1 });
 
 // Frequent multi-filter combinations used by inbox/review screens.

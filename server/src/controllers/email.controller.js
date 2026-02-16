@@ -79,6 +79,8 @@ class EmailController {
                 bodyText: 1,
                 category: 1,
                 confidence: 1,
+                sentiment: 1,
+                sentimentScore: 1,
                 status: 1,
                 isRead: 1,
                 readAt: 1,
