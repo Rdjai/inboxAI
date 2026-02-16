@@ -28,6 +28,7 @@ const InboxPage = () => {
     const [syncing, setSyncing] = useState(false);
     const [isLoadingMore, setIsLoadingMore] = useState(false);
     const loaderRef = useRef(null);
+    const latestRequestIdRef = useRef(0);
     const [syncResult, setSyncResult] = useState(null);
     const [pagination, setPagination] = useState({
         page: 1,
@@ -68,13 +69,11 @@ const InboxPage = () => {
 
     const hasMore = pagination.page < pagination.pages;
 
-    useEffect(() => {
-        fetchEmails();
-    }, [filters, pagination.page, pagination.limit]);
+    const fetchEmails = useCallback(async ({ forceReplace = false } = {}) => {
+        const requestId = ++latestRequestIdRef.current;
+        const shouldAppend = pagination.page > 1 && !forceReplace;
 
-    const fetchEmails = async () => {
         try {
-            const shouldAppend = pagination.page > 1;
             if (shouldAppend) {
                 setIsLoadingMore(true);
             } else {
@@ -95,6 +94,11 @@ const InboxPage = () => {
                     ? response.emails
                     : [];
 
+            // Ignore stale responses from older requests.
+            if (requestId !== latestRequestIdRef.current) {
+                return;
+            }
+
             setEmails((prev) => (shouldAppend
                 ? dedupeEmails([...prev, ...emailsData])
                 : dedupeEmails(emailsData)));
@@ -103,16 +107,27 @@ const InboxPage = () => {
                 ...(response?.pagination || {})
             }));
         } catch (error) {
+            // Ignore stale request errors too; only surface active request failures.
+            if (requestId !== latestRequestIdRef.current) {
+                return;
+            }
             console.error('Error fetching emails:', error);
             toast.error(error.message || 'Failed to fetch emails');
         } finally {
+            if (requestId !== latestRequestIdRef.current) {
+                return;
+            }
             if (shouldAppend) {
                 setIsLoadingMore(false);
             } else {
                 setLoading(false);
             }
         }
-    };
+    }, [pagination.page, pagination.limit, filters.status, filters.search]);
+
+    useEffect(() => {
+        fetchEmails();
+    }, [fetchEmails]);
 
     const loadNextPage = useCallback(() => {
         if (loading || isLoadingMore || !hasMore) return;
@@ -181,7 +196,9 @@ const InboxPage = () => {
                 saved: payload.imported ?? payload.saved ?? 0
             });
             toast.success(response?.message || payload?.message || 'Emails synced successfully!');
-            fetchEmails(); // Refresh the list
+            // Force a fresh first page fetch after sync to avoid append races.
+            setPagination(prev => ({ ...prev, page: 1, pages: 1, total: 0 }));
+            fetchEmails({ forceReplace: true });
         } catch (error) {
             toast.error('Sync failed: ' + (error.message || 'Unknown error'));
         } finally {
@@ -341,7 +358,7 @@ const InboxPage = () => {
                         </div>
 
                         <button
-                            onClick={fetchEmails}
+                            onClick={() => fetchEmails({ forceReplace: true })}
                             className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent flex items-center gap-2"
                         >
                             <RefreshCw className="h-4 w-4" />
