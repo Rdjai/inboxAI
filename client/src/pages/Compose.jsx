@@ -147,7 +147,14 @@ Best regards,`;
         }
 
         try {
-            const response = await aiAPI.generateReply(id || 'compose', 'professional');
+            const response = await aiAPI.generateReply(
+                id || 'compose',
+                'professional',
+                {
+                    subject: formData.subject || '',
+                    bodyText: formData.content || ''
+                }
+            );
             const draft = response?.data?.draft || '';
             const prefixedDraft = isStandaloneCompose && formData.subject?.trim()
                 ? `Regarding "${formData.subject.trim()}":\n\n${draft}`
@@ -541,7 +548,14 @@ Best regards,`;
                                         return;
                                     }
 
-                                    const response = await aiAPI.generateReply(id || 'compose', tone);
+                                    const response = await aiAPI.generateReply(
+                                        id || 'compose',
+                                        tone,
+                                        {
+                                            subject: formData.subject || '',
+                                            bodyText: formData.content || ''
+                                        }
+                                    );
                                     const draft = response?.data?.draft || '';
                                     const prefixedDraft = isStandaloneCompose && formData.subject?.trim()
                                         ? `Regarding "${formData.subject.trim()}":\n\n${draft}`
