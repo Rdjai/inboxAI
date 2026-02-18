@@ -157,10 +157,12 @@ class QueueService {
             }
 
             // Generate AI draft
-            const draft = await aiService.generateDraft(
-                category || email.category,
-                email.bodyText
-            );
+            const draft = await aiService.generateSmartReply({
+                category: category || email.category,
+                originalText: email.bodyText,
+                sentiment: email.sentiment,
+                tone: 'professional'
+            });
 
             // Update email
             email.draftText = draft;

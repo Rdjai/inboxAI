@@ -126,7 +126,7 @@ export const dashboardAPI = {
 
 export const aiAPI = {
     analyzeEmail: (emailId) => api.post(`/ai/analyze/${emailId}`),
-    generateReply: (emailId, tone = 'professional') => api.post(`/ai/reply/${emailId}`, { tone }),
+    generateReply: (emailId, tone = 'professional', context = {}) => api.post(`/ai/reply/${emailId}`, { tone, ...context }),
     bulkCategorize: (accountId) => api.post(`/ai/categorize/${accountId}`),
     summarizeEmail: (emailId) => api.post(`/ai/summarize/${emailId}`),
 };

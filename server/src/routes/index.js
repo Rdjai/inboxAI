@@ -11,6 +11,7 @@ const ImapService = require('../services/imap.service');
 const EmailAccount = require('../models/emailAccount.model');
 const Email = require('../models/email.model');
 const mongoose = require('mongoose');
+const aiService = require('../services/ai.service');
 
 
 // Manual sync endpoint
@@ -359,34 +360,89 @@ router.use('/analytics', analyticsRoutes);
 router.use('/email/accounts', emailAccountRoutes);
 
 // AI endpoints
-router.post('/ai/analyze/:id', (req, res) => {
-    // Your AI analysis endpoint
-    res.json({
-        success: true,
-        data: {
-            category: 'Other',
-            confidence: 0.85,
-            sentiment: 'neutral',
-            urgency: 'medium',
-            suggestedResponse: 'Thank you for your email. We will get back to you shortly.'
+router.post('/ai/analyze/:id', authMiddleware, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const email = await Email.findById(id).lean();
+        if (!email) {
+            return res.status(404).json({
+                success: false,
+                message: 'Email not found'
+            });
         }
-    });
+
+        const classification = await aiService.classifyEmail(email.subject || '', email.bodyText || '');
+        res.json({
+            success: true,
+            data: {
+                category: classification.category,
+                confidence: classification.confidence,
+                sentiment: classification.sentiment,
+                sentimentScore: classification.sentimentScore,
+                urgency: email.priority || 'MEDIUM'
+            }
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: `Failed to analyze email: ${error.message}`
+        });
+    }
 });
 
-router.post('/ai/reply/:id', (req, res) => {
-    const { tone = 'professional' } = req.body;
-    const templates = {
-        professional: 'Thank you for your email. We appreciate your inquiry and will respond within 24 hours.',
-        friendly: 'Hi there! Thanks for reaching out. We\'ll get back to you as soon as possible.',
-        formal: 'Dear Sir/Madam, Thank you for your correspondence. We will address your inquiry promptly.'
-    };
+router.post('/ai/reply/:id', authMiddleware, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { tone = 'professional', subject = '', bodyText = '' } = req.body;
 
-    res.json({
-        success: true,
-        data: {
-            draft: templates[tone] || templates.professional
+        // Compose flow can call with pseudo id; generate from provided text.
+        if (id === 'compose') {
+            const classification = await aiService.classifyEmail(subject, bodyText || subject);
+            const draft = await aiService.generateSmartReply({
+                category: classification.category,
+                originalText: bodyText || subject,
+                tone,
+                sentiment: classification.sentiment
+            });
+
+            return res.json({
+                success: true,
+                data: {
+                    draft,
+                    meta: classification
+                }
+            });
         }
-    });
+
+        const email = await Email.findById(id);
+        if (!email) {
+            return res.status(404).json({
+                success: false,
+                message: 'Email not found'
+            });
+        }
+
+        const classification = await aiService.classifyEmail(email.subject || '', email.bodyText || '');
+        const draft = await aiService.generateSmartReply({
+            category: classification.category,
+            originalText: email.bodyText || '',
+            tone,
+            sentiment: classification.sentiment
+        });
+
+        res.json({
+            success: true,
+            data: {
+                draft,
+                meta: classification
+            }
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: `Failed to generate AI reply: ${error.message}`
+        });
+    }
 });
 
 router.post('/ai/categorize/:accountId', async (req, res) => {

@@ -138,9 +138,56 @@ class LLMService {
         }
     }
 
+    async generateSmartReply({ category, originalText, tone = 'professional', sentiment = SENTIMENT.NEUTRAL }) {
+        const baseDraft = await this.generateDraft(category, originalText);
+        const normalizedTone = String(tone || 'professional').toLowerCase();
+
+        const openingByTone = {
+            professional: 'Thank you for reaching out.',
+            friendly: 'Thanks for your message!',
+            formal: 'Thank you for your correspondence.'
+        };
+
+        const empathyBySentiment = {
+            POSITIVE: 'We appreciate the positive note and are happy to help further.',
+            NEGATIVE: 'We understand your frustration and we are prioritizing this for a quick resolution.',
+            NEUTRAL: 'We are reviewing the details and will assist you promptly.'
+        };
+
+        const actionLineByCategory = {
+            Complaint: 'We have escalated this to the responsible team and will share an update shortly.',
+            Issue: 'Our technical team is investigating the issue and we will provide a fix/update soon.',
+            Refund: 'Your refund request is being reviewed, and we will confirm the next steps within 1-2 business days.',
+            Billing: 'Our billing team will verify the charges and send a clear breakdown.',
+            Feedback: 'Your feedback has been shared with our product team for review.',
+            Sales: 'Our sales team will follow up with tailored details and pricing options.',
+            Other: 'Our support team will continue assisting you until this is fully resolved.'
+        };
+
+        const sections = [
+            openingByTone[normalizedTone] || openingByTone.professional,
+            empathyBySentiment[sentiment] || empathyBySentiment.NEUTRAL,
+            actionLineByCategory[category] || actionLineByCategory.Other
+        ];
+
+        const compactBody = sections.join(' ');
+        if (normalizedTone === 'friendly') {
+            return `${compactBody}\n\n${baseDraft}`;
+        }
+        if (normalizedTone === 'formal') {
+            return `${compactBody}\n\n${baseDraft}`;
+        }
+        return `${compactBody}\n\n${baseDraft}`;
+    }
+
     async processEmail(emailData) {
         const classification = await this.classifyEmail(emailData.subject, emailData.bodyText);
-        const draft = await this.generateDraft(classification.category, emailData.bodyText);
+        const draft = await this.generateSmartReply({
+            category: classification.category,
+            originalText: emailData.bodyText,
+            sentiment: classification.sentiment,
+            tone: 'professional'
+        });
 
         return {
             classification,
