@@ -17,6 +17,8 @@ import { useEmail } from '../../context/EmailContext';
 import toast from 'react-hot-toast';
 import StatusBadge from '../common/StatusBadge';
 import LoadingSpinner from '../common/LoadingSpinner';
+import ToneSelector from './ToneSelector';
+import { adjustTone } from '../../utils/toneAdjuster';
 
 const EmailDetail = ({ email, onClose }) => {
     const { updateEmail, approveEmail, sendEmail, replyToEmail } = useEmail();
@@ -25,6 +27,8 @@ const EmailDetail = ({ email, onClose }) => {
     const [saving, setSaving] = useState(false);
     const [replying, setReplying] = useState(false);
     const [reply, setReply] = useState('');
+    const [selectedTone, setSelectedTone] = useState('professional');
+    const [isApplyingTone, setIsApplyingTone] = useState(false);
 
     const handleSaveDraft = async () => {
         setSaving(true);
@@ -53,6 +57,33 @@ const EmailDetail = ({ email, onClose }) => {
         if (result.success) {
             setReply('');
             setReplying(false);
+        }
+    };
+
+    const handleApplyTone = () => {
+        if (replying && !reply.trim()) {
+            toast.error('Please write your reply first');
+            return;
+        }
+        if (editing && !draft.trim()) {
+            toast.error('Please write your draft first');
+            return;
+        }
+
+        setIsApplyingTone(true);
+        try {
+            if (replying) {
+                const adjustedReply = adjustTone(reply, selectedTone);
+                setReply(adjustedReply);
+            } else if (editing) {
+                const adjustedDraft = adjustTone(draft, selectedTone);
+                setDraft(adjustedDraft);
+            }
+            toast.success(`${selectedTone.charAt(0).toUpperCase() + selectedTone.slice(1)} tone applied!`);
+        } catch (error) {
+            toast.error('Failed to apply tone');
+        } finally {
+            setIsApplyingTone(false);
         }
     };
 
@@ -237,6 +268,17 @@ const EmailDetail = ({ email, onClose }) => {
                         </div>
                     </div>
 
+                    {editing && (
+                        <div className="mb-4">
+                            <ToneSelector
+                                selectedTone={selectedTone}
+                                onToneChange={setSelectedTone}
+                                onApplyTone={handleApplyTone}
+                                isApplying={isApplyingTone}
+                            />
+                        </div>
+                    )}
+
                     {editing ? (
                         <textarea
                             value={draft}
@@ -317,7 +359,17 @@ const EmailDetail = ({ email, onClose }) => {
             {/* Reply Section */}
             {replying ? (
                 <div className="p-6 border-t border-gray-200">
-                    <h3 className="font-semibold mb-2">Reply</h3>
+                    <h3 className="font-semibold mb-4">Reply</h3>
+
+                    <div className="mb-4">
+                        <ToneSelector
+                            selectedTone={selectedTone}
+                            onToneChange={setSelectedTone}
+                            onApplyTone={handleApplyTone}
+                            isApplying={isApplyingTone}
+                        />
+                    </div>
+
                     <textarea
                         value={reply}
                         onChange={(e) => setReply(e.target.value)}

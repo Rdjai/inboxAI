@@ -1,10 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { emailAccountsAPI, emailsAPI } from '../../services/api';
 import toast from 'react-hot-toast';
+import ToneSelector from './ToneSelector';
+import { adjustTone } from '../../utils/toneAdjuster';
 
 const EmailComposer = ({ onSend, onCancel }) => {
     const [accounts, setAccounts] = useState([]);
     const [loading, setLoading] = useState(false);
+    const [selectedTone, setSelectedTone] = useState('professional');
+    const [isApplyingTone, setIsApplyingTone] = useState(false);
     const [formData, setFormData] = useState({
         accountId: '',
         to: '',
@@ -102,6 +106,24 @@ const EmailComposer = ({ onSend, onCancel }) => {
         }));
     };
 
+    const handleApplyTone = () => {
+        if (!formData.body.trim()) {
+            toast.error('Please write your message first');
+            return;
+        }
+
+        setIsApplyingTone(true);
+        try {
+            const adjustedBody = adjustTone(formData.body, selectedTone);
+            setFormData(prev => ({ ...prev, body: adjustedBody }));
+            toast.success(`${selectedTone.charAt(0).toUpperCase() + selectedTone.slice(1)} tone applied!`);
+        } catch (error) {
+            toast.error('Failed to apply tone');
+        } finally {
+            setIsApplyingTone(false);
+        }
+    };
+
     return (
         <div className="bg-white rounded-xl shadow-lg p-6">
             <h2 className="text-xl font-bold text-gray-900 mb-6">Compose Email</h2>
@@ -181,6 +203,14 @@ const EmailComposer = ({ onSend, onCancel }) => {
                         className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     />
                 </div>
+
+                {/* Tone Selector */}
+                <ToneSelector
+                    selectedTone={selectedTone}
+                    onToneChange={setSelectedTone}
+                    onApplyTone={handleApplyTone}
+                    isApplying={isApplyingTone}
+                />
 
                 {/* Body */}
                 <div>
