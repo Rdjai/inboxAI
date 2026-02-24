@@ -3,6 +3,7 @@ const Email = require('../models/email.model');
 const EmailThread = require('../modules/threads/thread.model');
 const AuditLog = require('../modules/audit/audit.model');
 const EmailModification = require('../modules/modifications/modification.model');
+const searchService = require('../services/search.service');
 const queueService = require('../queues/index');
 const { EMAIL_STATUS, AUDIT_ACTIONS } = require('../utils/constants');
 const { AppError } = require('../middleware/errorHandler.middleware');
@@ -31,10 +32,36 @@ class EmailController {
                 sortOrder = 'desc',
                 fromDate,
                 toDate,
-                includeStats = false
+                includeStats = false,
+                searchType = 'fulltext',
+                includeScore = false,
+                includeAnalytics = false
             } = req.query;
 
-            // Build query
+            // If search query is provided, use the enhanced search service
+            if (search) {
+                const filters = searchService.buildSearchFilters({
+                    status, category, priority, isRead, assignedTo, fromDate, toDate
+                });
+
+                const sort = {};
+                sort[sortBy] = sortOrder === 'desc' ? -1 : 1;
+
+                const searchResults = await searchService.searchEmails({
+                    query: search,
+                    filters,
+                    sort,
+                    page: parseInt(page),
+                    limit: parseInt(limit),
+                    includeScore: includeScore === 'true',
+                    includeAnalytics: includeAnalytics === 'true',
+                    searchType
+                });
+
+                return res.json(searchResults);
+            }
+
+            // Original non-search logic for backward compatibility
             const query = {};
 
             if (status) query.status = status;
@@ -49,15 +76,6 @@ class EmailController {
                 query.createdAt = {};
                 if (fromDate) query.createdAt.$gte = new Date(fromDate);
                 if (toDate) query.createdAt.$lte = new Date(toDate);
-            }
-
-            if (search) {
-                query.$or = [
-                    { subject: { $regex: search, $options: 'i' } },
-                    { bodyText: { $regex: search, $options: 'i' } },
-                    { fromAddress: { $regex: search, $options: 'i' } },
-                    { toAddress: { $regex: search, $options: 'i' } }
-                ];
             }
 
             const parsedPage = Math.max(1, parseInt(page, 10) || 1);
@@ -87,7 +105,9 @@ class EmailController {
                 assignedUserId: 1,
                 priority: 1,
                 createdAt: 1,
-                sentAt: 1
+                sentAt: 1,
+                keywords: 1,
+                extractedEntities: 1
             };
 
             // Execute primary list + count first for lower first-paint latency.
@@ -129,6 +149,195 @@ class EmailController {
                     pages: Math.ceil(total / parsedLimit)
                 },
                 stats: statusCounts
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    /**
+     * Advanced search endpoint with enhanced capabilities
+     */
+    async searchEmails(req, res, next) {
+        try {
+            const {
+                query,
+                searchType = 'fulltext',
+                page = 1,
+                limit = 20,
+                sortBy = 'createdAt',
+                sortOrder = 'desc',
+                includeScore = false,
+                includeAnalytics = false,
+                ...filterParams
+            } = req.query;
+
+            if (!query) {
+                throw new AppError('Search query is required', 400);
+            }
+
+            const filters = searchService.buildSearchFilters(filterParams);
+            const sort = {};
+            sort[sortBy] = sortOrder === 'desc' ? -1 : 1;
+
+            const searchResults = await searchService.searchEmails({
+                query,
+                filters,
+                sort,
+                page: parseInt(page),
+                limit: parseInt(limit),
+                includeScore: includeScore === 'true',
+                includeAnalytics: includeAnalytics === 'true',
+                searchType
+            });
+
+            res.json(searchResults);
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    /**
+     * Get search suggestions for autocomplete
+     */
+    async getSearchSuggestions(req, res, next) {
+        try {
+            const { query, limit = 10 } = req.query;
+
+            if (!query || query.length < 2) {
+                return res.json({
+                    success: true,
+                    data: []
+                });
+            }
+
+            const suggestions = await searchService.getSearchSuggestions(query, parseInt(limit));
+
+            res.json({
+                success: true,
+                data: suggestions
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    /**
+     * Search emails by entity (people, organizations, etc.)
+     */
+    async searchByEntity(req, res, next) {
+        try {
+            const { entityType, entityValue } = req.params;
+            const {
+                page = 1,
+                limit = 20,
+                sortBy = 'createdAt',
+                sortOrder = 'desc',
+                ...filterParams
+            } = req.query;
+
+            const validEntityTypes = ['people', 'organizations', 'locations', 'emails', 'phoneNumbers'];
+            if (!validEntityTypes.includes(entityType)) {
+                throw new AppError('Invalid entity type', 400);
+            }
+
+            const filters = searchService.buildSearchFilters(filterParams);
+            const sort = {};
+            sort[sortBy] = sortOrder === 'desc' ? -1 : 1;
+
+            const results = await searchService.searchByEntity(
+                entityType,
+                entityValue,
+                filters,
+                { page: parseInt(page), limit: parseInt(limit), sort }
+            );
+
+            res.json(results);
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    /**
+     * Get popular search terms and keywords
+     */
+    async getPopularSearchTerms(req, res, next) {
+        try {
+            const { limit = 10 } = req.query;
+
+            const popularTerms = await searchService.getPopularSearchTerms(parseInt(limit));
+
+            res.json({
+                success: true,
+                data: popularTerms
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    /**
+     * Get search analytics for a specific query
+     */
+    async getSearchAnalytics(req, res, next) {
+        try {
+            const { query } = req.query;
+
+            if (!query) {
+                throw new AppError('Search query is required', 400);
+            }
+
+            const analytics = await searchService.getSearchAnalytics(query);
+
+            res.json({
+                success: true,
+                data: analytics
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    /**
+     * Get search performance metrics and monitoring data
+     */
+    async getSearchMetrics(req, res, next) {
+        try {
+            const searchMonitor = require('../utils/searchMonitor');
+
+            const [metrics, dbAnalysis, recommendations, healthCheck] = await Promise.all([
+                Promise.resolve(searchMonitor.getMetrics()),
+                searchMonitor.analyzeDatabasePerformance(),
+                searchMonitor.generateRecommendations(),
+                searchMonitor.healthCheck()
+            ]);
+
+            res.json({
+                success: true,
+                data: {
+                    performance: metrics,
+                    database: dbAnalysis,
+                    recommendations,
+                    health: healthCheck,
+                    generatedAt: new Date()
+                }
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    /**
+     * Reset search metrics (admin only)
+     */
+    async resetSearchMetrics(req, res, next) {
+        try {
+            const searchMonitor = require('../utils/searchMonitor');
+            searchMonitor.resetMetrics();
+
+            res.json({
+                success: true,
+                message: 'Search metrics reset successfully'
             });
         } catch (error) {
             next(error);

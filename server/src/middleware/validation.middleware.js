@@ -93,7 +93,66 @@ const emailSchemas = {
         sortOrder: Joi.string().valid('asc', 'desc').default('desc'),
         fromDate: Joi.date().iso(),
         toDate: Joi.date().iso().greater(Joi.ref('fromDate')),
-        includeStats: Joi.boolean().default(false)
+        includeStats: Joi.boolean().default(false),
+        searchType: Joi.string().valid('fulltext', 'regex', 'exact').default('fulltext'),
+        includeScore: Joi.boolean().default(false),
+        includeAnalytics: Joi.boolean().default(false)
+    }),
+
+    // Enhanced search validation schema
+    search: Joi.object({
+        query: Joi.string().min(1).max(200).required(),
+        searchType: Joi.string().valid('fulltext', 'regex', 'exact').default('fulltext'),
+        page: Joi.number().integer().min(1).default(1),
+        limit: Joi.number().integer().min(1).max(100).default(20),
+        sortBy: Joi.string().valid('createdAt', 'priority', 'status', 'category', 'updatedAt', 'searchScore').default('createdAt'),
+        sortOrder: Joi.string().valid('asc', 'desc').default('desc'),
+        includeScore: Joi.boolean().default(false),
+        includeAnalytics: Joi.boolean().default(false),
+
+        // Filter parameters
+        status: Joi.string().valid('NEW', 'CLASSIFIED', 'DRAFTED', 'REVIEWED', 'APPROVED', 'SENT', 'FAILED'),
+        category: Joi.string().valid('Complaint', 'Issue', 'Refund', 'Billing', 'Feedback', 'Sales', 'Other'),
+        priority: Joi.string().valid('LOW', 'MEDIUM', 'HIGH', 'URGENT'),
+        sentiment: Joi.string().valid('POSITIVE', 'NEGATIVE', 'NEUTRAL'),
+        isRead: Joi.boolean(),
+        assignedTo: Joi.string().pattern(/^[0-9a-fA-F]{24}$/),
+        fromDate: Joi.date().iso(),
+        toDate: Joi.date().iso().greater(Joi.ref('fromDate')),
+        minConfidence: Joi.number().min(0).max(1),
+        maxConfidence: Joi.number().min(0).max(1).greater(Joi.ref('minConfidence'))
+    }),
+
+    searchSuggestions: Joi.object({
+        query: Joi.string().min(2).max(100).required(),
+        limit: Joi.number().integer().min(1).max(20).default(10)
+    }),
+
+    searchAnalytics: Joi.object({
+        query: Joi.string().min(1).max(200).required(),
+        status: Joi.string().valid('NEW', 'CLASSIFIED', 'DRAFTED', 'REVIEWED', 'APPROVED', 'SENT', 'FAILED'),
+        category: Joi.string().valid('Complaint', 'Issue', 'Refund', 'Billing', 'Feedback', 'Sales', 'Other'),
+        priority: Joi.string().valid('LOW', 'MEDIUM', 'HIGH', 'URGENT'),
+        fromDate: Joi.date().iso(),
+        toDate: Joi.date().iso().greater(Joi.ref('fromDate'))
+    }),
+
+    entitySearch: Joi.object({
+        entityType: Joi.string().valid('people', 'organizations', 'locations', 'emails', 'phoneNumbers').required(),
+        entityValue: Joi.string().min(1).max(100).required(),
+        page: Joi.number().integer().min(1).default(1),
+        limit: Joi.number().integer().min(1).max(100).default(20),
+        sortBy: Joi.string().valid('createdAt', 'priority', 'status', 'category', 'updatedAt').default('createdAt'),
+        sortOrder: Joi.string().valid('asc', 'desc').default('desc'),
+
+        // Filter parameters
+        status: Joi.string().valid('NEW', 'CLASSIFIED', 'DRAFTED', 'REVIEWED', 'APPROVED', 'SENT', 'FAILED'),
+        category: Joi.string().valid('Complaint', 'Issue', 'Refund', 'Billing', 'Feedback', 'Sales', 'Other'),
+        priority: Joi.string().valid('LOW', 'MEDIUM', 'HIGH', 'URGENT'),
+        isRead: Joi.boolean(),
+        assignedTo: Joi.string().pattern(/^[0-9a-fA-F]{24}$/),
+        fromDate: Joi.date().iso(),
+        toDate: Joi.date().iso().greater(Joi.ref('fromDate'))
     })
 };
 

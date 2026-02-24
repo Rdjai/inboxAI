@@ -8,6 +8,46 @@ const { ROLES } = require('../utils/constants');
 
 router.use(authMiddleware);
 
+// ===== SEARCH ROUTES =====
+router.get(
+    '/search',
+    validate(emailSchemas.search, 'query'),
+    emailController.searchEmails
+);
+
+router.get(
+    '/search/suggestions',
+    emailController.getSearchSuggestions
+);
+
+router.get(
+    '/search/analytics',
+    emailController.getSearchAnalytics
+);
+
+router.get(
+    '/search/popular-terms',
+    emailController.getPopularSearchTerms
+);
+
+router.get(
+    '/search/metrics',
+    roleMiddleware(ROLES.ADMIN),
+    emailController.getSearchMetrics
+);
+
+router.post(
+    '/search/metrics/reset',
+    roleMiddleware(ROLES.ADMIN),
+    emailController.resetSearchMetrics
+);
+
+router.get(
+    '/search/entity/:entityType/:entityValue',
+    emailController.searchByEntity
+);
+
+// ===== STANDARD EMAIL ROUTES =====
 router.get(
     '/',
     validate(emailSchemas.filter, 'query'),
