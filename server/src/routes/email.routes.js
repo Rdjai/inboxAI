@@ -2,106 +2,133 @@
 const express = require('express');
 const router = express.Router();
 const emailController = require('../controllers/email.controller');
-const { authMiddleware, roleMiddleware } = require('../middleware/auth.middleware');
+const {
+    authMiddleware,
+    permissionMiddleware,
+    adminOnly,
+    resourceOwnership
+} = require('../middleware/auth.middleware');
 const { validate, emailSchemas } = require('../middleware/validation.middleware');
-const { ROLES } = require('../utils/constants');
+const { PERMISSIONS } = require('../utils/constants');
 
 router.use(authMiddleware);
 
 // ===== SEARCH ROUTES =====
 router.get(
     '/search',
+    permissionMiddleware(PERMISSIONS.SEARCH_BASIC, PERMISSIONS.SEARCH_ADVANCED),
     validate(emailSchemas.search, 'query'),
     emailController.searchEmails
 );
 
 router.get(
     '/search/suggestions',
+    permissionMiddleware(PERMISSIONS.SEARCH_BASIC),
     emailController.getSearchSuggestions
 );
 
 router.get(
     '/search/analytics',
+    permissionMiddleware(PERMISSIONS.SEARCH_ANALYTICS),
     emailController.getSearchAnalytics
 );
 
 router.get(
     '/search/popular-terms',
+    permissionMiddleware(PERMISSIONS.SEARCH_ANALYTICS),
     emailController.getPopularSearchTerms
 );
 
 router.get(
     '/search/metrics',
-    roleMiddleware(ROLES.ADMIN),
+    permissionMiddleware(PERMISSIONS.SEARCH_METRICS),
     emailController.getSearchMetrics
 );
 
 router.post(
     '/search/metrics/reset',
-    roleMiddleware(ROLES.ADMIN),
+    adminOnly,
     emailController.resetSearchMetrics
 );
 
 router.get(
     '/search/entity/:entityType/:entityValue',
+    permissionMiddleware(PERMISSIONS.SEARCH_ADVANCED),
     emailController.searchByEntity
 );
 
 // ===== STANDARD EMAIL ROUTES =====
 router.get(
     '/',
+    resourceOwnership('assignedUserId', PERMISSIONS.EMAIL_VIEW_ALL),
     validate(emailSchemas.filter, 'query'),
     emailController.getAllEmails
 );
 
-router.get('/:id', emailController.getEmailById);
+router.get(
+    '/:id',
+    resourceOwnership('assignedUserId', PERMISSIONS.EMAIL_VIEW_ALL),
+    emailController.getEmailById
+);
 
-router.patch('/:id/read', emailController.markAsRead);
-router.patch('/:id/unread', emailController.markAsUnread);
+router.patch(
+    '/:id/read',
+    permissionMiddleware(PERMISSIONS.EMAIL_VIEW),
+    emailController.markAsRead
+);
+
+router.patch(
+    '/:id/unread',
+    permissionMiddleware(PERMISSIONS.EMAIL_VIEW),
+    emailController.markAsUnread
+);
 
 router.put(
     '/:id/draft',
-    roleMiddleware(ROLES.REVIEWER, ROLES.AGENT, ROLES.ADMIN),
+    resourceOwnership('assignedUserId', PERMISSIONS.EMAIL_EDIT_ALL),
+    permissionMiddleware(PERMISSIONS.EMAIL_EDIT),
     validate(emailSchemas.updateDraft),
     emailController.updateDraft
 );
 
 router.post(
     '/:id/approve',
-    roleMiddleware(ROLES.REVIEWER, ROLES.ADMIN),
+    permissionMiddleware(PERMISSIONS.EMAIL_APPROVE),
     emailController.approveEmail
 );
 
 router.post(
     '/:id/send',
-    roleMiddleware(ROLES.REVIEWER, ROLES.ADMIN),
+    permissionMiddleware(PERMISSIONS.EMAIL_SEND),
     emailController.sendEmail
 );
 
 router.post(
     '/:id/reply',
-    roleMiddleware(ROLES.REVIEWER, ROLES.AGENT, ROLES.ADMIN),
+    resourceOwnership('assignedUserId', PERMISSIONS.EMAIL_EDIT_ALL),
+    permissionMiddleware(PERMISSIONS.EMAIL_EDIT),
     validate(emailSchemas.reply),
     emailController.replyToEmail
 );
 
 router.post(
     '/:id/forward',
-    roleMiddleware(ROLES.REVIEWER, ROLES.AGENT, ROLES.ADMIN),
+    resourceOwnership('assignedUserId', PERMISSIONS.EMAIL_EDIT_ALL),
+    permissionMiddleware(PERMISSIONS.EMAIL_EDIT),
     validate(emailSchemas.forward),
     emailController.forwardEmail
 );
 
 router.post(
     '/bulk',
-    roleMiddleware(ROLES.ADMIN),
+    permissionMiddleware(PERMISSIONS.EMAIL_BULK_ACTIONS),
     validate(emailSchemas.bulkAction),
     emailController.bulkAction
 );
 
 router.post(
     '/',
-    roleMiddleware(ROLES.REVIEWER, ROLES.AGENT, ROLES.ADMIN),
+    permissionMiddleware(PERMISSIONS.EMAIL_CREATE),
     emailController.createEmail
 );
 

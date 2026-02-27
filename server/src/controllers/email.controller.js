@@ -38,11 +38,35 @@ class EmailController {
                 includeAnalytics = false
             } = req.query;
 
+            // Build base query
+            let query = {};
+
+            // Apply resource ownership filter if required
+            if (req.requireOwnership) {
+                query[req.requireOwnership.field] = req.requireOwnership.userId;
+            }
+
+            if (status) query.status = status;
+            if (category) query.category = category;
+            if (priority) query.priority = priority;
+            if (typeof isRead !== 'undefined') {
+                query.isRead = isRead === true || isRead === 'true';
+            }
+            if (assignedTo) query.assignedUserId = assignedTo;
+
+            if (fromDate || toDate) {
+                query.createdAt = {};
+                if (fromDate) query.createdAt.$gte = new Date(fromDate);
+                if (toDate) query.createdAt.$lte = new Date(toDate);
+            }
+
             // If search query is provided, use the enhanced search service
             if (search) {
-                const filters = searchService.buildSearchFilters({
-                    status, category, priority, isRead, assignedTo, fromDate, toDate
-                });
+                const filters = {
+                    ...searchService.buildSearchFilters({
+                        status, category, priority, isRead, assignedTo, fromDate, toDate
+                    }), ...query
+                };
 
                 const sort = {};
                 sort[sortBy] = sortOrder === 'desc' ? -1 : 1;
@@ -59,23 +83,6 @@ class EmailController {
                 });
 
                 return res.json(searchResults);
-            }
-
-            // Original non-search logic for backward compatibility
-            const query = {};
-
-            if (status) query.status = status;
-            if (category) query.category = category;
-            if (priority) query.priority = priority;
-            if (typeof isRead !== 'undefined') {
-                query.isRead = isRead === true || isRead === 'true';
-            }
-            if (assignedTo) query.assignedUserId = assignedTo;
-
-            if (fromDate || toDate) {
-                query.createdAt = {};
-                if (fromDate) query.createdAt.$gte = new Date(fromDate);
-                if (toDate) query.createdAt.$lte = new Date(toDate);
             }
 
             const parsedPage = Math.max(1, parseInt(page, 10) || 1);
@@ -346,7 +353,15 @@ class EmailController {
 
     async getEmailById(req, res, next) {
         try {
-            let emailQuery = Email.findById(req.params.id)
+            // Build query with resource ownership check
+            let query = { _id: req.params.id };
+
+            // Apply resource ownership filter if required
+            if (req.requireOwnership) {
+                query[req.requireOwnership.field] = req.requireOwnership.userId;
+            }
+
+            let emailQuery = Email.findOne(query)
                 .populate('assignedUserId', 'name email');
 
             if (Email.schema.path('auditLogs')) {
@@ -371,7 +386,7 @@ class EmailController {
             const email = await emailQuery;
 
             if (!email) {
-                throw new AppError('Email not found', 404);
+                throw new AppError('Email not found or access denied', 404);
             }
 
             // Get thread if exists

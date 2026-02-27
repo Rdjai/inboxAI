@@ -156,6 +156,103 @@ const emailSchemas = {
     })
 };
 
+// User management schemas
+const userSchemas = {
+    createUser: Joi.object({
+        name: Joi.string().min(2).max(50).required().trim(),
+        email: Joi.string().email().required().trim().lowercase(),
+        password: Joi.string().min(6).required(),
+        role: Joi.string().valid('admin', 'editor', 'member', 'reviewer', 'agent').default('member'),
+        isActive: Joi.boolean().default(true),
+        department: Joi.string().max(100).optional(),
+        phoneNumber: Joi.string().pattern(/^[\+]?[1-9][\d]{0,15}$/).optional(),
+        timezone: Joi.string().max(50).optional(),
+        preferences: Joi.object({
+            emailNotifications: Joi.boolean().default(true),
+            theme: Joi.string().valid('light', 'dark', 'auto').default('light'),
+            language: Joi.string().max(10).default('en'),
+            dateFormat: Joi.string().valid('MM/DD/YYYY', 'DD/MM/YYYY', 'YYYY-MM-DD').default('MM/DD/YYYY'),
+            timeFormat: Joi.string().valid('12h', '24h').default('12h')
+        }).optional()
+    }),
+
+    updateUser: Joi.object({
+        name: Joi.string().min(2).max(50).optional().trim(),
+        email: Joi.string().email().optional().trim().lowercase(),
+        role: Joi.string().valid('admin', 'editor', 'member', 'reviewer', 'agent').optional(),
+        isActive: Joi.boolean().optional(),
+        department: Joi.string().max(100).optional().allow(''),
+        phoneNumber: Joi.string().pattern(/^[\+]?[1-9][\d]{0,15}$/).optional().allow(''),
+        timezone: Joi.string().max(50).optional().allow(''),
+        preferences: Joi.object({
+            emailNotifications: Joi.boolean().optional(),
+            theme: Joi.string().valid('light', 'dark', 'auto').optional(),
+            language: Joi.string().max(10).optional(),
+            dateFormat: Joi.string().valid('MM/DD/YYYY', 'DD/MM/YYYY', 'YYYY-MM-DD').optional(),
+            timeFormat: Joi.string().valid('12h', '24h').optional()
+        }).optional()
+    }),
+
+    changePassword: Joi.object({
+        currentPassword: Joi.string().required(),
+        newPassword: Joi.string().min(6).required(),
+        confirmPassword: Joi.string().valid(Joi.ref('newPassword')).required()
+    }),
+
+    changeRole: Joi.object({
+        userId: Joi.string().pattern(/^[0-9a-fA-F]{24}$/).required(),
+        newRole: Joi.string().valid('admin', 'editor', 'member', 'reviewer', 'agent').required(),
+        reason: Joi.string().max(500).optional()
+    }),
+
+    bulkUserAction: Joi.object({
+        userIds: Joi.array().items(Joi.string().pattern(/^[0-9a-fA-F]{24}$/)).min(1).required(),
+        action: Joi.string().valid('activate', 'deactivate', 'delete', 'change-role').required(),
+        data: Joi.object({
+            role: Joi.string().valid('admin', 'editor', 'member', 'reviewer', 'agent').optional(),
+            reason: Joi.string().max(500).optional()
+        }).optional()
+    }),
+
+    userFilter: Joi.object({
+        page: Joi.number().integer().min(1).default(1),
+        limit: Joi.number().integer().min(1).max(100).default(20),
+        role: Joi.string().valid('admin', 'editor', 'member', 'reviewer', 'agent'),
+        isActive: Joi.boolean(),
+        department: Joi.string().max(100),
+        search: Joi.string().max(100),
+        sortBy: Joi.string().valid('name', 'email', 'role', 'createdAt', 'lastLoginAt', 'isActive'),
+        sortOrder: Joi.string().valid('asc', 'desc').default('desc'),
+        includeStats: Joi.boolean().default(false),
+        fromDate: Joi.date().iso(),
+        toDate: Joi.date().iso().greater(Joi.ref('fromDate'))
+    }),
+
+    resetPassword: Joi.object({
+        email: Joi.string().email().required().trim().lowercase()
+    }),
+
+    confirmResetPassword: Joi.object({
+        token: Joi.string().required(),
+        newPassword: Joi.string().min(6).required(),
+        confirmPassword: Joi.string().valid(Joi.ref('newPassword')).required()
+    }),
+
+    updateProfile: Joi.object({
+        name: Joi.string().min(2).max(50).optional().trim(),
+        department: Joi.string().max(100).optional().allow(''),
+        phoneNumber: Joi.string().pattern(/^[\+]?[1-9][\d]{0,15}$/).optional().allow(''),
+        timezone: Joi.string().max(50).optional().allow(''),
+        preferences: Joi.object({
+            emailNotifications: Joi.boolean().optional(),
+            theme: Joi.string().valid('light', 'dark', 'auto').optional(),
+            language: Joi.string().max(10).optional(),
+            dateFormat: Joi.string().valid('MM/DD/YYYY', 'DD/MM/YYYY', 'YYYY-MM-DD').optional(),
+            timeFormat: Joi.string().valid('12h', '24h').optional()
+        }).optional()
+    })
+};
+
 // Import email account schemas
 const emailAccountSchemas = require('../validators/emailAccount.schemas');
 
@@ -163,5 +260,6 @@ module.exports = {
     validate,
     authSchemas,
     emailSchemas,
+    userSchemas,
     emailAccountSchemas
 };
