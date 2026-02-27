@@ -13,6 +13,7 @@ import Drafts from './pages/Drafts';
 import Review from './pages/Review';
 import Sent from './pages/Sent';
 import Analytics from './pages/Analytics';
+import ActivityDashboard from './pages/ActivityDashboard';
 import Team from './pages/Team';
 import Settings from './pages/Settings';
 import EmailAccounts from './pages/EmailAccounts';
@@ -153,6 +154,10 @@ const router = createBrowserRouter([
       {
         path: 'analytics',
         element: <Analytics />,
+      },
+      {
+        path: 'activity',
+        element: <ActivityDashboard />,
       },
       {
         path: 'settings',

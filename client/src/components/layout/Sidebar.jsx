@@ -11,23 +11,25 @@ import {
     Users,
     LineChart,
     Eye,
-    Settings
+    Settings,
+    Activity
 } from 'lucide-react';
 
 const Sidebar = ({ isOpen, onClose }) => {
     const { user } = useAuth();
 
     const navItems = [
-        { path: '/app/dashboard', label: 'Dashboard', icon: BarChart3, roles: ['admin', 'reviewer', 'agent'], section: 'Workspace' },
-        { path: '/app/inbox', label: 'Inbox', icon: Inbox, roles: ['admin', 'reviewer', 'agent'], section: 'Workspace' },
-        { path: '/app/compose', label: 'Compose', icon: PenSquare, roles: ['admin', 'reviewer', 'agent'], section: 'Workspace' },
-        { path: '/app/sent', label: 'Sent', icon: Send, roles: ['admin', 'reviewer', 'agent'], section: 'Workspace' },
-        { path: '/app/drafts', label: 'Drafts', icon: FileText, roles: ['admin', 'reviewer', 'agent'], section: 'Workspace' },
-        { path: '/app/accounts', label: 'Email Accounts', icon: Mail, roles: ['admin', 'reviewer'], section: 'Management' },
+        { path: '/app/dashboard', label: 'Dashboard', icon: BarChart3, roles: ['admin', 'reviewer', 'agent', 'editor', 'member'], section: 'Workspace' },
+        { path: '/app/inbox', label: 'Inbox', icon: Inbox, roles: ['admin', 'reviewer', 'agent', 'editor', 'member'], section: 'Workspace' },
+        { path: '/app/compose', label: 'Compose', icon: PenSquare, roles: ['admin', 'reviewer', 'agent', 'editor', 'member'], section: 'Workspace' },
+        { path: '/app/sent', label: 'Sent', icon: Send, roles: ['admin', 'reviewer', 'agent', 'editor', 'member'], section: 'Workspace' },
+        { path: '/app/drafts', label: 'Drafts', icon: FileText, roles: ['admin', 'reviewer', 'agent', 'editor', 'member'], section: 'Workspace' },
+        { path: '/app/accounts', label: 'Email Accounts', icon: Mail, roles: ['admin', 'reviewer', 'editor'], section: 'Management' },
+        { path: '/app/activity', label: 'Activity', icon: Activity, roles: ['admin', 'reviewer', 'editor'], section: 'Management' },
+        { path: '/app/analytics', label: 'Analytics', icon: LineChart, roles: ['admin', 'reviewer', 'editor'], section: 'Management' },
         { path: '/app/team', label: 'Team', icon: Users, roles: ['admin'], section: 'Management' },
-        { path: '/app/analytics', label: 'Analytics', icon: LineChart, roles: ['admin', 'reviewer'], section: 'Management' },
         { path: '/app/review', label: 'Review', icon: Eye, roles: ['admin', 'reviewer'], section: 'Management' },
-        { path: '/app/settings', label: 'Settings', icon: Settings, roles: ['admin', 'reviewer', 'agent'], section: 'Management' },
+        { path: '/app/settings', label: 'Settings', icon: Settings, roles: ['admin', 'reviewer', 'agent', 'editor', 'member'], section: 'Management' },
     ];
 
     const filteredItems = navItems.filter(item =>
