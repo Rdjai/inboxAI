@@ -138,6 +138,39 @@ export const analyticsAPI = {
     getQueueStatus: () => dashboardAPI.getQueueStatus(),
 };
 
+export const chartAggregationAPI = {
+    // Email Volume
+    getEmailVolume: (params = {}) => api.get('/charts/volume', { params }),
+    getEmailVolumeByHour: (params = {}) => api.get('/charts/volume', { params: { ...params, groupBy: 'hour' } }),
+    getEmailVolumeByDayOfWeek: (params = {}) => api.get('/charts/volume', { params: { ...params, groupBy: 'dayOfWeek' } }),
+
+    // Distributions
+    getStatusDistribution: (params = {}) => api.get('/charts/status', { params }),
+    getCategoryDistribution: (params = {}) => api.get('/charts/category', { params }),
+    getPriorityDistribution: (params = {}) => api.get('/charts/priority', { params }),
+    getSentimentDistribution: (params = {}) => api.get('/charts/sentiment', { params }),
+    getConfidenceDistribution: (params = {}) => api.get('/charts/confidence', { params }),
+
+    // Response Time
+    getResponseTimeStats: (params = {}) => api.get('/charts/response-time/stats', { params }),
+    getResponseTimeByDate: (params = {}) => api.get('/charts/response-time/by-date', { params }),
+
+    // User Activity
+    getUserActivityStats: (params = {}) => api.get('/charts/user-activity', { params }),
+
+    // Heatmap
+    getActivityHeatmap: (params = {}) => api.get('/charts/heatmap', { params }),
+
+    // Processing Flow
+    getEmailProcessingFlow: (params = {}) => api.get('/charts/processing-flow', { params }),
+
+    // Comprehensive
+    getComprehensiveAggregation: (params = {}) => api.get('/charts/comprehensive', { params }),
+    getMultipleAggregations: (types = [], params = {}) => api.get('/charts/multiple', {
+        params: { ...params, types: types.join(',') }
+    }),
+};
+
 export const healthAPI = {
     check: () => api.get('/health'),
 };

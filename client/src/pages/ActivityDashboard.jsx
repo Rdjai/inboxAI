@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { analyticsAPI, dashboardAPI } from '../services/api';
+import { chartAggregationAPI } from '../services/api';
 import toast from 'react-hot-toast';
 import ActivityTimeline from '../components/analytics/ActivityTimeline';
 import EmailActivityHeatmap from '../components/analytics/EmailActivityHeatmap';
@@ -14,11 +14,16 @@ const ActivityDashboard = () => {
     const [timeRange, setTimeRange] = useState('week');
     const [chartType, setChartType] = useState('line');
 
-    const [activities, setActivities] = useState([]);
-    const [emails, setEmails] = useState([]);
-    const [users, setUsers] = useState([]);
-    const [stats, setStats] = useState({});
     const [volumeData, setVolumeData] = useState([]);
+    const [statusDist, setStatusDist] = useState({});
+    const [categoryDist, setCategoryDist] = useState({});
+    const [priorityDist, setPriorityDist] = useState({});
+    const [sentimentDist, setSentimentDist] = useState({});
+    const [responseTimeStats, setResponseTimeStats] = useState({});
+    const [responseTimeByDate, setResponseTimeByDate] = useState([]);
+    const [userStats, setUserStats] = useState([]);
+    const [heatmapData, setHeatmapData] = useState({});
+    const [processingFlow, setProcessingFlow] = useState({});
 
     useEffect(() => {
         fetchActivityData();
@@ -39,44 +44,61 @@ const ActivityDashboard = () => {
             setLoading(true);
             const params = buildDateParams();
 
-            const [dashboardRes, categoryRes, teamRes] = await Promise.allSettled([
-                dashboardAPI.getDashboard(params),
-                analyticsAPI.getCategoryAnalytics(params),
-                analyticsAPI.getTeamAnalytics(params)
+            // Fetch all data in parallel
+            const [
+                volumeRes,
+                statusRes,
+                categoryRes,
+                priorityRes,
+                sentimentRes,
+                responseTimeRes,
+                responseTimeByDateRes,
+                userActivityRes,
+                heatmapRes,
+                processingFlowRes
+            ] = await Promise.allSettled([
+                chartAggregationAPI.getEmailVolume(params),
+                chartAggregationAPI.getStatusDistribution(params),
+                chartAggregationAPI.getCategoryDistribution(params),
+                chartAggregationAPI.getPriorityDistribution(params),
+                chartAggregationAPI.getSentimentDistribution(params),
+                chartAggregationAPI.getResponseTimeStats(params),
+                chartAggregationAPI.getResponseTimeByDate(params),
+                chartAggregationAPI.getUserActivityStats(params),
+                chartAggregationAPI.getActivityHeatmap(params),
+                chartAggregationAPI.getEmailProcessingFlow(params)
             ]);
 
-            // Extract dashboard data
-            if (dashboardRes.status === 'fulfilled') {
-                const payload = dashboardRes.value?.data || dashboardRes.value;
-                const dashboardData = payload?.data || payload;
-
-                setStats({
-                    totalEmails: dashboardData?.overview?.totalEmails || 0,
-                    processedEmails: dashboardData?.overview?.processedEmails || 0,
-                    draftedEmails: dashboardData?.overview?.draftedEmails || 0,
-                    approvedEmails: dashboardData?.overview?.approvedEmails || 0,
-                    sentEmails: dashboardData?.overview?.sentEmails || 0,
-                    failedEmails: dashboardData?.overview?.failedEmails || 0,
-                    avgResponseTime: dashboardData?.overview?.avgResponseTime || 0
-                });
-
-                // Extract activities
-                const recentActivity = dashboardData?.recentActivity || [];
-                setActivities(Array.isArray(recentActivity) ? recentActivity : []);
-
-                // Generate volume data from activities
-                const volumeData = (Array.isArray(recentActivity) ? recentActivity : []).map(activity => ({
-                    date: activity.createdAt,
-                    type: activity.action?.toLowerCase() || 'received'
-                }));
-                setVolumeData(volumeData);
+            // Process results
+            if (volumeRes.status === 'fulfilled') {
+                setVolumeData(volumeRes.value?.data || []);
             }
-
-            // Extract team/user data
-            if (teamRes.status === 'fulfilled') {
-                const payload = teamRes.value?.data || teamRes.value;
-                const teamData = Array.isArray(payload) ? payload : payload?.data || [];
-                setUsers(teamData);
+            if (statusRes.status === 'fulfilled') {
+                setStatusDist(statusRes.value?.data || {});
+            }
+            if (categoryRes.status === 'fulfilled') {
+                setCategoryDist(categoryRes.value?.data || {});
+            }
+            if (priorityRes.status === 'fulfilled') {
+                setPriorityDist(priorityRes.value?.data || {});
+            }
+            if (sentimentRes.status === 'fulfilled') {
+                setSentimentDist(sentimentRes.value?.data || {});
+            }
+            if (responseTimeRes.status === 'fulfilled') {
+                setResponseTimeStats(responseTimeRes.value?.data || {});
+            }
+            if (responseTimeByDateRes.status === 'fulfilled') {
+                setResponseTimeByDate(responseTimeByDateRes.value?.data || []);
+            }
+            if (userActivityRes.status === 'fulfilled') {
+                setUserStats(userActivityRes.value?.data || []);
+            }
+            if (heatmapRes.status === 'fulfilled') {
+                setHeatmapData(heatmapRes.value?.data || {});
+            }
+            if (processingFlowRes.status === 'fulfilled') {
+                setProcessingFlow(processingFlowRes.value?.data || {});
             }
 
         } catch (error) {
@@ -120,26 +142,26 @@ const ActivityDashboard = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div className="bg-white rounded-xl shadow-sm p-5 border-l-4 border-blue-500">
                     <p className="text-sm text-gray-600">Total Emails</p>
-                    <p className="text-3xl font-bold mt-1 text-blue-600">{stats.totalEmails}</p>
+                    <p className="text-3xl font-bold mt-1 text-blue-600">{processingFlow.total || 0}</p>
                 </div>
                 <div className="bg-white rounded-xl shadow-sm p-5 border-l-4 border-green-500">
                     <p className="text-sm text-gray-600">Processed</p>
-                    <p className="text-3xl font-bold mt-1 text-green-600">{stats.processedEmails}</p>
+                    <p className="text-3xl font-bold mt-1 text-green-600">{processingFlow.classified || 0}</p>
                 </div>
                 <div className="bg-white rounded-xl shadow-sm p-5 border-l-4 border-purple-500">
                     <p className="text-sm text-gray-600">Sent</p>
-                    <p className="text-3xl font-bold mt-1 text-purple-600">{stats.sentEmails}</p>
+                    <p className="text-3xl font-bold mt-1 text-purple-600">{processingFlow.sent || 0}</p>
                 </div>
                 <div className="bg-white rounded-xl shadow-sm p-5 border-l-4 border-red-500">
                     <p className="text-sm text-gray-600">Failed</p>
-                    <p className="text-3xl font-bold mt-1 text-red-600">{stats.failedEmails}</p>
+                    <p className="text-3xl font-bold mt-1 text-red-600">{processingFlow.failed || 0}</p>
                 </div>
             </div>
 
             {/* Email Flow Diagram */}
             <div className="bg-white rounded-xl shadow-sm p-6">
                 <h2 className="text-lg font-semibold text-gray-900 mb-4">Email Processing Flow</h2>
-                <EmailFlowDiagram stats={stats} loading={loading} />
+                <EmailFlowDiagram stats={processingFlow} loading={loading} />
             </div>
 
             {/* Email Volume Chart */}
@@ -168,31 +190,65 @@ const ActivityDashboard = () => {
             <div className="bg-white rounded-xl shadow-sm p-6">
                 <h2 className="text-lg font-semibold text-gray-900 mb-4">Activity Heatmap</h2>
                 <p className="text-sm text-gray-600 mb-4">Email activity by day and hour</p>
-                <EmailActivityHeatmap activities={activities} loading={loading} />
+                <EmailActivityHeatmap activities={Object.values(heatmapData).flat()} loading={loading} />
             </div>
 
             {/* Response Time Chart */}
             <div className="bg-white rounded-xl shadow-sm p-6">
                 <h2 className="text-lg font-semibold text-gray-900 mb-4">Response Time Trends</h2>
-                <ResponseTimeChart data={activities} loading={loading} />
+                <ResponseTimeChart data={responseTimeByDate} loading={loading} />
             </div>
 
             {/* Sentiment Analysis */}
             <div className="bg-white rounded-xl shadow-sm p-6">
                 <h2 className="text-lg font-semibold text-gray-900 mb-4">Sentiment Analysis</h2>
-                <SentimentAnalysis emails={emails} loading={loading} />
+                <SentimentAnalysis emails={[]} loading={loading} />
             </div>
 
             {/* User Activity Stats */}
             <div className="bg-white rounded-xl shadow-sm p-6">
                 <h2 className="text-lg font-semibold text-gray-900 mb-4">Team Activity</h2>
-                <UserActivityStats users={users} loading={loading} />
+                <UserActivityStats users={userStats} loading={loading} />
             </div>
 
             {/* Activity Timeline */}
             <div className="bg-white rounded-xl shadow-sm p-6">
-                <h2 className="text-lg font-semibold text-gray-900 mb-4">Recent Activity Timeline</h2>
-                <ActivityTimeline activities={activities} loading={loading} />
+                <h2 className="text-lg font-semibold text-gray-900 mb-4">Distribution Overview</h2>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div>
+                        <h3 className="font-semibold text-gray-900 mb-3">Status Distribution</h3>
+                        <div className="space-y-2">
+                            {Object.entries(statusDist).map(([status, count]) => (
+                                <div key={status} className="flex justify-between items-center">
+                                    <span className="text-sm text-gray-600">{status}</span>
+                                    <span className="font-semibold text-gray-900">{count}</span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                    <div>
+                        <h3 className="font-semibold text-gray-900 mb-3">Category Distribution</h3>
+                        <div className="space-y-2">
+                            {Object.entries(categoryDist).slice(0, 5).map(([category, count]) => (
+                                <div key={category} className="flex justify-between items-center">
+                                    <span className="text-sm text-gray-600">{category}</span>
+                                    <span className="font-semibold text-gray-900">{count}</span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                    <div>
+                        <h3 className="font-semibold text-gray-900 mb-3">Priority Distribution</h3>
+                        <div className="space-y-2">
+                            {Object.entries(priorityDist).map(([priority, count]) => (
+                                <div key={priority} className="flex justify-between items-center">
+                                    <span className="text-sm text-gray-600">{priority}</span>
+                                    <span className="font-semibold text-gray-900">{count}</span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     );
