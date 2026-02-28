@@ -169,6 +169,31 @@ export const chartAggregationAPI = {
     getMultipleAggregations: (types = [], params = {}) => api.get('/charts/multiple', {
         params: { ...params, types: types.join(',') }
     }),
+
+    // Optimized endpoints
+    getOptimizedVolume: (params = {}) => api.get('/charts-optimized/volume', { params }),
+    getOptimizedStatus: (params = {}) => api.get('/charts-optimized/status', { params }),
+    getOptimizedCategory: (params = {}) => api.get('/charts-optimized/category', { params }),
+    getOptimizedPriority: (params = {}) => api.get('/charts-optimized/priority', { params }),
+    getOptimizedSentiment: (params = {}) => api.get('/charts-optimized/sentiment', { params }),
+    getOptimizedResponseTimeStats: (params = {}) => api.get('/charts-optimized/response-time/stats', { params }),
+    getOptimizedResponseTimeByDate: (params = {}) => api.get('/charts-optimized/response-time/by-date', { params }),
+    getOptimizedUserActivity: (params = {}) => api.get('/charts-optimized/user-activity', { params }),
+    getOptimizedHeatmap: (params = {}) => api.get('/charts-optimized/heatmap', { params }),
+    getOptimizedProcessingFlow: (params = {}) => api.get('/charts-optimized/processing-flow', { params }),
+    getOptimizedComprehensive: (params = {}) => api.get('/charts-optimized/comprehensive', { params }),
+    getOptimizedMultiple: (types = [], params = {}) => api.get('/charts-optimized/multiple', {
+        params: { ...params, types: types.join(',') }
+    }),
+
+    // Cache management
+    getCacheStats: () => api.get('/charts-optimized/cache/stats'),
+    clearCache: (pattern = null) => api.post('/charts-optimized/cache/clear', pattern ? { pattern } : {}),
+
+    // Performance monitoring
+    getPerformanceMetrics: () => api.get('/charts-optimized/performance/metrics'),
+    getQueryStats: (queryName) => api.get('/charts-optimized/performance/query-stats', { params: { queryName } }),
+    resetPerformanceMetrics: () => api.post('/charts-optimized/performance/reset')
 };
 
 export const healthAPI = {

@@ -7,6 +7,7 @@ const analyticsRoutes = require('../routes/analytics.routes');
 const emailAccountRoutes = require('../routes/emailAccount.routes');
 const userRoutes = require('../routes/user.routes');
 const chartAggregationRoutes = require('../routes/chartAggregation.routes');
+const chartAggregationOptimizedRoutes = require('../routes/chartAggregationOptimized.routes');
 const { authMiddleware } = require('../middleware/auth.middleware');
 const mailService = require('../services/mail.service');
 const ImapService = require('../services/imap.service');
@@ -362,6 +363,7 @@ router.use('/analytics', analyticsRoutes);
 router.use('/email/accounts', emailAccountRoutes);
 router.use('/users', userRoutes);
 router.use('/charts', chartAggregationRoutes);
+router.use('/charts-optimized', chartAggregationOptimizedRoutes);
 
 // AI endpoints
 router.post('/ai/analyze/:id', authMiddleware, async (req, res) => {
