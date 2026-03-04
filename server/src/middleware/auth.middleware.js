@@ -3,6 +3,7 @@ const { JWT_SECRET } = require('../config/env');
 const User = require('../models/user.model');
 const { ROLES, PERMISSIONS } = require('../utils/constants');
 const permissionService = require('../services/permission.service');
+const jwtValidation = require('./jwtValidation.middleware');
 const logger = require('../utils/logger');
 
 const authMiddleware = async (req, res, next) => {
@@ -16,31 +17,45 @@ const authMiddleware = async (req, res, next) => {
             });
         }
 
-        const decoded = jwt.verify(token, JWT_SECRET);
-        const user = await User.findById(decoded.userId).select('-password');
+        const validation = await jwtValidation.validateToken(token);
 
-        if (!user) {
-            return res.status(401).json({
-                success: false,
-                message: 'User not found.'
-            });
-        }
+        if (!validation.valid) {
+            const errorResponses = {
+                'TOKEN_BLACKLISTED': 401,
+                'TOKEN_EXPIRED': 401,
+                'INVALID_SIGNATURE': 401,
+                'TOKEN_NOT_YET_VALID': 401,
+                'INVALID_PAYLOAD': 401,
+                'MISSING_USER_ID': 401,
+                'INVALID_USER_ID_FORMAT': 401,
+                'MISSING_IAT': 401,
+                'MISSING_EXP': 401,
+                'TOKEN_TOO_OLD': 401,
+                'USER_NOT_FOUND': 401,
+                'ACCOUNT_DEACTIVATED': 401,
+                'ACCOUNT_LOCKED': 401,
+                'EMAIL_NOT_VERIFIED': 403,
+                'VALIDATION_ERROR': 500
+            };
 
-        if (!user.isActive) {
-            return res.status(401).json({
+            const statusCode = errorResponses[validation.code] || 401;
+
+            return res.status(statusCode).json({
                 success: false,
-                message: 'Account is deactivated.'
+                message: validation.error,
+                code: validation.code
             });
         }
 
         // Add permission helper methods to user object
-        user.hasPermission = (permission) => permissionService.hasPermission(user, permission);
-        user.hasAnyPermission = (permissions) => permissionService.hasAnyPermission(user, permissions);
-        user.hasAllPermissions = (permissions) => permissionService.hasAllPermissions(user, permissions);
-        user.canManageRole = (targetRole) => permissionService.canManageRole(user.role, targetRole);
+        validation.user.hasPermission = (permission) => permissionService.hasPermission(validation.user, permission);
+        validation.user.hasAnyPermission = (permissions) => permissionService.hasAnyPermission(validation.user, permissions);
+        validation.user.hasAllPermissions = (permissions) => permissionService.hasAllPermissions(validation.user, permissions);
+        validation.user.canManageRole = (targetRole) => permissionService.canManageRole(validation.user.role, targetRole);
 
-        req.user = user;
-        req.token = token;
+        req.user = validation.user;
+        req.token = validation.token;
+        req.tokenPayload = validation.decoded;
         next();
     } catch (error) {
         logger.error('Auth middleware error:', error);
@@ -256,5 +271,6 @@ module.exports = {
     requireAllPermissions,
     adminOnly,
     resourceOwnership,
-    conditionalPermission
+    conditionalPermission,
+    jwtValidation
 };
