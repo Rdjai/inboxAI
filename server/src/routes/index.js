@@ -8,6 +8,7 @@ const emailAccountRoutes = require('../routes/emailAccount.routes');
 const userRoutes = require('../routes/user.routes');
 const chartAggregationRoutes = require('../routes/chartAggregation.routes');
 const chartAggregationOptimizedRoutes = require('../routes/chartAggregationOptimized.routes');
+const bruteForceProtectionRoutes = require('../routes/bruteForceProtection.routes');
 const { authMiddleware } = require('../middleware/auth.middleware');
 const mailService = require('../services/mail.service');
 const ImapService = require('../services/imap.service');
