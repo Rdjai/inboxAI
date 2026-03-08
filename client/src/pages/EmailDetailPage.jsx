@@ -159,11 +159,11 @@ const EmailDetailPage = () => {
     };
 
     const handleReply = async () => {
-        navigate(`/email/${id}/reply`);
+        navigate(`/app/email/${id}/reply`);
     };
 
     const handleForward = async () => {
-        navigate(`/email/${id}/forward`);
+        navigate(`/app/email/${id}/forward`);
     };
 
     const formatDate = (dateString) => {
@@ -229,7 +229,7 @@ const EmailDetailPage = () => {
                     <CardContent className="pt-6 text-center">
                         <AlertCircle className="h-12 w-12 text-red-500 mx-auto" />
                         <h3 className="mt-4 text-lg font-semibold">Email not found</h3>
-                        <Button className="mt-4" onClick={() => navigate('/inbox')}>
+                        <Button className="mt-4" onClick={() => navigate('/app/inbox')}>
                             <ArrowLeft className="h-4 w-4 mr-2" />
                             Back to Inbox
                         </Button>
@@ -244,7 +244,7 @@ const EmailDetailPage = () => {
             {/* Header */}
             <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-4">
-                    <Button variant="outline" size="sm" onClick={() => navigate('/inbox')}>
+                    <Button variant="outline" size="sm" onClick={() => navigate('/app/inbox')}>
                         <ArrowLeft className="h-4 w-4 mr-2" />
                         Back to Inbox
                     </Button>
@@ -527,7 +527,7 @@ const EmailDetailPage = () => {
                             <Button
                                 variant="outline"
                                 className="w-full justify-start"
-                                onClick={() => navigate(`/email/${id}/forward`)}
+                                onClick={() => navigate(`/app/email/${id}/forward`)}
                             >
                                 <Forward className="h-4 w-4 mr-2" />
                                 Forward
