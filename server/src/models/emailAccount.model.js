@@ -100,5 +100,9 @@ const emailAccountSchema = new mongoose.Schema(
 );
 
 emailAccountSchema.index({ userId: 1, email: 1 }, { unique: true });
+emailAccountSchema.index({ userId: 1, isDefault: -1, createdAt: -1 });
+emailAccountSchema.index({ userId: 1, provider: 1, isActive: 1 });
+emailAccountSchema.index({ 'sharedWith.userId': 1, isActive: 1 });
+emailAccountSchema.index({ userId: 1, lastSyncedAt: -1 });
 
 module.exports = mongoose.model('EmailAccount', emailAccountSchema);

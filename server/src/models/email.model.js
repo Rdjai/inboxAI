@@ -28,6 +28,16 @@ const emailMetadataSchema = new mongoose.Schema(
 );
 
 const emailSchema = new mongoose.Schema({
+    userId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        index: true
+    },
+    accountId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'EmailAccount',
+        index: true
+    },
     fromAddress: {
         type: String,
         required: true,
@@ -199,12 +209,19 @@ emailSchema.index({ category: 1, createdAt: -1 });
 emailSchema.index({ priority: 1, createdAt: -1 });
 emailSchema.index({ sentiment: 1, createdAt: -1 });
 emailSchema.index({ assignedUserId: 1, createdAt: -1 });
+emailSchema.index({ userId: 1, createdAt: -1 });
+emailSchema.index({ accountId: 1, createdAt: -1 });
 
 // 3. Multi-field compound indexes for complex queries
 emailSchema.index({ assignedUserId: 1, status: 1, createdAt: -1 });
 emailSchema.index({ status: 1, priority: 1, createdAt: -1 });
 emailSchema.index({ fromAddress: 1, createdAt: -1 });
 emailSchema.index({ toAddress: 1, createdAt: -1 });
+emailSchema.index({ userId: 1, status: 1, createdAt: -1 });
+emailSchema.index({ accountId: 1, status: 1, createdAt: -1 });
+emailSchema.index({ accountId: 1, isRead: 1, createdAt: -1 });
+emailSchema.index({ userId: 1, assignedUserId: 1, status: 1, createdAt: -1 });
+emailSchema.index({ status: 1, sentAt: -1 }, { partialFilterExpression: { sentAt: { $exists: true } } });
 
 // 4. Search-specific indexes
 emailSchema.index({ keywords: 1 });
