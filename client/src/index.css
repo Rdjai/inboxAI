@@ -141,6 +141,24 @@
   -webkit-box-orient: vertical;
 }
 
+.sidebar-panel {
+  will-change: transform;
+  transform: translate3d(0, 0, 0);
+  contain: layout paint;
+  backface-visibility: hidden;
+}
+
+.sidebar-scroll {
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sidebar-panel {
+    transition: none !important;
+  }
+}
+
 /* Remove the problematic classes or define them without @apply */
 .text-blue-600 {
   color: #2563eb;
