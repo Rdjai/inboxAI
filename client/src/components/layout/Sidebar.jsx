@@ -1,6 +1,7 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { useEmail } from '../../context/EmailContext';
 import {
     BarChart3,
     Inbox,
@@ -31,6 +32,7 @@ const navItems = [
 
 const Sidebar = ({ isOpen, onClose }) => {
     const { user } = useAuth();
+    const { unreadCount } = useEmail();
 
     const filteredItems = navItems.filter(item =>
         item.roles.includes(user?.role || 'agent')
@@ -41,6 +43,7 @@ const Sidebar = ({ isOpen, onClose }) => {
 
     const renderNavItem = (item) => {
         const Icon = item.icon;
+        const showUnreadPulse = item.path === '/app/inbox' && unreadCount > 0;
 
         return (
             <NavLink
@@ -54,10 +57,21 @@ const Sidebar = ({ isOpen, onClose }) => {
                     }`
                 }
             >
-                <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-gray-100 text-gray-600 transition-colors duration-200 group-hover:bg-white group-hover:text-gray-900">
+                <span className="relative flex h-8 w-8 items-center justify-center rounded-lg bg-gray-100 text-gray-600 transition-colors duration-200 group-hover:bg-white group-hover:text-gray-900">
                     <Icon className="h-4 w-4" />
+                    {showUnreadPulse && (
+                        <>
+                            <span className="mail-pulse absolute h-2.5 w-2.5 rounded-full bg-rose-400" />
+                            <span className="absolute h-2.5 w-2.5 rounded-full bg-rose-500" />
+                        </>
+                    )}
                 </span>
                 <span className="truncate">{item.label}</span>
+                {showUnreadPulse && (
+                    <span className="ml-auto inline-flex min-w-[1.75rem] items-center justify-center rounded-full bg-rose-50 px-2 py-0.5 text-[11px] font-semibold text-rose-700 ring-1 ring-inset ring-rose-200">
+                        {unreadCount > 99 ? '99+' : unreadCount}
+                    </span>
+                )}
             </NavLink>
         );
     };

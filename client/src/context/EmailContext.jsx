@@ -1,4 +1,4 @@
-import React, { createContext, useState, useContext, useEffect, useCallback } from 'react';
+import React, { createContext, useState, useContext, useEffect, useCallback, useMemo } from 'react';
 import { emailAccountsAPI, emailsAPI, setupSocket } from '../services/api';
 import { useAuth } from './AuthContext';
 import toast from 'react-hot-toast';
@@ -527,10 +527,16 @@ export const EmailProvider = ({ children }) => {
         }
     };
 
+    const unreadCount = useMemo(
+        () => emails.reduce((count, email) => count + (email?.isRead ? 0 : 1), 0),
+        [emails]
+    );
+
     // Context value
     const value = {
         accounts,
         emails,
+        unreadCount,
         loading: loading || accountsLoading,
         accountsLoading,
         error,
