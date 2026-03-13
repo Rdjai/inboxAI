@@ -5,6 +5,7 @@ const { ROLES, PERMISSIONS, AUDIT_ACTIONS } = require('../utils/constants');
 const { AppError } = require('../middleware/errorHandler.middleware');
 const logger = require('../utils/logger');
 const bcrypt = require('bcryptjs');
+const { normalizePaginationParams, buildPaginationMeta } = require('../utils/pagination');
 
 class UserController {
     /**
@@ -43,16 +44,13 @@ class UserController {
                 ];
             }
 
-            const parsedPage = Math.max(1, parseInt(page, 10) || 1);
-            const parsedLimit = Math.max(1, Math.min(100, parseInt(limit, 10) || 20));
+            const { page: parsedPage, limit: parsedLimit, skip } = normalizePaginationParams({ page, limit });
 
             // Sorting
             const sort = {};
             sort[sortBy] = sortOrder === 'desc' ? -1 : 1;
 
             // Pagination
-            const skip = (parsedPage - 1) * parsedLimit;
-
             const [users, total] = await Promise.all([
                 User.find(query)
                     .sort(sort)
@@ -83,12 +81,7 @@ class UserController {
             res.json({
                 success: true,
                 data: usersWithPermissions,
-                pagination: {
-                    page: parsedPage,
-                    limit: parsedLimit,
-                    total,
-                    pages: Math.ceil(total / parsedLimit)
-                }
+                pagination: buildPaginationMeta({ page: parsedPage, limit: parsedLimit, total })
             });
         } catch (error) {
             next(error);
