@@ -3,6 +3,7 @@ const Email = require('../models/email.model');
 const User = require('../models/user.model');
 const logger = require('../utils/logger');
 const searchMonitor = require('../utils/searchMonitor');
+const { normalizePaginationParams, buildPaginationMeta } = require('../utils/pagination');
 
 class SearchService {
     /**
@@ -26,6 +27,7 @@ class SearchService {
                 includeAnalytics = false,
                 searchType = 'fulltext' // 'fulltext', 'regex', 'exact'
             } = searchParams;
+            const { page: parsedPage, limit: parsedLimit } = normalizePaginationParams({ page, limit });
 
             let searchResults;
             let totalCount = 0;
@@ -33,25 +35,25 @@ class SearchService {
             switch (searchType) {
                 case 'fulltext':
                     searchResults = await this.performFullTextSearch({
-                        query, filters, sort, page, limit, includeScore
+                        query, filters, sort, page: parsedPage, limit: parsedLimit, includeScore
                     });
                     break;
 
                 case 'regex':
                     searchResults = await this.performRegexSearch({
-                        query, filters, sort, page, limit
+                        query, filters, sort, page: parsedPage, limit: parsedLimit
                     });
                     break;
 
                 case 'exact':
                     searchResults = await this.performExactSearch({
-                        query, filters, sort, page, limit
+                        query, filters, sort, page: parsedPage, limit: parsedLimit
                     });
                     break;
 
                 default:
                     searchResults = await this.performFullTextSearch({
-                        query, filters, sort, page, limit, includeScore
+                        query, filters, sort, page: parsedPage, limit: parsedLimit, includeScore
                     });
             }
 
@@ -67,12 +69,7 @@ class SearchService {
             const result = {
                 success: true,
                 data: searchResults,
-                pagination: {
-                    page: parseInt(page),
-                    limit: parseInt(limit),
-                    total: totalCount,
-                    pages: Math.ceil(totalCount / limit)
-                },
+                pagination: buildPaginationMeta({ page: parsedPage, limit: parsedLimit, total: totalCount }),
                 searchMeta: {
                     query,
                     searchType,
@@ -102,14 +99,6 @@ class SearchService {
                 error
             );
         }
-    }
-
-            return result;
-
-        } catch (error) {
-    logger.error('Search service error:', error);
-    throw error;
-}
     }
 
     /**
@@ -154,7 +143,7 @@ class SearchService {
     // Pagination
     const skip = (page - 1) * limit;
     pipeline.push({ $skip: skip });
-    pipeline.push({ $limit: parseInt(limit) });
+    pipeline.push({ $limit: limit });
 
     // Populate assigned user
     pipeline.push({
@@ -220,7 +209,7 @@ class SearchService {
     return await Email.find(searchQuery)
         .sort(sort)
         .skip(skip)
-        .limit(parseInt(limit))
+        .limit(limit)
         .populate('assignedUserId', 'name email')
         .select({
             fromAddress: 1,
@@ -260,7 +249,7 @@ class SearchService {
     return await Email.find(searchQuery)
         .sort(sort)
         .skip(skip)
-        .limit(parseInt(limit))
+        .limit(limit)
         .populate('assignedUserId', 'name email')
         .lean();
 }
@@ -481,6 +470,7 @@ class SearchService {
     async searchByEntity(entityType, entityValue, filters = {}, options = {}) {
     try {
         const { page = 1, limit = 20, sort = { createdAt: -1 } } = options;
+        const { page: parsedPage, limit: parsedLimit, skip } = normalizePaginationParams({ page, limit });
 
         const searchQuery = {
             ...filters,
@@ -489,13 +479,11 @@ class SearchService {
             }
         };
 
-        const skip = (page - 1) * limit;
-
         const [results, total] = await Promise.all([
             Email.find(searchQuery)
                 .sort(sort)
                 .skip(skip)
-                .limit(parseInt(limit))
+                .limit(parsedLimit)
                 .populate('assignedUserId', 'name email')
                 .lean(),
             Email.countDocuments(searchQuery)
@@ -504,12 +492,7 @@ class SearchService {
         return {
             success: true,
             data: results,
-            pagination: {
-                page: parseInt(page),
-                limit: parseInt(limit),
-                total,
-                pages: Math.ceil(total / limit)
-            }
+            pagination: buildPaginationMeta({ page: parsedPage, limit: parsedLimit, total })
         };
     } catch (error) {
         logger.error('Error searching by entity:', error);
