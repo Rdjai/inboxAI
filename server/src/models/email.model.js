@@ -2,6 +2,108 @@ const mongoose = require('mongoose');
 const { EMAIL_STATUS, EMAIL_CATEGORIES, PRIORITY, SENTIMENT } = require('../utils/constants');
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const MAX_SEARCHABLE_BODY_LENGTH = 4000;
+const MAX_KEYWORDS = 20;
+const MAX_ENTITY_VALUES = 10;
+const MAX_ENTITY_DATES = 5;
+
+const SEARCH_STOP_WORDS = new Set([
+    'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by',
+    'is', 'are', 'was', 'were', 'be', 'been', 'being', 'have', 'has', 'had', 'do', 'does', 'did',
+    'will', 'would', 'could', 'should', 'may', 'might', 'can', 'must', 'shall', 'this', 'that',
+    'these', 'those', 'i', 'you', 'he', 'she', 'it', 'we', 'they', 'me', 'him', 'her', 'us', 'them'
+]);
+
+function sliceUnique(values = [], limit = MAX_ENTITY_VALUES) {
+    return [...new Set(values.filter(Boolean))].slice(0, limit);
+}
+
+function normalizeSearchText(value, maxLength = MAX_SEARCHABLE_BODY_LENGTH) {
+    return String(value || '')
+        .replace(/\s+/g, ' ')
+        .trim()
+        .slice(0, maxLength);
+}
+
+function extractKeywordsFromText(text) {
+    return sliceUnique(
+        normalizeSearchText(text, MAX_SEARCHABLE_BODY_LENGTH)
+            .toLowerCase()
+            .replace(/[^\w\s]/g, ' ')
+            .split(/\s+/)
+            .filter(word => word.length > 2 && !SEARCH_STOP_WORDS.has(word)),
+        MAX_KEYWORDS
+    );
+}
+
+function extractEntitiesFromText(text, fromAddress, toAddress) {
+    const source = String(text || '');
+    const emailRegex = /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g;
+    const phoneRegex = /(\+?1[-.\s]?)?\(?([0-9]{3})\)?[-.\s]?([0-9]{3})[-.\s]?([0-9]{4})/g;
+    const dateRegex = /\b\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4}\b|\b\d{4}[\/\-]\d{1,2}[\/\-]\d{1,2}\b/g;
+    const nameRegex = /\b[A-Z][a-z]+ [A-Z][a-z]+\b/g;
+    const orgRegex = /\b[A-Z][A-Za-z\s]+(Inc|LLC|Corp|Corporation|Company|Co|Ltd|Limited)\b/g;
+
+    const emails = sliceUnique(
+        (source.match(emailRegex) || [])
+            .map(email => email.toLowerCase())
+            .filter(email => email !== fromAddress && email !== toAddress)
+    );
+
+    return {
+        people: sliceUnique(source.match(nameRegex) || []),
+        organizations: sliceUnique(source.match(orgRegex) || []),
+        locations: [],
+        dates: sliceUnique(source.match(dateRegex) || [], MAX_ENTITY_DATES),
+        emails,
+        phoneNumbers: sliceUnique(source.match(phoneRegex) || [], MAX_ENTITY_DATES)
+    };
+}
+
+function buildSearchableContent({ subject, bodyText, draftText, fromAddress, toAddress, extractedEntities }) {
+    const entityTerms = [
+        ...(extractedEntities?.people || []),
+        ...(extractedEntities?.organizations || []),
+        ...(extractedEntities?.emails || [])
+    ];
+
+    return [
+        normalizeSearchText(subject, 300),
+        normalizeSearchText(bodyText, MAX_SEARCHABLE_BODY_LENGTH),
+        normalizeSearchText(draftText, 1000),
+        normalizeSearchText(fromAddress, 320),
+        normalizeSearchText(toAddress, 320),
+        ...entityTerms
+    ]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase();
+}
+
+function computeSearchArtifacts(emailLike = {}) {
+    const subject = emailLike.subject || '';
+    const bodyText = emailLike.bodyText || '';
+    const draftText = emailLike.draftText || '';
+    const fromAddress = String(emailLike.fromAddress || '').toLowerCase();
+    const toAddress = String(emailLike.toAddress || '').toLowerCase();
+    const entitySourceText = `${subject} ${bodyText}`;
+    const extractedEntities = extractEntitiesFromText(entitySourceText, fromAddress, toAddress);
+    const keywords = extractKeywordsFromText(`${subject} ${bodyText}`);
+    const searchableContent = buildSearchableContent({
+        subject,
+        bodyText,
+        draftText,
+        fromAddress,
+        toAddress,
+        extractedEntities
+    });
+
+    return {
+        searchableContent,
+        keywords,
+        extractedEntities
+    };
+}
 
 const emailMetadataSchema = new mongoose.Schema(
     {
@@ -150,8 +252,7 @@ const emailSchema = new mongoose.Schema({
 
     // Enhanced search fields
     searchableContent: {
-        type: String,
-        index: 'text'
+        type: String
     },
     keywords: [{
         type: String,
@@ -184,18 +285,14 @@ const emailSchema = new mongoose.Schema({
 // 1. Compound Text Index for full-text search
 emailSchema.index({
     subject: 'text',
-    bodyText: 'text',
     searchableContent: 'text',
-    'extractedEntities.people': 'text',
-    'extractedEntities.organizations': 'text'
+    keywords: 'text'
 }, {
     name: 'email_fulltext_search',
     weights: {
         subject: 10,
         searchableContent: 8,
-        bodyText: 5,
-        'extractedEntities.people': 3,
-        'extractedEntities.organizations': 2
+        keywords: 4
     },
     default_language: 'english',
     language_override: 'language'
@@ -245,78 +342,25 @@ emailSchema.index(
 // Pre-save middleware to enhance searchability
 emailSchema.pre('save', function (next) {
     if (this.isModified('subject') || this.isModified('bodyText') || this.isModified('draftText')) {
-        // Create searchable content combining all text fields
-        const searchParts = [
-            this.subject || '',
-            this.bodyText || '',
-            this.draftText || '',
-            this.fromAddress || '',
-            this.toAddress || ''
-        ].filter(Boolean);
-
-        this.searchableContent = searchParts.join(' ').toLowerCase();
-
-        // Extract keywords (simple implementation - can be enhanced with NLP)
-        this.keywords = this.extractKeywords();
-
-        // Extract entities (basic implementation)
-        this.extractedEntities = this.extractEntities();
+        const artifacts = computeSearchArtifacts(this);
+        this.searchableContent = artifacts.searchableContent;
+        this.keywords = artifacts.keywords;
+        this.extractedEntities = artifacts.extractedEntities;
     }
     next();
 });
 
 // Method to extract keywords from email content
 emailSchema.methods.extractKeywords = function () {
-    const text = `${this.subject} ${this.bodyText}`.toLowerCase();
-    const stopWords = new Set([
-        'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by',
-        'is', 'are', 'was', 'were', 'be', 'been', 'being', 'have', 'has', 'had', 'do', 'does', 'did',
-        'will', 'would', 'could', 'should', 'may', 'might', 'can', 'must', 'shall', 'this', 'that',
-        'these', 'those', 'i', 'you', 'he', 'she', 'it', 'we', 'they', 'me', 'him', 'her', 'us', 'them'
-    ]);
-
-    const words = text
-        .replace(/[^\w\s]/g, ' ')
-        .split(/\s+/)
-        .filter(word => word.length > 2 && !stopWords.has(word))
-        .slice(0, 20); // Limit to top 20 keywords
-
-    return [...new Set(words)]; // Remove duplicates
+    return computeSearchArtifacts(this).keywords;
 };
 
 // Method to extract entities from email content
 emailSchema.methods.extractEntities = function () {
-    const text = `${this.subject} ${this.bodyText}`;
-
-    // Email regex
-    const emailRegex = /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g;
-    const emails = [...new Set((text.match(emailRegex) || []).map(email => email.toLowerCase()))];
-
-    // Phone number regex (basic)
-    const phoneRegex = /(\+?1[-.\s]?)?\(?([0-9]{3})\)?[-.\s]?([0-9]{3})[-.\s]?([0-9]{4})/g;
-    const phoneNumbers = [...new Set(text.match(phoneRegex) || [])];
-
-    // Date regex (basic)
-    const dateRegex = /\b\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4}\b|\b\d{4}[\/\-]\d{1,2}[\/\-]\d{1,2}\b/g;
-    const dates = [...new Set(text.match(dateRegex) || [])];
-
-    // People names (basic - capitalized words)
-    const nameRegex = /\b[A-Z][a-z]+ [A-Z][a-z]+\b/g;
-    const people = [...new Set(text.match(nameRegex) || [])];
-
-    // Organizations (basic - words ending with Inc, LLC, Corp, etc.)
-    const orgRegex = /\b[A-Z][A-Za-z\s]+(Inc|LLC|Corp|Corporation|Company|Co|Ltd|Limited)\b/g;
-    const organizations = [...new Set(text.match(orgRegex) || [])];
-
-    return {
-        people: people.slice(0, 10),
-        organizations: organizations.slice(0, 10),
-        locations: [], // Can be enhanced with location detection
-        dates: dates.slice(0, 5),
-        emails: emails.filter(email => email !== this.fromAddress && email !== this.toAddress).slice(0, 10),
-        phoneNumbers: phoneNumbers.slice(0, 5)
-    };
+    return computeSearchArtifacts(this).extractedEntities;
 };
+
+emailSchema.statics.computeSearchArtifacts = computeSearchArtifacts;
 
 // Static method for advanced search
 emailSchema.statics.advancedSearch = function (searchOptions) {
