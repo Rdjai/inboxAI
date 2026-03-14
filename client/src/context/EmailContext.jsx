@@ -1,5 +1,5 @@
 import React, { createContext, useState, useContext, useEffect, useCallback, useMemo } from 'react';
-import { emailAccountsAPI, emailsAPI, setupSocket } from '../services/api';
+import { emailAccountsAPI, emailsAPI, disconnectSocket, subscribeSocketEvent } from '../services/api';
 import { useAuth } from './AuthContext';
 import toast from 'react-hot-toast';
 
@@ -75,6 +75,7 @@ export const EmailProvider = ({ children }) => {
             fetchAccounts();
         } else if (!authLoading) {
             console.log('👤 [EmailProvider] User not authenticated, clearing data');
+            disconnectSocket();
             setAccounts([]);
             setEmails([]);
             setSelectedAccount(null);
@@ -86,11 +87,6 @@ export const EmailProvider = ({ children }) => {
         if (!isAuthenticated || authLoading) {
             return;
         }
-
-        const token = localStorage.getItem('token');
-        const socket = setupSocket(token);
-
-        if (!socket) return;
 
         const handleEmailUpdated = (payload) => {
             const updatedEmail = normalizeEmail(payload?.email || payload);
@@ -105,11 +101,7 @@ export const EmailProvider = ({ children }) => {
             });
         };
 
-        socket.on('email:updated', handleEmailUpdated);
-
-        return () => {
-            socket.off('email:updated', handleEmailUpdated);
-        };
+        return subscribeSocketEvent('email:updated', handleEmailUpdated, localStorage.getItem('token'));
     }, [isAuthenticated, authLoading]);
 
     const fetchAccounts = useCallback(async () => {

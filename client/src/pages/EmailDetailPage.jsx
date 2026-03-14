@@ -4,7 +4,9 @@ import { useParams, useNavigate } from 'react-router-dom';
 import {
     emailsAPI,
     aiAPI,
-    dashboardAPI,
+    joinEmailRoom,
+    leaveEmailRoom,
+    subscribeSocketEvent,
     getStatusColor,
     getPriorityColor
 } from '../services/api';
@@ -59,13 +61,25 @@ const EmailDetailPage = () => {
     }, [id]);
 
     useEffect(() => {
-        // Setup real-time updates for this email
+        if (!id) {
+            return undefined;
+        }
+
+        joinEmailRoom(id);
+
         const handleEmailUpdate = (data) => {
-            if (data.data?.emailId === id) {
+            const updatedEmailId = data?.data?.emailId || data?.emailId || data?.email?._id;
+            if (updatedEmailId === id) {
                 fetchEmail(); // Refresh when this email updates
             }
         };
-        window.emailUpdateCallback = handleEmailUpdate;
+
+        const unsubscribe = subscribeSocketEvent('email:updated', handleEmailUpdate, localStorage.getItem('token'));
+
+        return () => {
+            unsubscribe();
+            leaveEmailRoom(id);
+        };
     }, [id]);
 
     const fetchEmail = async () => {

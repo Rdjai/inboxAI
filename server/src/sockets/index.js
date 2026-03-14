@@ -26,9 +26,19 @@ class SocketService {
                 logger.info(`Socket ${socket.id} joined email:${emailId}`);
             });
 
+            socket.on('leave:email', (emailId) => {
+                socket.leave(`email:${emailId}`);
+                logger.info(`Socket ${socket.id} left email:${emailId}`);
+            });
+
             socket.on('join:dashboard', () => {
                 socket.join('dashboard');
                 logger.info(`Socket ${socket.id} joined dashboard`);
+            });
+
+            socket.on('leave:dashboard', () => {
+                socket.leave('dashboard');
+                logger.info(`Socket ${socket.id} left dashboard`);
             });
 
             socket.on('disconnect', () => {
