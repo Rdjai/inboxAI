@@ -5,18 +5,6 @@ import { getStatusColor, getPriorityColor, getCategoryIcon } from '../utils/help
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api';
 const SOCKET_BASE_URL = API_BASE_URL.replace(/\/api\/?$/, '');
 
-// In api.js, add:
-export const setupSocket = () => {
-    const socket = io('http://localhost:3000', {
-        auth: { token: localStorage.getItem('token') }
-    });
-
-    socket.on('email:updated', (data) => {
-        // Dispatch to state management
-        window.dispatchEvent(new CustomEvent('email-update', { detail: data }));
-    });
-};
-
 const api = axios.create({
     baseURL: API_BASE_URL,
     headers: {
@@ -201,20 +189,67 @@ export const healthAPI = {
 };
 
 let socket = null;
+const socketListeners = new Map();
 
-// export const setupSocket = (tokenOverride) => {
-//     const token = tokenOverride || localStorage.getItem('token');
-//     if (!socket && token) {
-//         socket = io(SOCKET_BASE_URL, {
-//             auth: { token },
-//             transports: ['websocket', 'polling'],
-//         });
-//     }
-//     return socket;
-// };
+export const setupSocket = (tokenOverride) => {
+    const token = tokenOverride || localStorage.getItem('token');
+
+    if (!token) {
+        return null;
+    }
+
+    if (!socket) {
+        socket = io(SOCKET_BASE_URL, {
+            auth: { token },
+            transports: ['websocket', 'polling'],
+        });
+        return socket;
+    }
+
+    const currentToken = socket.auth?.token;
+    if (currentToken !== token) {
+        socket.auth = { token };
+        if (socket.connected) {
+            socket.disconnect().connect();
+        }
+    }
+
+    return socket;
+};
+
+export const subscribeSocketEvent = (eventName, handler, tokenOverride) => {
+    const activeSocket = setupSocket(tokenOverride);
+    if (!activeSocket || typeof handler !== 'function') {
+        return () => {};
+    }
+
+    let handlers = socketListeners.get(eventName);
+    if (!handlers) {
+        handlers = new Set();
+        socketListeners.set(eventName, handlers);
+    }
+
+    handlers.add(handler);
+    activeSocket.on(eventName, handler);
+
+    return () => {
+        const currentHandlers = socketListeners.get(eventName);
+        activeSocket.off(eventName, handler);
+
+        if (!currentHandlers) {
+            return;
+        }
+
+        currentHandlers.delete(handler);
+        if (currentHandlers.size === 0) {
+            socketListeners.delete(eventName);
+        }
+    };
+};
 
 export const disconnectSocket = () => {
     if (socket) {
+        socketListeners.clear();
         socket.disconnect();
         socket = null;
     }
@@ -226,9 +261,21 @@ export const joinEmailRoom = (emailId) => {
     }
 };
 
+export const leaveEmailRoom = (emailId) => {
+    if (socket) {
+        socket.emit('leave:email', emailId);
+    }
+};
+
 export const joinDashboardRoom = () => {
     if (socket) {
         socket.emit('join:dashboard');
+    }
+};
+
+export const leaveDashboardRoom = () => {
+    if (socket) {
+        socket.emit('leave:dashboard');
     }
 };
 
