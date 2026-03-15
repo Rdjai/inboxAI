@@ -341,7 +341,13 @@ emailSchema.index(
 
 // Pre-save middleware to enhance searchability
 emailSchema.pre('save', function (next) {
-    if (this.isModified('subject') || this.isModified('bodyText') || this.isModified('draftText')) {
+    if (
+        this.isModified('subject') ||
+        this.isModified('bodyText') ||
+        this.isModified('draftText') ||
+        this.isModified('fromAddress') ||
+        this.isModified('toAddress')
+    ) {
         const artifacts = computeSearchArtifacts(this);
         this.searchableContent = artifacts.searchableContent;
         this.keywords = artifacts.keywords;
