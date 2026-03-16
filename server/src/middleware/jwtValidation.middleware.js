@@ -1,11 +1,12 @@
 // src/middleware/jwtValidation.middleware.js
 const jwt = require('jsonwebtoken');
-const { JWT_SECRET, JWT_EXPIRY } = require('../config/env');
+const { JWT_SECRET, JWT_EXPIRES_IN } = require('../config/env');
 const User = require('../models/user.model');
 const { ROLES, PERMISSIONS } = require('../utils/constants');
 const permissionService = require('../services/permission.service');
 const cacheService = require('../services/cacheService');
 const logger = require('../utils/logger');
+const { parseJwtExpiresInToSeconds } = require('../utils/jwt');
 
 /**
  * Enhanced JWT validation middleware with comprehensive security features
@@ -40,16 +41,9 @@ class JWTValidationMiddleware {
                 };
             }
 
-            // Check token prefix
-            if (!token.startsWith('Bearer ')) {
-                return {
-                    valid: false,
-                    error: 'Token must have Bearer prefix',
-                    code: 'INVALID_PREFIX'
-                };
-            }
-
-            const cleanToken = token.replace('Bearer ', '');
+            const cleanToken = token.startsWith('Bearer ')
+                ? token.slice('Bearer '.length).trim()
+                : token.trim();
 
             // Token structure validation
             if (!cleanToken || cleanToken.length < 10) {
@@ -86,21 +80,21 @@ class JWTValidationMiddleware {
                     };
                 }
 
+                if (verifyError.name === 'NotBeforeError') {
+                    this.metrics.invalidTokens++;
+                    return {
+                        valid: false,
+                        error: 'Token is not valid yet',
+                        code: 'TOKEN_NOT_YET_VALID'
+                    };
+                }
+
                 if (verifyError.name === 'JsonWebTokenError') {
                     this.metrics.invalidTokens++;
                     return {
                         valid: false,
                         error: 'Invalid token signature',
                         code: 'INVALID_SIGNATURE'
-                    };
-                }
-
-                if (verifyError.name === 'JsonWebTokenError' || verifyError.name === 'NotBeforeError') {
-                    this.metrics.invalidTokens++;
-                    return {
-                        valid: false,
-                        error: 'Token is not valid yet',
-                        code: 'TOKEN_NOT_YET_VALID'
                     };
                 }
 
@@ -190,7 +184,8 @@ class JWTValidationMiddleware {
             return {
                 valid: true,
                 decoded,
-                token: cleanToken
+                token: cleanToken,
+                expiresAt: decoded?.exp ? new Date(decoded.exp * 1000).toISOString() : null
             };
 
         } catch (error) {
@@ -246,7 +241,7 @@ class JWTValidationMiddleware {
 
         // Check if token is not expired
         const now = Math.floor(Date.now() / 1000);
-        if (payload.exp < now) {
+        if (payload.exp <= now) {
             return {
                 valid: false,
                 error: 'Token has expired',
@@ -265,7 +260,7 @@ class JWTValidationMiddleware {
         }
 
         // Validate token age (prevent replay attacks)
-        const maxTokenAge = 30 * 24 * 60 * 60; // 30 days max
+        const maxTokenAge = Math.max(parseJwtExpiresInToSeconds(JWT_EXPIRES_IN), 1);
         if (now - payload.iat > maxTokenAge) {
             return {
                 valid: false,
@@ -410,7 +405,6 @@ class JWTValidationMiddleware {
             if (!validation.valid) {
                 const errorResponses = {
                     'INVALID_FORMAT': 400,
-                    'INVALID_PREFIX': 400,
                     'TOKEN_TOO_SHORT': 400,
                     'TOKEN_BLACKLISTED': 401,
                     'TOKEN_EXPIRED': 401,
@@ -503,7 +497,7 @@ class JWTValidationMiddleware {
                     userId: validation.decoded.userId,
                     role: validation.decoded.role,
                     iat: Math.floor(Date.now() / 1000),
-                    exp: Math.floor(Date.now() / 1000) + (JWT_EXPIRY || 3600)
+                    exp: Math.floor(Date.now() / 1000) + parseJwtExpiresInToSeconds(JWT_EXPIRES_IN)
                 },
                 JWT_SECRET
             );
@@ -514,7 +508,7 @@ class JWTValidationMiddleware {
             res.json({
                 success: true,
                 accessToken: newAccessToken,
-                expiresIn: JWT_EXPIRY || 3600
+                expiresIn: parseJwtExpiresInToSeconds(JWT_EXPIRES_IN)
             });
         } catch (error) {
             logger.error('Token refresh error:', error);

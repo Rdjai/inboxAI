@@ -5,6 +5,7 @@ const { ROLES } = require('../utils/constants');
 const { AppError } = require('../middleware/errorHandler.middleware');
 const bruteForceProtection = require('../services/bruteForceProtection.service');
 const logger = require('../utils/logger');
+const { parseJwtExpiresInToSeconds } = require('../utils/jwt');
 
 class AuthController {
     constructor() {
@@ -40,7 +41,7 @@ class AuthController {
             });
 
             // Generate token
-            const token = this.generateToken(user._id);
+            const tokenData = this.generateToken(user._id);
 
             // Update last login
             user.lastLoginAt = new Date();
@@ -53,7 +54,7 @@ class AuthController {
                 message: 'Registration successful',
                 data: {
                     user,
-                    token
+                    ...tokenData
                 }
             });
         } catch (error) {
@@ -145,7 +146,7 @@ class AuthController {
             bruteForceProtection.recordAttempt(clientId, true, req);
 
             // Generate token
-            const token = this.generateToken(user._id);
+            const tokenData = this.generateToken(user._id);
 
             // Update last login
             user.lastLoginAt = new Date();
@@ -158,7 +159,7 @@ class AuthController {
                 message: 'Login successful',
                 data: {
                     user,
-                    token
+                    ...tokenData
                 }
             });
         } catch (error) {
@@ -218,11 +219,19 @@ class AuthController {
     }
 
     generateToken(userId) {
-        return jwt.sign(
+        const token = jwt.sign(
             { userId },
             JWT_SECRET,
             { expiresIn: JWT_EXPIRES_IN }
         );
+
+        const expiresIn = parseJwtExpiresInToSeconds(JWT_EXPIRES_IN);
+
+        return {
+            token,
+            expiresIn,
+            expiresAt: new Date(Date.now() + expiresIn * 1000).toISOString()
+        };
     }
 }
 

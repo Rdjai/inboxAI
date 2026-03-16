@@ -3,6 +3,24 @@ import { authAPI } from '../services/api';
 import toast from 'react-hot-toast';
 
 const AuthContext = createContext(null);
+const AUTH_EXPIRED_MESSAGE_KEY = 'auth_expired_message';
+
+const decodeJwtPayload = (token) => {
+    try {
+        const [, payload] = String(token || '').split('.');
+        if (!payload) return null;
+        const normalized = payload.replace(/-/g, '+').replace(/_/g, '/');
+        return JSON.parse(atob(normalized));
+    } catch (error) {
+        return null;
+    }
+};
+
+const clearStoredAuth = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    localStorage.removeItem('tokenExpiresAt');
+};
 
 export const useAuth = () => {
     const context = useContext(AuthContext);
@@ -19,15 +37,36 @@ export const AuthProvider = ({ children }) => {
 
     // Check authentication on mount
     useEffect(() => {
+        const expiredMessage = sessionStorage.getItem(AUTH_EXPIRED_MESSAGE_KEY);
+        if (expiredMessage) {
+            toast.error(expiredMessage);
+            sessionStorage.removeItem(AUTH_EXPIRED_MESSAGE_KEY);
+        }
+
         const checkAuth = async () => {
             const token = localStorage.getItem('token');
             const storedUser = localStorage.getItem('user');
+            const storedExpiresAt = localStorage.getItem('tokenExpiresAt');
 
             if (token && storedUser) {
                 try {
+                    const decoded = decodeJwtPayload(token);
+                    const tokenExpiresAt = storedExpiresAt || (decoded?.exp ? new Date(decoded.exp * 1000).toISOString() : null);
+
+                    if (tokenExpiresAt && new Date(tokenExpiresAt).getTime() <= Date.now()) {
+                        clearStoredAuth();
+                        setUser(null);
+                        sessionStorage.setItem(AUTH_EXPIRED_MESSAGE_KEY, 'Your session expired. Please sign in again.');
+                        setLoading(false);
+                        return;
+                    }
+
                     // Parse stored user
                     const parsedUser = JSON.parse(storedUser);
                     setUser(parsedUser);
+                    if (tokenExpiresAt) {
+                        localStorage.setItem('tokenExpiresAt', tokenExpiresAt);
+                    }
 
                     // Verify token with backend by loading profile
                     try {
@@ -39,14 +78,12 @@ export const AuthProvider = ({ children }) => {
                         }
                     } catch (error) {
                         console.log('Token verification failed, clearing auth');
-                        localStorage.removeItem('user');
-                        localStorage.removeItem('token');
+                        clearStoredAuth();
                         setUser(null);
                     }
                 } catch (error) {
                     console.error('Failed to parse stored user:', error);
-                    localStorage.removeItem('user');
-                    localStorage.removeItem('token');
+                    clearStoredAuth();
                 }
             }
             setLoading(false);
