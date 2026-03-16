@@ -112,11 +112,15 @@ export const AuthProvider = ({ children }) => {
             const payload = responseData?.data || responseData;
             const token = payload?.token || responseData?.token;
             const userData = payload?.user || responseData?.user;
+            const tokenExpiresAt = payload?.expiresAt || responseData?.expiresAt || (decodeJwtPayload(token)?.exp ? new Date(decodeJwtPayload(token).exp * 1000).toISOString() : null);
 
             if (responseData?.success !== false && token && userData) {
 
                 localStorage.setItem('token', token);
                 localStorage.setItem('user', JSON.stringify(userData));
+                if (tokenExpiresAt) {
+                    localStorage.setItem('tokenExpiresAt', tokenExpiresAt);
+                }
                 setUser(userData);
 
                 toast.success('✅ Login successful!', { duration: 2000 });
@@ -158,11 +162,15 @@ export const AuthProvider = ({ children }) => {
             const payload = responseData?.data || responseData;
             const token = payload?.token || responseData?.token;
             const userData = payload?.user || responseData?.user;
+            const tokenExpiresAt = payload?.expiresAt || responseData?.expiresAt || (decodeJwtPayload(token)?.exp ? new Date(decodeJwtPayload(token).exp * 1000).toISOString() : null);
 
             if (responseData?.success !== false && token && userData) {
 
                 localStorage.setItem('token', token);
                 localStorage.setItem('user', JSON.stringify(userData));
+                if (tokenExpiresAt) {
+                    localStorage.setItem('tokenExpiresAt', tokenExpiresAt);
+                }
                 setUser(userData);
 
                 toast.success('✅ Registration successful!', { duration: 2000 });
@@ -193,10 +201,9 @@ export const AuthProvider = ({ children }) => {
     };
 
     const logout = () => {
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
+        clearStoredAuth();
         setUser(null);
-        toast.success('👋 Logged out successfully', { duration: 2000 });
+        toast.success('Logged out successfully', { duration: 2000 });
         // Let components handle navigation via useEffect
     };
 

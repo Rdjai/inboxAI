@@ -4,6 +4,7 @@ import { getStatusColor, getPriorityColor, getCategoryIcon } from '../utils/help
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api';
 const SOCKET_BASE_URL = API_BASE_URL.replace(/\/api\/?$/, '');
+const AUTH_EXPIRED_MESSAGE_KEY = 'auth_expired_message';
 
 const api = axios.create({
     baseURL: API_BASE_URL,
@@ -33,6 +34,10 @@ api.interceptors.response.use(
         if (status === 401) {
             localStorage.removeItem('token');
             localStorage.removeItem('user');
+            localStorage.removeItem('tokenExpiresAt');
+            if (data?.code === 'TOKEN_EXPIRED') {
+                sessionStorage.setItem(AUTH_EXPIRED_MESSAGE_KEY, 'Your session expired. Please sign in again.');
+            }
             window.location.href = '/login';
         }
 
