@@ -1,4 +1,3 @@
-// src/middleware/jwtValidation.middleware.js
 const jwt = require('jsonwebtoken');
 const { JWT_SECRET, JWT_EXPIRES_IN } = require('../config/env');
 const User = require('../models/user.model');
@@ -8,14 +7,37 @@ const cacheService = require('../services/cacheService');
 const logger = require('../utils/logger');
 const { parseJwtExpiresInToSeconds } = require('../utils/jwt');
 
-/**
- * Enhanced JWT validation middleware with comprehensive security features
- */
+const AUTH_STATUS_BY_CODE = {
+    INVALID_FORMAT: 400,
+    TOKEN_TOO_SHORT: 400,
+    TOKEN_BLACKLISTED: 401,
+    TOKEN_EXPIRED: 401,
+    INVALID_SIGNATURE: 401,
+    TOKEN_NOT_YET_VALID: 401,
+    VERIFICATION_FAILED: 401,
+    INVALID_PAYLOAD: 401,
+    MISSING_USER_ID: 401,
+    INVALID_USER_ID_FORMAT: 401,
+    MISSING_IAT: 401,
+    MISSING_EXP: 401,
+    TOKEN_TOO_OLD: 401,
+    USER_NOT_FOUND: 401,
+    ACCOUNT_DEACTIVATED: 401,
+    ACCOUNT_LOCKED: 401,
+    EMAIL_NOT_VERIFIED: 403,
+    INVALID_TOKEN_TYPE: 401,
+    VALIDATION_ERROR: 500
+};
+
 class JWTValidationMiddleware {
     constructor() {
         this.tokenBlacklist = new Map();
-        this.tokenBlacklistTTL = 3600000; // 1 hour in milliseconds
-        this.metrics = {
+        this.tokenBlacklistTTL = 60 * 60 * 1000;
+        this.metrics = this.createEmptyMetrics();
+    }
+
+    createEmptyMetrics() {
+        return {
             validTokens: 0,
             invalidTokens: 0,
             expiredTokens: 0,
@@ -25,186 +47,91 @@ class JWTValidationMiddleware {
         };
     }
 
-    /**
-     * Validate JWT token with comprehensive checks
-     */
-    async validateToken(token, options = {}) {
-        const { skipBlacklist = false, skipUserCheck = false } = options;
-
-        try {
-            // Token format validation
-            if (!token || typeof token !== 'string') {
-                return {
-                    valid: false,
-                    error: 'Invalid token format',
-                    code: 'INVALID_FORMAT'
-                };
-            }
-
-            const cleanToken = token.startsWith('Bearer ')
-                ? token.slice('Bearer '.length).trim()
-                : token.trim();
-
-            // Token structure validation
-            if (!cleanToken || cleanToken.length < 10) {
-                return {
-                    valid: false,
-                    error: 'Token is too short',
-                    code: 'TOKEN_TOO_SHORT'
-                };
-            }
-
-            // Check token blacklist
-            if (!skipBlacklist && this.isTokenBlacklisted(cleanToken)) {
-                this.metrics.blacklistedTokens++;
-                logger.warn(`Blacklisted token used: ${cleanToken.substring(0, 20)}...`);
-                return {
-                    valid: false,
-                    error: 'Token has been invalidated',
-                    code: 'TOKEN_BLACKLISTED'
-                };
-            }
-
-            // Verify token signature and decode
-            let decoded;
-            try {
-                decoded = jwt.verify(cleanToken, JWT_SECRET);
-            } catch (verifyError) {
-                if (verifyError.name === 'TokenExpiredError') {
-                    this.metrics.expiredTokens++;
-                    return {
-                        valid: false,
-                        error: 'Token has expired',
-                        code: 'TOKEN_EXPIRED',
-                        expiredAt: verifyError.expiredAt
-                    };
-                }
-
-                if (verifyError.name === 'NotBeforeError') {
-                    this.metrics.invalidTokens++;
-                    return {
-                        valid: false,
-                        error: 'Token is not valid yet',
-                        code: 'TOKEN_NOT_YET_VALID'
-                    };
-                }
-
-                if (verifyError.name === 'JsonWebTokenError') {
-                    this.metrics.invalidTokens++;
-                    return {
-                        valid: false,
-                        error: 'Invalid token signature',
-                        code: 'INVALID_SIGNATURE'
-                    };
-                }
-
-                this.metrics.invalidTokens++;
-                return {
-                    valid: false,
-                    error: 'Token verification failed',
-                    code: 'VERIFICATION_FAILED'
-                };
-            }
-
-            // Validate token payload structure
-            if (!decoded || !decoded.userId) {
-                this.metrics.invalidTokens++;
-                return {
-                    valid: false,
-                    error: 'Invalid token payload',
-                    code: 'INVALID_PAYLOAD'
-                };
-            }
-
-            // Validate token payload fields
-            const payloadValidation = this.validatePayload(decoded);
-            if (!payloadValidation.valid) {
-                this.metrics.invalidTokens++;
-                return payloadValidation;
-            }
-
-            // Check if user exists
-            if (!skipUserCheck) {
-                const user = await this.getUser(decoded.userId);
-                if (!user) {
-                    this.metrics.userNotFound++;
-                    logger.warn(`User not found for token: ${decoded.userId}`);
-                    return {
-                        valid: false,
-                        error: 'User not found',
-                        code: 'USER_NOT_FOUND'
-                    };
-                }
-
-                // Check if user is active
-                if (!user.isActive) {
-                    this.metrics.deactivatedAccounts++;
-                    logger.warn(`Deactivated account used: ${decoded.userId}`);
-                    return {
-                        valid: false,
-                        error: 'Account is deactivated',
-                        code: 'ACCOUNT_DEACTIVATED'
-                    };
-                }
-
-                // Check if user is locked
-                if (user.isLocked) {
-                    this.metrics.deactivatedAccounts++;
-                    logger.warn(`Locked account used: ${decoded.userId}`);
-                    return {
-                        valid: false,
-                        error: 'Account is locked',
-                        code: 'ACCOUNT_LOCKED'
-                    };
-                }
-
-                // Check if user's email is verified (if required)
-                if (options.requireEmailVerified && !user.isEmailVerified) {
-                    return {
-                        valid: false,
-                        error: 'Email must be verified',
-                        code: 'EMAIL_NOT_VERIFIED'
-                    };
-                }
-
-                // Add permission helper methods to user object
-                user.hasPermission = (permission) => permissionService.hasPermission(user, permission);
-                user.hasAnyPermission = (permissions) => permissionService.hasAnyPermission(user, permissions);
-                user.hasAllPermissions = (permissions) => permissionService.hasAllPermissions(user, permissions);
-                user.canManageRole = (targetRole) => permissionService.canManageRole(user.role, targetRole);
-
-                return {
-                    valid: true,
-                    decoded,
-                    user,
-                    token: cleanToken
-                };
-            }
-
-            return {
-                valid: true,
-                decoded,
-                token: cleanToken,
-                expiresAt: decoded?.exp ? new Date(decoded.exp * 1000).toISOString() : null
-            };
-
-        } catch (error) {
-            logger.error('JWT validation error:', error);
-            this.metrics.invalidTokens++;
-            return {
-                valid: false,
-                error: 'Token validation failed',
-                code: 'VALIDATION_ERROR'
-            };
+    getAuthorizationToken(headerValue) {
+        if (!headerValue || typeof headerValue !== 'string') {
+            return null;
         }
+
+        const trimmed = headerValue.trim();
+        if (!trimmed) {
+            return null;
+        }
+
+        return trimmed.startsWith('Bearer ')
+            ? trimmed.slice('Bearer '.length).trim()
+            : trimmed;
     }
 
-    /**
-     * Validate token payload structure
-     */
+    buildFailure(code, error, extra = {}) {
+        if (code === 'TOKEN_EXPIRED') {
+            this.metrics.expiredTokens++;
+        } else if (code === 'TOKEN_BLACKLISTED') {
+            this.metrics.blacklistedTokens++;
+        } else if (code === 'USER_NOT_FOUND') {
+            this.metrics.userNotFound++;
+        } else if (code === 'ACCOUNT_DEACTIVATED' || code === 'ACCOUNT_LOCKED') {
+            this.metrics.deactivatedAccounts++;
+        } else {
+            this.metrics.invalidTokens++;
+        }
+
+        return {
+            valid: false,
+            error,
+            code,
+            ...extra
+        };
+    }
+
+    attachPermissionHelpers(user) {
+        if (!user) {
+            return user;
+        }
+
+        user.hasPermission = (permission) => permissionService.hasPermission(user, permission);
+        user.hasAnyPermission = (permissions) => permissionService.hasAnyPermission(user, permissions);
+        user.hasAllPermissions = (permissions) => permissionService.hasAllPermissions(user, permissions);
+        user.canManageRole = (targetRole) => permissionService.canManageRole(user.role, targetRole);
+
+        return user;
+    }
+
+    respondWithValidationError(res, validation) {
+        const statusCode = AUTH_STATUS_BY_CODE[validation.code] || 401;
+
+        return res.status(statusCode).json({
+            success: false,
+            message: validation.error,
+            code: validation.code,
+            expiredAt: validation.expiredAt || null
+        });
+    }
+
+    ensureAuthenticated(req, res) {
+        if (req.user) {
+            return true;
+        }
+
+        res.status(401).json({
+            success: false,
+            message: 'Authentication required.'
+        });
+
+        return false;
+    }
+
+    getRequiredPermissionsFromConditions(req, conditions = []) {
+        for (const condition of conditions) {
+            if (typeof condition?.when === 'function' && condition.when(req)) {
+                return Array.isArray(condition.permissions) ? condition.permissions : [];
+            }
+        }
+
+        return [];
+    }
+
     validatePayload(payload) {
-        // Validate required fields
-        if (!payload.userId) {
+        if (!payload?.userId) {
             return {
                 valid: false,
                 error: 'Missing userId in token',
@@ -212,7 +139,6 @@ class JWTValidationMiddleware {
             };
         }
 
-        // Validate userId format (MongoDB ObjectId)
         if (typeof payload.userId !== 'string' || !payload.userId.match(/^[0-9a-fA-F]{24}$/)) {
             return {
                 valid: false,
@@ -221,7 +147,6 @@ class JWTValidationMiddleware {
             };
         }
 
-        // Validate iat (issued at) timestamp
         if (!payload.iat || typeof payload.iat !== 'number') {
             return {
                 valid: false,
@@ -230,7 +155,6 @@ class JWTValidationMiddleware {
             };
         }
 
-        // Validate exp (expiration) timestamp
         if (!payload.exp || typeof payload.exp !== 'number') {
             return {
                 valid: false,
@@ -239,19 +163,18 @@ class JWTValidationMiddleware {
             };
         }
 
-        // Check if token is not expired
         const now = Math.floor(Date.now() / 1000);
         if (payload.exp <= now) {
             return {
                 valid: false,
                 error: 'Token has expired',
-                code: 'TOKEN_EXPIRED'
+                code: 'TOKEN_EXPIRED',
+                expiredAt: new Date(payload.exp * 1000).toISOString()
             };
         }
 
-        // Check if token is not too old (prevent token reuse attacks)
-        const maxAge = 365 * 24 * 60 * 60; // 1 year max
-        if (now - payload.iat > maxAge) {
+        const maxAgeSeconds = 365 * 24 * 60 * 60;
+        if (now - payload.iat > maxAgeSeconds) {
             return {
                 valid: false,
                 error: 'Token is too old',
@@ -259,25 +182,21 @@ class JWTValidationMiddleware {
             };
         }
 
-        // Validate token age (prevent replay attacks)
-        const maxTokenAge = Math.max(parseJwtExpiresInToSeconds(JWT_EXPIRES_IN), 1);
-        if (now - payload.iat > maxTokenAge) {
+        const configuredMaxAge = Math.max(parseJwtExpiresInToSeconds(JWT_EXPIRES_IN), 1);
+        if (now - payload.iat > configuredMaxAge) {
             return {
                 valid: false,
                 error: 'Token has expired',
-                code: 'TOKEN_EXPIRED'
+                code: 'TOKEN_EXPIRED',
+                expiredAt: new Date(payload.exp * 1000).toISOString()
             };
         }
 
         return { valid: true };
     }
 
-    /**
-     * Get user from database
-     */
     async getUser(userId) {
         try {
-            // Check cache first
             const cacheKey = `user:${userId}`;
             const cachedUser = cacheService.get(cacheKey);
             if (cachedUser) {
@@ -287,7 +206,6 @@ class JWTValidationMiddleware {
             const user = await User.findById(userId).select('-password -__v');
 
             if (user) {
-                // Cache user for 5 minutes
                 cacheService.set(cacheKey, user, 300);
             }
 
@@ -298,19 +216,13 @@ class JWTValidationMiddleware {
         }
     }
 
-    /**
-     * Check if token is blacklisted
-     */
     isTokenBlacklisted(token) {
-        const now = Date.now();
         const blacklistEntry = this.tokenBlacklist.get(token);
-
         if (!blacklistEntry) {
             return false;
         }
 
-        // Clean up expired blacklist entries
-        if (now > blacklistEntry.expiry) {
+        if (Date.now() > blacklistEntry.expiry) {
             this.tokenBlacklist.delete(token);
             return false;
         }
@@ -318,26 +230,26 @@ class JWTValidationMiddleware {
         return true;
     }
 
-    /**
-     * Blacklist a token
-     */
     blacklistToken(token, ttl = this.tokenBlacklistTTL) {
-        const expiry = Date.now() + ttl;
-        this.tokenBlacklist.set(token, { expiry });
-        logger.info(`Token blacklisted: ${token.substring(0, 20)}...`);
+        const cleanToken = this.getAuthorizationToken(token);
+        if (!cleanToken) {
+            return;
+        }
+
+        this.tokenBlacklist.set(cleanToken, { expiry: Date.now() + ttl });
+        logger.info(`Token blacklisted: ${cleanToken.substring(0, 20)}...`);
     }
 
-    /**
-     * Unblacklist a token
-     */
     unblacklistToken(token) {
-        this.tokenBlacklist.delete(token);
-        logger.info(`Token unblacklisted: ${token.substring(0, 20)}...`);
+        const cleanToken = this.getAuthorizationToken(token);
+        if (!cleanToken) {
+            return;
+        }
+
+        this.tokenBlacklist.delete(cleanToken);
+        logger.info(`Token unblacklisted: ${cleanToken.substring(0, 20)}...`);
     }
 
-    /**
-     * Clean up expired blacklist entries
-     */
     cleanupBlacklist() {
         const now = Date.now();
         let cleaned = 0;
@@ -356,43 +268,100 @@ class JWTValidationMiddleware {
         return cleaned;
     }
 
-    /**
-     * Get metrics
-     */
-    getMetrics() {
-        const total = this.metrics.validTokens + this.metrics.invalidTokens + this.metrics.expiredTokens +
-            this.metrics.blacklistedTokens + this.metrics.userNotFound + this.metrics.deactivatedAccounts;
+    async validateToken(token, options = {}) {
+        const { skipBlacklist = false, skipUserCheck = false, requireEmailVerified = false } = options;
 
-        return {
-            ...this.metrics,
-            total: total,
-            validRate: total > 0 ? ((this.metrics.validTokens / total) * 100).toFixed(2) + '%' : '0%',
-            invalidRate: total > 0 ? ((this.metrics.invalidTokens / total) * 100).toFixed(2) + '%' : '0%',
-            blacklistCount: this.tokenBlacklist.size
-        };
-    }
-
-    /**
-     * Reset metrics
-     */
-    resetMetrics() {
-        this.metrics = {
-            validTokens: 0,
-            invalidTokens: 0,
-            expiredTokens: 0,
-            blacklistedTokens: 0,
-            userNotFound: 0,
-            deactivatedAccounts: 0
-        };
-    }
-
-    /**
-     * Enhanced auth middleware
-     */
-    async authMiddleware(req, res, next) {
         try {
-            const token = req.header('Authorization')?.replace('Bearer ', '');
+            const cleanToken = this.getAuthorizationToken(token);
+            if (!cleanToken) {
+                return this.buildFailure('INVALID_FORMAT', 'Invalid token format');
+            }
 
+            if (cleanToken.length < 10) {
+                return this.buildFailure('TOKEN_TOO_SHORT', 'Token is too short');
+            }
+
+            if (!skipBlacklist && this.isTokenBlacklisted(cleanToken)) {
+                logger.warn(`Blacklisted token used: ${cleanToken.substring(0, 20)}...`);
+                return this.buildFailure('TOKEN_BLACKLISTED', 'Token has been invalidated');
+            }
+
+            let decoded;
+            try {
+                decoded = jwt.verify(cleanToken, JWT_SECRET);
+            } catch (error) {
+                if (error.name === 'TokenExpiredError') {
+                    return this.buildFailure('TOKEN_EXPIRED', 'Token has expired', {
+                        expiredAt: error.expiredAt
+                    });
+                }
+
+                if (error.name === 'NotBeforeError') {
+                    return this.buildFailure('TOKEN_NOT_YET_VALID', 'Token is not valid yet');
+                }
+
+                if (error.name === 'JsonWebTokenError') {
+                    return this.buildFailure('INVALID_SIGNATURE', 'Invalid token signature');
+                }
+
+                return this.buildFailure('VERIFICATION_FAILED', 'Token verification failed');
+            }
+
+            const payloadValidation = this.validatePayload(decoded);
+            if (!payloadValidation.valid) {
+                return this.buildFailure(payloadValidation.code, payloadValidation.error, {
+                    expiredAt: payloadValidation.expiredAt || null
+                });
+            }
+
+            if (skipUserCheck) {
+                this.metrics.validTokens++;
+                return {
+                    valid: true,
+                    decoded,
+                    token: cleanToken,
+                    expiresAt: decoded.exp ? new Date(decoded.exp * 1000).toISOString() : null
+                };
+            }
+
+            const user = await this.getUser(decoded.userId);
+            if (!user) {
+                logger.warn(`User not found for token: ${decoded.userId}`);
+                return this.buildFailure('USER_NOT_FOUND', 'User not found');
+            }
+
+            if (!user.isActive) {
+                logger.warn(`Deactivated account used: ${decoded.userId}`);
+                return this.buildFailure('ACCOUNT_DEACTIVATED', 'Account is deactivated');
+            }
+
+            if (user.isLocked) {
+                logger.warn(`Locked account used: ${decoded.userId}`);
+                return this.buildFailure('ACCOUNT_LOCKED', 'Account is locked');
+            }
+
+            if (requireEmailVerified && !user.isEmailVerified) {
+                return this.buildFailure('EMAIL_NOT_VERIFIED', 'Email must be verified');
+            }
+
+            this.metrics.validTokens++;
+
+            return {
+                valid: true,
+                decoded,
+                token: cleanToken,
+                user: this.attachPermissionHelpers(user),
+                expiresAt: decoded.exp ? new Date(decoded.exp * 1000).toISOString() : null
+            };
+        } catch (error) {
+            logger.error('JWT validation error:', error);
+            return this.buildFailure('VALIDATION_ERROR', 'Token validation failed');
+        }
+    }
+
+    async authenticateRequest(req, res, next, options = {}) {
+        try {
+            const token = req.header('Authorization');
             if (!token) {
                 return res.status(401).json({
                     success: false,
@@ -400,56 +369,20 @@ class JWTValidationMiddleware {
                 });
             }
 
-            const validation = await this.validateToken(token);
-
+            const validation = await this.validateToken(token, options);
             if (!validation.valid) {
-                const errorResponses = {
-                    'INVALID_FORMAT': 400,
-                    'TOKEN_TOO_SHORT': 400,
-                    'TOKEN_BLACKLISTED': 401,
-                    'TOKEN_EXPIRED': 401,
-                    'INVALID_SIGNATURE': 401,
-                    'TOKEN_NOT_YET_VALID': 401,
-                    'VERIFICATION_FAILED': 401,
-                    'INVALID_PAYLOAD': 401,
-                    'MISSING_USER_ID': 401,
-                    'INVALID_USER_ID_FORMAT': 401,
-                    'MISSING_IAT': 401,
-                    'MISSING_EXP': 401,
-                    'TOKEN_TOO_OLD': 401,
-                    'USER_NOT_FOUND': 401,
-                    'ACCOUNT_DEACTIVATED': 401,
-                    'ACCOUNT_LOCKED': 401,
-                    'EMAIL_NOT_VERIFIED': 403,
-                    'VALIDATION_ERROR': 500
-                };
-
-                const statusCode = errorResponses[validation.code] || 401;
-
-                return res.status(statusCode).json({
-                    success: false,
-                    message: validation.error,
-                    code: validation.code
-                });
+                return this.respondWithValidationError(res, validation);
             }
 
-            this.metrics.validTokens++;
-
-            // Add permission helper methods to user object
-            validation.user.hasPermission = (permission) => permissionService.hasPermission(validation.user, permission);
-            validation.user.hasAnyPermission = (permissions) => permissionService.hasAnyPermission(validation.user, permissions);
-            validation.user.hasAllPermissions = (permissions) => permissionService.hasAllPermissions(validation.user, permissions);
-            validation.user.canManageRole = (targetRole) => permissionService.canManageRole(validation.user.role, targetRole);
-
-            req.user = validation.user;
             req.token = validation.token;
             req.tokenPayload = validation.decoded;
+            if (validation.user) {
+                req.user = validation.user;
+            }
 
-            next();
+            return next();
         } catch (error) {
             logger.error('Auth middleware error:', error);
-            this.metrics.invalidTokens++;
-
             return res.status(500).json({
                 success: false,
                 message: 'Authentication error',
@@ -458,13 +391,21 @@ class JWTValidationMiddleware {
         }
     }
 
-    /**
-     * Token refresh middleware
-     */
-    async refreshMiddleware(req, res, next) {
+    async authMiddleware(req, res, next) {
+        return this.authenticateRequest(req, res, next);
+    }
+
+    async validateTokenMiddleware(req, res, next) {
+        return this.authenticateRequest(req, res, next, { skipUserCheck: true });
+    }
+
+    async verifyTokenMiddleware(req, res, next) {
+        return this.authenticateRequest(req, res, next);
+    }
+
+    async refreshMiddleware(req, res) {
         try {
             const { refreshToken } = req.body;
-
             if (!refreshToken) {
                 return res.status(400).json({
                     success: false,
@@ -473,25 +414,17 @@ class JWTValidationMiddleware {
             }
 
             const validation = await this.validateToken(refreshToken);
-
             if (!validation.valid) {
-                return res.status(401).json({
-                    success: false,
-                    message: validation.error,
-                    code: validation.code
-                });
+                return this.respondWithValidationError(res, validation);
             }
 
-            // Check if refresh token is valid (different from access token)
             if (!validation.decoded.isRefreshToken) {
-                return res.status(401).json({
-                    success: false,
-                    message: 'Invalid token type',
+                return this.respondWithValidationError(res, {
+                    error: 'Invalid token type',
                     code: 'INVALID_TOKEN_TYPE'
                 });
             }
 
-            // Generate new access token
             const newAccessToken = jwt.sign(
                 {
                     userId: validation.decoded.userId,
@@ -502,100 +435,53 @@ class JWTValidationMiddleware {
                 JWT_SECRET
             );
 
-            // Invalidate old refresh token
             this.blacklistToken(refreshToken);
 
-            res.json({
+            return res.json({
                 success: true,
                 accessToken: newAccessToken,
                 expiresIn: parseJwtExpiresInToSeconds(JWT_EXPIRES_IN)
             });
         } catch (error) {
             logger.error('Token refresh error:', error);
-            res.status(500).json({
+            return res.status(500).json({
                 success: false,
                 message: 'Token refresh failed'
             });
         }
     }
 
-    /**
-     * Token invalidation middleware
-     */
-    async invalidateTokenMiddleware(req, res, next) {
+    async invalidateTokenMiddleware(req, res) {
         try {
-            const token = req.header('Authorization')?.replace('Bearer ', '');
+            const token = req.header('Authorization');
+            const cleanToken = this.getAuthorizationToken(token);
 
-            if (!token) {
+            if (!cleanToken) {
                 return res.status(400).json({
                     success: false,
                     message: 'Token is required'
                 });
             }
 
-            // Blacklist the token
-            this.blacklistToken(token);
+            this.blacklistToken(cleanToken);
 
-            res.json({
+            return res.json({
                 success: true,
                 message: 'Token has been invalidated'
             });
         } catch (error) {
             logger.error('Token invalidation error:', error);
-            res.status(500).json({
+            return res.status(500).json({
                 success: false,
                 message: 'Token invalidation failed'
             });
         }
     }
 
-    /**
-     * Token validation middleware (for public endpoints)
-     */
-    async validateTokenMiddleware(req, res, next) {
-        try {
-            const token = req.header('Authorization')?.replace('Bearer ', '');
-
-            if (!token) {
-                return res.status(401).json({
-                    success: false,
-                    message: 'Access denied. No token provided.'
-                });
-            }
-
-            const validation = await this.validateToken(token, { skipUserCheck: true });
-
-            if (!validation.valid) {
-                return res.status(401).json({
-                    success: false,
-                    message: validation.error,
-                    code: validation.code
-                });
-            }
-
-            req.tokenPayload = validation.decoded;
-            req.token = validation.token;
-
-            next();
-        } catch (error) {
-            logger.error('Token validation error:', error);
-            res.status(500).json({
-                success: false,
-                message: 'Token validation failed'
-            });
-        }
-    }
-
-    /**
-     * Role-based middleware (enhanced)
-     */
     roleMiddleware(...roles) {
         return (req, res, next) => {
-            if (!req.user) {
-                return res.status(401).json({
-                    success: false,
-                    message: 'Authentication required.'
-                });
+            if (!this.ensureAuthenticated(req, res)) {
+                return;
             }
 
             if (!roles.includes(req.user.role)) {
@@ -608,25 +494,17 @@ class JWTValidationMiddleware {
                 });
             }
 
-            next();
+            return next();
         };
     }
 
-    /**
-     * Permission-based middleware (enhanced)
-     */
     permissionMiddleware(...permissions) {
         return (req, res, next) => {
-            if (!req.user) {
-                return res.status(401).json({
-                    success: false,
-                    message: 'Authentication required.'
-                });
+            if (!this.ensureAuthenticated(req, res)) {
+                return;
             }
 
-            const hasPermission = permissionService.hasAnyPermission(req.user, permissions);
-
-            if (!hasPermission) {
+            if (!permissionService.hasAnyPermission(req.user, permissions)) {
                 return res.status(403).json({
                     success: false,
                     message: 'Insufficient permissions.',
@@ -637,25 +515,17 @@ class JWTValidationMiddleware {
                 });
             }
 
-            next();
+            return next();
         };
     }
 
-    /**
-     * Require all specified permissions (enhanced)
-     */
     requireAllPermissions(...permissions) {
         return (req, res, next) => {
-            if (!req.user) {
-                return res.status(401).json({
-                    success: false,
-                    message: 'Authentication required.'
-                });
+            if (!this.ensureAuthenticated(req, res)) {
+                return;
             }
 
-            const hasAllPermissions = permissionService.hasAllPermissions(req.user, permissions);
-
-            if (!hasAllPermissions) {
+            if (!permissionService.hasAllPermissions(req.user, permissions)) {
                 return res.status(403).json({
                     success: false,
                     message: 'Insufficient permissions. All specified permissions required.',
@@ -665,19 +535,13 @@ class JWTValidationMiddleware {
                 });
             }
 
-            next();
+            return next();
         };
     }
 
-    /**
-     * Admin-only middleware (enhanced)
-     */
     adminOnly(req, res, next) {
-        if (!req.user) {
-            return res.status(401).json({
-                success: false,
-                message: 'Authentication required.'
-            });
+        if (!this.ensureAuthenticated(req, res)) {
+            return;
         }
 
         if (req.user.role !== ROLES.ADMIN) {
@@ -689,63 +553,35 @@ class JWTValidationMiddleware {
             });
         }
 
-        next();
+        return next();
     }
 
-    /**
-     * Resource ownership middleware (enhanced)
-     */
     resourceOwnership(resourceField = 'assignedUserId', permission = PERMISSIONS.EMAIL_VIEW_ALL) {
         return (req, res, next) => {
-            if (!req.user) {
-                return res.status(401).json({
-                    success: false,
-                    message: 'Authentication required.'
-                });
+            if (!this.ensureAuthenticated(req, res)) {
+                return;
             }
 
-            // Admin can access everything
-            if (req.user.role === ROLES.ADMIN) {
+            if (req.user.role === ROLES.ADMIN || permissionService.hasPermission(req.user, permission)) {
                 return next();
             }
 
-            // Check if user has permission to access all resources
-            if (permissionService.hasPermission(req.user, permission)) {
-                return next();
-            }
-
-            // Add ownership check to request for later validation
             req.requireOwnership = {
                 field: resourceField,
                 userId: req.user._id
             };
 
-            next();
+            return next();
         };
     }
 
-    /**
-     * Conditional permission middleware (enhanced)
-     */
     conditionalPermission(conditions) {
         return (req, res, next) => {
-            if (!req.user) {
-                return res.status(401).json({
-                    success: false,
-                    message: 'Authentication required.'
-                });
+            if (!this.ensureAuthenticated(req, res)) {
+                return;
             }
 
-            let requiredPermissions = [];
-
-            // Evaluate conditions
-            for (const condition of conditions) {
-                if (condition.when(req)) {
-                    requiredPermissions = condition.permissions;
-                    break;
-                }
-            }
-
+            const requiredPermissions = this.getRequiredPermissionsFromConditions(req, conditions);
             if (requiredPermissions.length === 0) {
                 return res.status(403).json({
                     success: false,
@@ -753,9 +589,7 @@ class JWTValidationMiddleware {
                 });
             }
 
-            const hasPermission = permissionService.hasAnyPermission(req.user, requiredPermissions);
-
-            if (!hasPermission) {
+            if (!permissionService.hasAnyPermission(req.user, requiredPermissions)) {
                 return res.status(403).json({
                     success: false,
                     message: 'Insufficient permissions for this operation.',
@@ -765,57 +599,33 @@ class JWTValidationMiddleware {
                 });
             }
 
-            next();
+            return next();
         };
     }
 
-    /**
-     * Token verification middleware (for public endpoints)
-     */
-    async verifyTokenMiddleware(req, res, next) {
-        try {
-            const token = req.header('Authorization')?.replace('Bearer ', '');
+    getMetrics() {
+        const total = Object.values(this.metrics).reduce((sum, value) => sum + value, 0);
 
-            if (!token) {
-                return res.status(401).json({
-                    success: false,
-                    message: 'Access denied. No token provided.'
-                });
-            }
-
-            const validation = await this.validateToken(token);
-
-            if (!validation.valid) {
-                return res.status(401).json({
-                    success: false,
-                    message: validation.error,
-                    code: validation.code
-                });
-            }
-
-            req.tokenPayload = validation.decoded;
-            req.token = validation.token;
-
-            next();
-        } catch (error) {
-            logger.error('Token verification error:', error);
-            res.status(500).json({
-                success: false,
-                message: 'Token verification failed'
-            });
-        }
+        return {
+            ...this.metrics,
+            total,
+            validRate: total > 0 ? `${((this.metrics.validTokens / total) * 100).toFixed(2)}%` : '0%',
+            invalidRate: total > 0 ? `${((this.metrics.invalidTokens / total) * 100).toFixed(2)}%` : '0%',
+            blacklistCount: this.tokenBlacklist.size
+        };
     }
 
-    /**
-     * Get middleware instance
-     */
+    resetMetrics() {
+        this.metrics = this.createEmptyMetrics();
+    }
+
     static getInstance() {
         if (!this.instance) {
             this.instance = new JWTValidationMiddleware();
         }
+
         return this.instance;
     }
 }
 
-// Export singleton instance
 module.exports = JWTValidationMiddleware.getInstance();
