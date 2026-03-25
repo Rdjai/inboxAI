@@ -19,6 +19,7 @@ import StatusBadge from '../common/StatusBadge';
 import LoadingSpinner from '../common/LoadingSpinner';
 import ToneSelector from './ToneSelector';
 import { adjustTone } from '../../utils/toneAdjuster';
+import AttachmentGallery from './AttachmentGallery';
 
 const EmailDetail = ({ email, onClose }) => {
     const { updateEmail, approveEmail, sendEmail, replyToEmail } = useEmail();
@@ -296,28 +297,7 @@ const EmailDetail = ({ email, onClose }) => {
                 {/* Attachments */}
                 {email.attachments && email.attachments.length > 0 && (
                     <div className="mb-6">
-                        <h3 className="font-semibold mb-2">Attachments</h3>
-                        <div className="space-y-2">
-                            {email.attachments.map((attachment, index) => (
-                                <div
-                                    key={index}
-                                    className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100"
-                                >
-                                    <div className="flex items-center space-x-3">
-                                        <Paperclip className="h-5 w-5 text-gray-400" />
-                                        <div>
-                                            <p className="font-medium">{attachment.filename}</p>
-                                            <p className="text-sm text-gray-500">
-                                                {(attachment.size / 1024).toFixed(1)} KB
-                                            </p>
-                                        </div>
-                                    </div>
-                                    <button className="btn-secondary px-3 py-1 text-sm">
-                                        <Download className="h-4 w-4" />
-                                    </button>
-                                </div>
-                            ))}
-                        </div>
+                        <AttachmentGallery attachments={email.attachments} />
                     </div>
                 )}
 

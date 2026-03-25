@@ -22,6 +22,7 @@ import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
 import { Textarea } from '../components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
+import AttachmentGallery from '../components/email/AttachmentGallery';
 import {
     ArrowLeft,
     Mail,
@@ -382,21 +383,8 @@ const EmailDetailPage = () => {
                                 </div>
 
                                 {email.attachments?.length > 0 && (
-                                    <div className="mt-6 pt-6 border-t">
-                                        <h4 className="font-medium mb-3">Attachments</h4>
-                                        <div className="space-y-2">
-                                            {email.attachments.map((att, index) => (
-                                                <div key={index} className="flex items-center justify-between p-2 bg-white border rounded">
-                                                    <div className="flex items-center">
-                                                        <Download className="h-4 w-4 mr-2 text-gray-500" />
-                                                        <span>{att.filename}</span>
-                                                    </div>
-                                                    <Button variant="ghost" size="sm">
-                                                        Download
-                                                    </Button>
-                                                </div>
-                                            ))}
-                                        </div>
+                                    <div className="mt-6 border-t pt-6">
+                                        <AttachmentGallery attachments={email.attachments} />
                                     </div>
                                 )}
                             </div>
