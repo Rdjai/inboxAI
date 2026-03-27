@@ -1,43 +1,15 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
+import { Sparkles } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useEmail } from '../../context/EmailContext';
-import {
-    BarChart3,
-    Inbox,
-    PenSquare,
-    Send,
-    FileText,
-    Mail,
-    Users,
-    LineChart,
-    Eye,
-    Settings,
-    Activity
-} from 'lucide-react';
-
-const navItems = [
-    { path: '/app/dashboard', label: 'Dashboard', icon: BarChart3, roles: ['admin', 'reviewer', 'agent', 'editor', 'member'], section: 'Workspace' },
-    { path: '/app/inbox', label: 'Inbox', icon: Inbox, roles: ['admin', 'reviewer', 'agent', 'editor', 'member'], section: 'Workspace' },
-    { path: '/app/compose', label: 'Compose', icon: PenSquare, roles: ['admin', 'reviewer', 'agent', 'editor', 'member'], section: 'Workspace' },
-    { path: '/app/sent', label: 'Sent', icon: Send, roles: ['admin', 'reviewer', 'agent', 'editor', 'member'], section: 'Workspace' },
-    { path: '/app/drafts', label: 'Drafts', icon: FileText, roles: ['admin', 'reviewer', 'agent', 'editor', 'member'], section: 'Workspace' },
-    { path: '/app/accounts', label: 'Email Accounts', icon: Mail, roles: ['admin', 'reviewer', 'editor'], section: 'Management' },
-    { path: '/app/activity', label: 'Activity', icon: Activity, roles: ['admin', 'reviewer', 'editor'], section: 'Management' },
-    { path: '/app/analytics', label: 'Analytics', icon: LineChart, roles: ['admin', 'reviewer', 'editor'], section: 'Management' },
-    { path: '/app/team', label: 'Team', icon: Users, roles: ['admin'], section: 'Management' },
-    { path: '/app/review', label: 'Review', icon: Eye, roles: ['admin', 'reviewer'], section: 'Management' },
-    { path: '/app/settings', label: 'Settings', icon: Settings, roles: ['admin', 'reviewer', 'agent', 'editor', 'member'], section: 'Management' },
-];
+import { getAllowedNavItems } from './navigation';
 
 const Sidebar = ({ isOpen, onClose }) => {
     const { user } = useAuth();
     const { unreadCount } = useEmail();
 
-    const filteredItems = navItems.filter(item =>
-        item.roles.includes(user?.role || 'agent')
-    );
-
+    const filteredItems = getAllowedNavItems(user?.role);
     const workspaceItems = filteredItems.filter((item) => item.section === 'Workspace');
     const managementItems = filteredItems.filter((item) => item.section === 'Management');
 
@@ -51,26 +23,41 @@ const Sidebar = ({ isOpen, onClose }) => {
                 to={item.path}
                 onClick={onClose}
                 className={({ isActive }) =>
-                    `group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors duration-200 ${isActive
-                        ? 'bg-gradient-to-r from-blue-50 to-purple-50 text-blue-700 shadow-sm ring-1 ring-blue-100'
-                        : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                    `group flex items-center gap-3 rounded-2xl px-3 py-3 text-sm font-medium transition ${isActive
+                        ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/10'
+                        : 'text-slate-600 hover:bg-white hover:text-slate-900 hover:shadow-sm'
                     }`
                 }
             >
-                <span className="relative flex h-8 w-8 items-center justify-center rounded-lg bg-gray-100 text-gray-600 transition-colors duration-200 group-hover:bg-white group-hover:text-gray-900">
-                    <Icon className="h-4 w-4" />
-                    {showUnreadPulse && (
-                        <>
-                            <span className="mail-pulse absolute h-2.5 w-2.5 rounded-full bg-rose-400" />
-                            <span className="absolute h-2.5 w-2.5 rounded-full bg-rose-500" />
-                        </>
-                    )}
-                </span>
-                <span className="truncate">{item.label}</span>
-                {showUnreadPulse && (
-                    <span className="ml-auto inline-flex min-w-[1.75rem] items-center justify-center rounded-full bg-rose-50 px-2 py-0.5 text-[11px] font-semibold text-rose-700 ring-1 ring-inset ring-rose-200">
-                        {unreadCount > 99 ? '99+' : unreadCount}
-                    </span>
+                {({ isActive }) => (
+                    <>
+                        <span className={`relative flex h-10 w-10 items-center justify-center rounded-2xl transition ${isActive
+                            ? 'bg-white/12 text-white'
+                            : 'bg-slate-100 text-slate-500 group-hover:bg-slate-900 group-hover:text-white'
+                            }`}>
+                            <Icon className="h-4 w-4" />
+                            {showUnreadPulse && (
+                                <>
+                                    <span className="mail-pulse absolute right-2 top-2 h-2.5 w-2.5 rounded-full bg-rose-400" />
+                                    <span className="absolute right-2 top-2 h-2.5 w-2.5 rounded-full bg-rose-500" />
+                                </>
+                            )}
+                        </span>
+                        <div className="min-w-0 flex-1">
+                            <p className="truncate">{item.label}</p>
+                            <p className={`truncate text-xs ${isActive ? 'text-white/65' : 'text-slate-400'}`}>
+                                {item.section}
+                            </p>
+                        </div>
+                        {showUnreadPulse && (
+                            <span className={`inline-flex min-w-[1.9rem] items-center justify-center rounded-full px-2 py-0.5 text-[11px] font-semibold ${isActive
+                                ? 'bg-white/15 text-white'
+                                : 'bg-rose-50 text-rose-700 ring-1 ring-inset ring-rose-200'
+                                }`}>
+                                {unreadCount > 99 ? '99+' : unreadCount}
+                            </span>
+                        )}
+                    </>
                 )}
             </NavLink>
         );
@@ -78,51 +65,60 @@ const Sidebar = ({ isOpen, onClose }) => {
 
     return (
         <>
-            {/* Mobile overlay */}
             <div
                 className={`fixed inset-0 z-40 bg-slate-950/45 transition-opacity duration-200 md:hidden ${isOpen ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0'}`}
                 onClick={onClose}
                 aria-hidden={!isOpen}
             />
 
-            {/* Sidebar */}
             <aside className={`
-                sidebar-panel fixed bottom-0 left-0 top-16 z-50 w-64 border-r border-gray-200 bg-white
+                sidebar-panel fixed bottom-0 left-0 top-[73px] z-50 w-[290px] border-r border-slate-200 bg-[#f6f8fb]
                 transition-transform duration-200 ease-out
                 ${isOpen ? 'translate-x-0' : '-translate-x-full'}
                 md:relative md:bottom-0 md:top-0 md:flex md:h-full md:translate-x-0 md:transition-none
             `}>
-                <div className="h-full flex flex-col pt-4 pb-4 overflow-hidden">
-                    {/* Navigation */}
-                    <nav className="sidebar-scroll mt-2 flex-1 px-3 overflow-y-auto">
+                <div className="flex h-full flex-col overflow-hidden px-4 py-4">
+                    <div className="rounded-[28px] bg-gradient-to-br from-sky-500 via-cyan-500 to-slate-900 p-4 text-white shadow-lg">
+                        <div className="flex items-start justify-between gap-3">
+                            <div>
+                                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-cyan-100">Workspace</p>
+                                <p className="mt-2 text-lg font-semibold">{user?.role ? `${user.role.charAt(0).toUpperCase()}${user.role.slice(1)}` : 'Member'} Console</p>
+                                <p className="mt-1 text-sm text-cyan-50/90">
+                                    {unreadCount > 0 ? `${unreadCount} unread messages need attention.` : 'Inbox is under control.'}
+                                </p>
+                            </div>
+                            <div className="rounded-2xl bg-white/15 p-2.5">
+                                <Sparkles className="h-5 w-5" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <nav className="sidebar-scroll mt-5 flex-1 overflow-y-auto">
                         <div>
-                            <p className="px-3 pb-2 text-xs font-semibold uppercase tracking-wide text-gray-400">Workspace</p>
-                            <div className="space-y-1">
+                            <p className="px-2 pb-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Workspace</p>
+                            <div className="space-y-2">
                                 {workspaceItems.map(renderNavItem)}
                             </div>
                         </div>
 
                         {managementItems.length > 0 && (
-                            <div className="mt-6">
-                                <p className="px-3 pb-2 text-xs font-semibold uppercase tracking-wide text-gray-400">Management</p>
-                                <div className="space-y-1">
+                            <div className="mt-7">
+                                <p className="px-2 pb-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Management</p>
+                                <div className="space-y-2">
                                     {managementItems.map(renderNavItem)}
                                 </div>
                             </div>
                         )}
                     </nav>
 
-                    {/* User info */}
-                    <div className="mt-auto mx-3 px-3 py-3 border border-gray-200 rounded-xl bg-gray-50">
-                        <div className="flex items-center">
-                            <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center shadow-sm">
-                                <span className="text-white font-bold">
-                                    {user?.name?.charAt(0) || 'U'}
-                                </span>
+                    <div className="mt-5 rounded-[24px] border border-slate-200 bg-white p-4 shadow-sm">
+                        <div className="flex items-center gap-3">
+                            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-500 to-slate-900 text-sm font-semibold text-white shadow-sm">
+                                {user?.name?.charAt(0) || 'U'}
                             </div>
-                            <div className="ml-3">
-                                <p className="text-sm font-medium text-gray-700">{user?.name}</p>
-                                <p className="text-xs text-gray-500 capitalize">{user?.role}</p>
+                            <div className="min-w-0">
+                                <p className="truncate text-sm font-medium text-slate-900">{user?.name}</p>
+                                <p className="truncate text-xs text-slate-500">{user?.email}</p>
                             </div>
                         </div>
                     </div>

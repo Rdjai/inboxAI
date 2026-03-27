@@ -1,82 +1,163 @@
-import React from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Bell, ChevronDown, LogOut, Menu, PenSquare, Settings, Users } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
-import { Link } from 'react-router-dom';
 import { useEmail } from '../../context/EmailContext';
+import { getAllowedNavItems, getCurrentNavItem } from './navigation';
 
 const Header = ({ onMenuClick }) => {
     const { user, logout } = useAuth();
     const { unreadCount } = useEmail();
+    const location = useLocation();
+    const navigate = useNavigate();
+    const menuRef = useRef(null);
+    const [profileOpen, setProfileOpen] = useState(false);
+
+    const navItems = useMemo(() => getAllowedNavItems(user?.role), [user?.role]);
+    const currentItem = useMemo(
+        () => getCurrentNavItem(location.pathname, navItems),
+        [location.pathname, navItems]
+    );
+    const quickLinks = useMemo(
+        () => navItems.filter((item) => ['/app/inbox', '/app/compose', '/app/analytics'].includes(item.path)).slice(0, 3),
+        [navItems]
+    );
+
+    useEffect(() => {
+        setProfileOpen(false);
+    }, [location.pathname]);
+
+    useEffect(() => {
+        if (!profileOpen) {
+            return undefined;
+        }
+
+        const handlePointerDown = (event) => {
+            if (menuRef.current && !menuRef.current.contains(event.target)) {
+                setProfileOpen(false);
+            }
+        };
+
+        window.addEventListener('mousedown', handlePointerDown);
+        return () => window.removeEventListener('mousedown', handlePointerDown);
+    }, [profileOpen]);
 
     return (
-        <header className="bg-white shadow-sm border-b border-gray-200 h-16 flex-shrink-0 z-30">
+        <header className="sticky top-0 z-30 border-b border-slate-200/80 bg-white/90 shadow-sm backdrop-blur-xl">
             <div className="px-4 sm:px-6 lg:px-8">
-                <div className="flex items-center justify-between h-16">
-                    <div className="flex items-center">
+                <div className="flex h-18 items-center justify-between gap-4 py-3">
+                    <div className="flex min-w-0 items-center gap-3">
                         <button
                             onClick={onMenuClick}
-                            className="md:hidden p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100"
+                            className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200 text-slate-500 transition hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900 md:hidden"
+                            aria-label="Open navigation"
                         >
-                            <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                            </svg>
+                            <Menu className="h-5 w-5" />
                         </button>
 
-                        <div className="ml-4 md:ml-0">
-                            <Link to="/dashboard" className="flex items-center">
-                                <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-                                    <span className="text-white font-bold text-lg">I</span>
-                                </div>
-                                <span className="ml-3 text-xl font-bold text-gray-900 hidden md:block">
-                                    InboxFlow
-                                </span>
-                            </Link>
+                        <Link to="/app/dashboard" className="flex min-w-0 items-center gap-3">
+                            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-500 via-cyan-500 to-slate-900 shadow-sm">
+                                <span className="text-lg font-semibold text-white">I</span>
+                            </div>
+                            <div className="min-w-0">
+                                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-sky-600">InboxFlow</p>
+                                <p className="truncate text-sm font-semibold text-slate-900">
+                                    {currentItem?.label || 'Workspace'}
+                                </p>
+                            </div>
+                        </Link>
+                    </div>
+
+                    <div className="hidden flex-1 items-center justify-center lg:flex">
+                        <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50/80 px-2 py-1">
+                            {quickLinks.map((item) => {
+                                const isActive = location.pathname === item.path || location.pathname.startsWith(`${item.path}/`);
+                                return (
+                                    <Link
+                                        key={item.path}
+                                        to={item.path}
+                                        className={`rounded-full px-4 py-2 text-sm font-medium transition ${isActive
+                                            ? 'bg-white text-slate-900 shadow-sm'
+                                            : 'text-slate-500 hover:text-slate-900'
+                                            }`}
+                                    >
+                                        {item.shortLabel || item.label}
+                                    </Link>
+                                );
+                            })}
                         </div>
                     </div>
 
-                    <div className="flex items-center space-x-4">
-                        <button className="relative p-2 rounded-full text-gray-400 hover:text-gray-500 hover:bg-gray-100">
-                            <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                            </svg>
+                    <div className="flex items-center gap-2 md:gap-3">
+                        <button
+                            type="button"
+                            onClick={() => navigate('/app/inbox?filter=unread')}
+                            className="relative inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200 text-slate-500 transition hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900"
+                            aria-label="Open unread mail"
+                        >
+                            <Bell className="h-5 w-5" />
                             {unreadCount > 0 && (
                                 <>
                                     <span className="mail-pulse absolute right-2 top-2 h-2.5 w-2.5 rounded-full bg-rose-400" />
                                     <span className="absolute right-2 top-2 h-2.5 w-2.5 rounded-full bg-rose-500" />
-                                    <span className="absolute -right-1 -top-1 inline-flex min-w-[1.15rem] items-center justify-center rounded-full bg-rose-500 px-1.5 py-0.5 text-[10px] font-bold leading-none text-white">
+                                    <span className="absolute -right-1 -top-1 inline-flex min-w-[1.2rem] items-center justify-center rounded-full bg-rose-500 px-1.5 py-0.5 text-[10px] font-bold leading-none text-white">
                                         {unreadCount > 9 ? '9+' : unreadCount}
                                     </span>
                                 </>
                             )}
                         </button>
 
-                        <div className="relative group">
-                            <button className="flex items-center space-x-3 focus:outline-none">
-                                <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-                                    <span className="text-white font-bold">
-                                        {user?.name?.charAt(0) || 'U'}
-                                    </span>
+                        <button
+                            type="button"
+                            onClick={() => navigate('/app/compose')}
+                            className="inline-flex h-11 items-center gap-2 rounded-2xl bg-slate-900 px-4 text-sm font-medium text-white transition hover:bg-slate-800"
+                        >
+                            <PenSquare className="h-4 w-4" />
+                            <span className="hidden sm:inline">Compose</span>
+                        </button>
+
+                        <div ref={menuRef} className="relative">
+                            <button
+                                type="button"
+                                onClick={() => setProfileOpen((open) => !open)}
+                                className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-2.5 py-2 transition hover:border-slate-300 hover:bg-slate-50"
+                            >
+                                <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-500 to-slate-900 text-sm font-semibold text-white shadow-sm">
+                                    {user?.name?.charAt(0) || 'U'}
                                 </div>
-                                <div className="hidden md:block text-left">
-                                    <p className="text-sm font-medium text-gray-700">{user?.name}</p>
-                                    <p className="text-xs text-gray-500">{user?.email}</p>
+                                <div className="hidden text-left md:block">
+                                    <p className="max-w-[140px] truncate text-sm font-medium text-slate-800">{user?.name}</p>
+                                    <p className="max-w-[140px] truncate text-xs text-slate-500 capitalize">{user?.role || 'member'}</p>
                                 </div>
+                                <ChevronDown className={`h-4 w-4 text-slate-400 transition ${profileOpen ? 'rotate-180' : ''}`} />
                             </button>
 
-                            <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 hidden group-hover:block">
-                                <Link to="/settings" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                                    Settings
-                                </Link>
-                                <Link to="/team" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                                    Team
-                                </Link>
-                                <div className="border-t border-gray-100"></div>
-                                <button
-                                    onClick={logout}
-                                    className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
-                                >
-                                    Sign out
-                                </button>
-                            </div>
+                            {profileOpen && (
+                                <div className="absolute right-0 mt-3 w-64 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-xl">
+                                    <div className="border-b border-slate-100 bg-slate-50 px-4 py-4">
+                                        <p className="text-sm font-semibold text-slate-900">{user?.name}</p>
+                                        <p className="mt-1 truncate text-sm text-slate-500">{user?.email}</p>
+                                    </div>
+
+                                    <div className="p-2">
+                                        <Link to="/app/settings" className="flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm text-slate-700 transition hover:bg-slate-50">
+                                            <Settings className="h-4 w-4 text-slate-400" />
+                                            Settings
+                                        </Link>
+                                        <Link to="/app/team" className="flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm text-slate-700 transition hover:bg-slate-50">
+                                            <Users className="h-4 w-4 text-slate-400" />
+                                            Team
+                                        </Link>
+                                        <button
+                                            onClick={logout}
+                                            className="flex w-full items-center gap-3 rounded-2xl px-3 py-2.5 text-sm text-rose-600 transition hover:bg-rose-50"
+                                        >
+                                            <LogOut className="h-4 w-4" />
+                                            Sign out
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>
