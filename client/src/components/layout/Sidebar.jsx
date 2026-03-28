@@ -3,65 +3,77 @@ import { NavLink } from 'react-router-dom';
 import { Sparkles } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useEmail } from '../../context/EmailContext';
-import { getAllowedNavItems } from './navigation';
+import { getNavSections } from './navigation';
+
+const SidebarNavItem = ({ item, unreadCount, onClose }) => {
+    const Icon = item.icon;
+    const showUnreadPulse = item.path === '/app/inbox' && unreadCount > 0;
+    const badgeText = unreadCount > 99 ? '99+' : unreadCount;
+
+    return (
+        <NavLink
+            key={item.path}
+            to={item.path}
+            onClick={onClose}
+            className={({ isActive }) =>
+                `group flex items-center gap-3 rounded-2xl px-3 py-3 text-sm font-medium transition-all duration-200 ${isActive
+                    ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/10 dark:bg-sky-500 dark:text-slate-950'
+                    : 'text-slate-600 hover:-translate-y-0.5 hover:bg-white hover:text-slate-900 hover:shadow-[0_12px_30px_-18px_rgba(15,23,42,0.45)] dark:text-slate-300 dark:hover:bg-slate-900 dark:hover:text-white dark:hover:shadow-[0_12px_30px_-18px_rgba(2,6,23,0.85)]'
+                }`
+            }
+        >
+            {({ isActive }) => (
+                <>
+                    <span className={`relative flex h-10 w-10 items-center justify-center rounded-2xl transition-all duration-200 ${isActive
+                        ? 'bg-white/12 text-white dark:bg-slate-950/15 dark:text-slate-950'
+                        : 'bg-slate-100 text-slate-500 group-hover:scale-105 group-hover:bg-slate-900 group-hover:text-white dark:bg-slate-800 dark:text-slate-400 dark:group-hover:bg-sky-500 dark:group-hover:text-slate-950'
+                        }`}>
+                        <Icon className="h-4 w-4" />
+                        {showUnreadPulse && (
+                            <>
+                                <span className="mail-pulse absolute right-2 top-2 h-2.5 w-2.5 rounded-full bg-rose-400" />
+                                <span className="absolute right-2 top-2 h-2.5 w-2.5 rounded-full bg-rose-500" />
+                            </>
+                        )}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                        <p className={`truncate transition-transform duration-200 ${isActive ? '' : 'group-hover:translate-x-0.5'}`}>{item.label}</p>
+                        <p className={`truncate text-xs transition-colors duration-200 ${isActive ? 'text-white/65 dark:text-slate-900/70' : 'text-slate-400 group-hover:text-slate-500 dark:text-slate-500 dark:group-hover:text-slate-300'}`}>
+                            {item.section}
+                        </p>
+                    </div>
+                    {showUnreadPulse && (
+                        <span className={`inline-flex min-w-[1.9rem] items-center justify-center rounded-full px-2 py-0.5 text-[11px] font-semibold ${isActive
+                            ? 'bg-white/15 text-white dark:bg-slate-950/15 dark:text-slate-950'
+                            : 'bg-rose-50 text-rose-700 ring-1 ring-inset ring-rose-200 dark:bg-rose-500/10 dark:text-rose-300 dark:ring-rose-400/30'
+                            }`}>
+                            {badgeText}
+                        </span>
+                    )}
+                </>
+            )}
+        </NavLink>
+    );
+};
 
 const Sidebar = ({ isOpen, onClose }) => {
     const { user } = useAuth();
     const { unreadCount } = useEmail();
 
-    const filteredItems = getAllowedNavItems(user?.role);
-    const workspaceItems = filteredItems.filter((item) => item.section === 'Workspace');
-    const managementItems = filteredItems.filter((item) => item.section === 'Management');
+    const navSections = getNavSections(user?.role);
 
-    const renderNavItem = (item) => {
-        const Icon = item.icon;
-        const showUnreadPulse = item.path === '/app/inbox' && unreadCount > 0;
-
-        return (
-            <NavLink
-                key={item.path}
-                to={item.path}
-                onClick={onClose}
-                className={({ isActive }) =>
-                    `group flex items-center gap-3 rounded-2xl px-3 py-3 text-sm font-medium transition-all duration-200 ${isActive
-                        ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/10 dark:bg-sky-500 dark:text-slate-950'
-                        : 'text-slate-600 hover:-translate-y-0.5 hover:bg-white hover:text-slate-900 hover:shadow-[0_12px_30px_-18px_rgba(15,23,42,0.45)] dark:text-slate-300 dark:hover:bg-slate-900 dark:hover:text-white dark:hover:shadow-[0_12px_30px_-18px_rgba(2,6,23,0.85)]'
-                    }`
-                }
-            >
-                {({ isActive }) => (
-                    <>
-                        <span className={`relative flex h-10 w-10 items-center justify-center rounded-2xl transition-all duration-200 ${isActive
-                            ? 'bg-white/12 text-white dark:bg-slate-950/15 dark:text-slate-950'
-                            : 'bg-slate-100 text-slate-500 group-hover:scale-105 group-hover:bg-slate-900 group-hover:text-white dark:bg-slate-800 dark:text-slate-400 dark:group-hover:bg-sky-500 dark:group-hover:text-slate-950'
-                            }`}>
-                            <Icon className="h-4 w-4" />
-                            {showUnreadPulse && (
-                                <>
-                                    <span className="mail-pulse absolute right-2 top-2 h-2.5 w-2.5 rounded-full bg-rose-400" />
-                                    <span className="absolute right-2 top-2 h-2.5 w-2.5 rounded-full bg-rose-500" />
-                                </>
-                            )}
-                        </span>
-                        <div className="min-w-0 flex-1">
-                            <p className={`truncate transition-transform duration-200 ${isActive ? '' : 'group-hover:translate-x-0.5'}`}>{item.label}</p>
-                            <p className={`truncate text-xs transition-colors duration-200 ${isActive ? 'text-white/65 dark:text-slate-900/70' : 'text-slate-400 group-hover:text-slate-500 dark:text-slate-500 dark:group-hover:text-slate-300'}`}>
-                                {item.section}
-                            </p>
-                        </div>
-                        {showUnreadPulse && (
-                            <span className={`inline-flex min-w-[1.9rem] items-center justify-center rounded-full px-2 py-0.5 text-[11px] font-semibold ${isActive
-                                ? 'bg-white/15 text-white dark:bg-slate-950/15 dark:text-slate-950'
-                                : 'bg-rose-50 text-rose-700 ring-1 ring-inset ring-rose-200 dark:bg-rose-500/10 dark:text-rose-300 dark:ring-rose-400/30'
-                                }`}>
-                                {unreadCount > 99 ? '99+' : unreadCount}
-                            </span>
-                        )}
-                    </>
-                )}
-            </NavLink>
-        );
-    };
+    const renderNavSection = (section) => (
+        <div key={section.section} className={section.section === 'Management' ? 'mt-7' : ''}>
+            <p className="px-2 pb-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-400 dark:text-slate-500">
+                {section.section}
+            </p>
+            <div className="space-y-2">
+                {section.items.map((item) => (
+                    <SidebarNavItem key={item.path} item={item} unreadCount={unreadCount} onClose={onClose} />
+                ))}
+            </div>
+        </div>
+    );
 
     return (
         <>
@@ -94,21 +106,7 @@ const Sidebar = ({ isOpen, onClose }) => {
                     </div>
 
                     <nav className="sidebar-scroll mt-5 flex-1 overflow-y-auto">
-                        <div>
-                            <p className="px-2 pb-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-400 dark:text-slate-500">Workspace</p>
-                            <div className="space-y-2">
-                                {workspaceItems.map(renderNavItem)}
-                            </div>
-                        </div>
-
-                        {managementItems.length > 0 && (
-                            <div className="mt-7">
-                                <p className="px-2 pb-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-400 dark:text-slate-500">Management</p>
-                                <div className="space-y-2">
-                                    {managementItems.map(renderNavItem)}
-                                </div>
-                            </div>
-                        )}
+                        {navSections.map(renderNavSection)}
                     </nav>
 
                     <div className="mt-5 rounded-[24px] border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">

@@ -28,6 +28,18 @@ export const navItems = [
 
 export const getAllowedNavItems = (role) => navItems.filter((item) => item.roles.includes(role || 'agent'));
 
+export const getNavSections = (role) => {
+    return getAllowedNavItems(role).reduce((sections, item) => {
+        const section = sections.find((entry) => entry.section === item.section);
+        if (section) {
+            section.items.push(item);
+        } else {
+            sections.push({ section: item.section, items: [item] });
+        }
+        return sections;
+    }, []);
+};
+
 export const getCurrentNavItem = (pathname, items) => {
     const candidates = items || navItems;
     return candidates.find((item) => pathname === item.path || pathname.startsWith(`${item.path}/`)) || null;
