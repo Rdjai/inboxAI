@@ -23,17 +23,17 @@ const Sidebar = ({ isOpen, onClose }) => {
                 to={item.path}
                 onClick={onClose}
                 className={({ isActive }) =>
-                    `group flex items-center gap-3 rounded-2xl px-3 py-3 text-sm font-medium transition ${isActive
+                    `group flex items-center gap-3 rounded-2xl px-3 py-3 text-sm font-medium transition-all duration-200 ${isActive
                         ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/10'
-                        : 'text-slate-600 hover:bg-white hover:text-slate-900 hover:shadow-sm'
+                        : 'text-slate-600 hover:-translate-y-0.5 hover:bg-white hover:text-slate-900 hover:shadow-[0_12px_30px_-18px_rgba(15,23,42,0.45)]'
                     }`
                 }
             >
                 {({ isActive }) => (
                     <>
-                        <span className={`relative flex h-10 w-10 items-center justify-center rounded-2xl transition ${isActive
+                        <span className={`relative flex h-10 w-10 items-center justify-center rounded-2xl transition-all duration-200 ${isActive
                             ? 'bg-white/12 text-white'
-                            : 'bg-slate-100 text-slate-500 group-hover:bg-slate-900 group-hover:text-white'
+                            : 'bg-slate-100 text-slate-500 group-hover:scale-105 group-hover:bg-slate-900 group-hover:text-white'
                             }`}>
                             <Icon className="h-4 w-4" />
                             {showUnreadPulse && (
@@ -44,8 +44,8 @@ const Sidebar = ({ isOpen, onClose }) => {
                             )}
                         </span>
                         <div className="min-w-0 flex-1">
-                            <p className="truncate">{item.label}</p>
-                            <p className={`truncate text-xs ${isActive ? 'text-white/65' : 'text-slate-400'}`}>
+                            <p className={`truncate transition-transform duration-200 ${isActive ? '' : 'group-hover:translate-x-0.5'}`}>{item.label}</p>
+                            <p className={`truncate text-xs transition-colors duration-200 ${isActive ? 'text-white/65' : 'text-slate-400 group-hover:text-slate-500'}`}>
                                 {item.section}
                             </p>
                         </div>
