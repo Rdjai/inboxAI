@@ -79,6 +79,8 @@ const InboxPage = () => {
     };
 
     const hasMore = pagination.page < pagination.pages;
+    const isInitialLoad = loading && emails.length === 0;
+    const isRefreshingList = loading && emails.length > 0;
 
     const fetchEmails = useCallback(async ({ forceReplace = false } = {}) => {
         const requestId = ++latestRequestIdRef.current;
@@ -512,10 +514,11 @@ const InboxPage = () => {
                     <div className="flex flex-col gap-3 sm:flex-row">
                         <button
                             onClick={() => fetchEmails({ forceReplace: true })}
+                            disabled={loading}
                             className="inline-flex items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
                         >
-                            <RefreshCw className="h-4 w-4" />
-                            Refresh
+                            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+                            {loading ? 'Refreshing' : 'Refresh'}
                         </button>
                         <button
                             onClick={handleSyncGmail}
@@ -553,7 +556,20 @@ const InboxPage = () => {
                 </div>
 
                 <div className="p-5 md:p-6">
-                    {loading ? (
+                    {isRefreshingList && (
+                        <div className="mb-4 flex items-center justify-between gap-3 rounded-2xl border border-sky-200 bg-sky-50/80 px-4 py-3 text-sm text-sky-800">
+                            <div className="flex items-center gap-3">
+                                <div className="h-4 w-4 animate-spin rounded-full border-2 border-sky-200 border-b-sky-600" />
+                                <span>Refreshing inbox results...</span>
+                            </div>
+                            <span className="text-xs font-medium uppercase tracking-[0.14em] text-sky-700">
+                                Fetching
+                            </span>
+                        </div>
+                    )}
+
+                    <div className="relative">
+                    {isInitialLoad ? (
                         <div className="flex min-h-[260px] flex-col items-center justify-center rounded-3xl border border-dashed border-slate-200 bg-slate-50 text-center">
                             <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-sky-500" />
                             <p className="mt-4 text-sm text-slate-500">Loading inbox cards...</p>
@@ -569,7 +585,8 @@ const InboxPage = () => {
                             </p>
                         </div>
                     ) : (
-                        <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+                        <>
+                        <div className={`grid grid-cols-1 gap-4 transition-opacity xl:grid-cols-2 ${isRefreshingList ? 'opacity-60' : 'opacity-100'}`}>
                             {emails.map((email, index) => {
                                 const emailIdentity = getEmailIdentity(email) || `email-card-${index}`;
                                 const emailIdForRoute = email._id || email.id;
@@ -683,10 +700,20 @@ const InboxPage = () => {
                                 );
                             })}
                         </div>
+                        {isRefreshingList && (
+                            <div className="pointer-events-none absolute inset-0 flex items-start justify-center pt-10">
+                                <div className="inline-flex items-center gap-3 rounded-full border border-white/80 bg-white/95 px-4 py-2 text-sm font-medium text-slate-700 shadow-lg backdrop-blur">
+                                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-slate-200 border-b-sky-600" />
+                                    Updating inbox...
+                                </div>
+                            </div>
+                        )}
+                        </>
                     )}
+                    </div>
                 </div>
 
-                {!loading && emails.length > 0 && (
+                {!isInitialLoad && emails.length > 0 && (
                     <div className="border-t border-slate-200 px-5 py-5 md:px-6">
                         <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
                             <div className="text-sm text-slate-500">
@@ -699,7 +726,7 @@ const InboxPage = () => {
                     </div>
                 )}
 
-                {!loading && emails.length > 0 && (
+                {!isInitialLoad && emails.length > 0 && (
                     <div ref={loaderRef} className="px-5 pb-6 md:px-6">
                         <div className="flex justify-center">
                             {isLoadingMore ? (
