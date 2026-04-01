@@ -24,16 +24,16 @@ const Sidebar = ({ isOpen, onClose }) => {
                 onClick={onClose}
                 className={({ isActive }) =>
                     `group flex items-center gap-3 rounded-2xl px-3 py-3 text-sm font-medium transition-all duration-200 ${isActive
-                        ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/10'
-                        : 'text-slate-600 hover:-translate-y-0.5 hover:bg-white hover:text-slate-900 hover:shadow-[0_12px_30px_-18px_rgba(15,23,42,0.45)]'
+                        ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/10 dark:bg-sky-500 dark:text-slate-950'
+                        : 'text-slate-600 hover:-translate-y-0.5 hover:bg-white hover:text-slate-900 hover:shadow-[0_12px_30px_-18px_rgba(15,23,42,0.45)] dark:text-slate-300 dark:hover:bg-slate-900 dark:hover:text-white dark:hover:shadow-[0_12px_30px_-18px_rgba(2,6,23,0.85)]'
                     }`
                 }
             >
                 {({ isActive }) => (
                     <>
                         <span className={`relative flex h-10 w-10 items-center justify-center rounded-2xl transition-all duration-200 ${isActive
-                            ? 'bg-white/12 text-white'
-                            : 'bg-slate-100 text-slate-500 group-hover:scale-105 group-hover:bg-slate-900 group-hover:text-white'
+                            ? 'bg-white/12 text-white dark:bg-slate-950/15 dark:text-slate-950'
+                            : 'bg-slate-100 text-slate-500 group-hover:scale-105 group-hover:bg-slate-900 group-hover:text-white dark:bg-slate-800 dark:text-slate-400 dark:group-hover:bg-sky-500 dark:group-hover:text-slate-950'
                             }`}>
                             <Icon className="h-4 w-4" />
                             {showUnreadPulse && (
@@ -45,14 +45,14 @@ const Sidebar = ({ isOpen, onClose }) => {
                         </span>
                         <div className="min-w-0 flex-1">
                             <p className={`truncate transition-transform duration-200 ${isActive ? '' : 'group-hover:translate-x-0.5'}`}>{item.label}</p>
-                            <p className={`truncate text-xs transition-colors duration-200 ${isActive ? 'text-white/65' : 'text-slate-400 group-hover:text-slate-500'}`}>
+                            <p className={`truncate text-xs transition-colors duration-200 ${isActive ? 'text-white/65 dark:text-slate-900/70' : 'text-slate-400 group-hover:text-slate-500 dark:text-slate-500 dark:group-hover:text-slate-300'}`}>
                                 {item.section}
                             </p>
                         </div>
                         {showUnreadPulse && (
                             <span className={`inline-flex min-w-[1.9rem] items-center justify-center rounded-full px-2 py-0.5 text-[11px] font-semibold ${isActive
-                                ? 'bg-white/15 text-white'
-                                : 'bg-rose-50 text-rose-700 ring-1 ring-inset ring-rose-200'
+                                ? 'bg-white/15 text-white dark:bg-slate-950/15 dark:text-slate-950'
+                                : 'bg-rose-50 text-rose-700 ring-1 ring-inset ring-rose-200 dark:bg-rose-500/10 dark:text-rose-300 dark:ring-rose-400/30'
                                 }`}>
                                 {unreadCount > 99 ? '99+' : unreadCount}
                             </span>
@@ -72,7 +72,7 @@ const Sidebar = ({ isOpen, onClose }) => {
             />
 
             <aside className={`
-                sidebar-panel fixed bottom-0 left-0 top-[73px] z-50 w-[290px] border-r border-slate-200 bg-[#f6f8fb]
+                sidebar-panel fixed bottom-0 left-0 top-[73px] z-50 w-[290px] border-r border-slate-200 bg-[#f6f8fb] dark:border-slate-800 dark:bg-slate-950
                 transition-transform duration-200 ease-out
                 ${isOpen ? 'translate-x-0' : '-translate-x-full'}
                 md:relative md:bottom-0 md:top-0 md:flex md:h-full md:translate-x-0 md:transition-none
@@ -95,7 +95,7 @@ const Sidebar = ({ isOpen, onClose }) => {
 
                     <nav className="sidebar-scroll mt-5 flex-1 overflow-y-auto">
                         <div>
-                            <p className="px-2 pb-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Workspace</p>
+                            <p className="px-2 pb-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-400 dark:text-slate-500">Workspace</p>
                             <div className="space-y-2">
                                 {workspaceItems.map(renderNavItem)}
                             </div>
@@ -103,7 +103,7 @@ const Sidebar = ({ isOpen, onClose }) => {
 
                         {managementItems.length > 0 && (
                             <div className="mt-7">
-                                <p className="px-2 pb-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Management</p>
+                                <p className="px-2 pb-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-400 dark:text-slate-500">Management</p>
                                 <div className="space-y-2">
                                     {managementItems.map(renderNavItem)}
                                 </div>
@@ -111,14 +111,14 @@ const Sidebar = ({ isOpen, onClose }) => {
                         )}
                     </nav>
 
-                    <div className="mt-5 rounded-[24px] border border-slate-200 bg-white p-4 shadow-sm">
+                    <div className="mt-5 rounded-[24px] border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
                         <div className="flex items-center gap-3">
                             <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-500 to-slate-900 text-sm font-semibold text-white shadow-sm">
                                 {user?.name?.charAt(0) || 'U'}
                             </div>
                             <div className="min-w-0">
-                                <p className="truncate text-sm font-medium text-slate-900">{user?.name}</p>
-                                <p className="truncate text-xs text-slate-500">{user?.email}</p>
+                                <p className="truncate text-sm font-medium text-slate-900 dark:text-slate-100">{user?.name}</p>
+                                <p className="truncate text-xs text-slate-500 dark:text-slate-400">{user?.email}</p>
                             </div>
                         </div>
                     </div>

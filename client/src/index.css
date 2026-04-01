@@ -5,8 +5,12 @@
 @tailwind utilities;
 
 @layer base {
+  html {
+    @apply transition-colors duration-300;
+  }
+
   body {
-    @apply bg-gray-50 text-gray-900 font-sans;
+    @apply bg-gray-50 text-gray-900 font-sans transition-colors duration-300;
   }
   :root {
     --background: 0 0% 100%;
@@ -60,6 +64,13 @@
     --chart-3: 30 80% 55%;
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%;
+  }
+
+  .dark body {
+    background:
+      radial-gradient(circle at top left, rgba(14, 165, 233, 0.08), transparent 28%),
+      radial-gradient(circle at top right, rgba(59, 130, 246, 0.05), transparent 22%),
+      #020617;
   }
 }
 
@@ -157,6 +168,18 @@
   animation: mailPulse 1.8s ease-out infinite;
 }
 
+.theme-toggle {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.24);
+}
+
+.theme-toggle__thumb {
+  transition: transform 180ms ease, background-color 180ms ease, color 180ms ease, box-shadow 180ms ease;
+}
+
+.theme-toggle:hover .theme-toggle__thumb {
+  transform: translateY(-1px) scale(1.04);
+}
+
 @keyframes mailPulse {
   0% {
     transform: scale(0.95);
@@ -179,6 +202,10 @@
 
   .mail-pulse {
     animation: none !important;
+  }
+
+  .theme-toggle__thumb {
+    transition: none !important;
   }
 }
 

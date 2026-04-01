@@ -8,7 +8,7 @@ const Layout = () => {
     const [sidebarOpen, setSidebarOpen] = useState(false);
 
     return (
-        <div className="h-screen bg-gray-50 flex flex-col overflow-hidden">
+        <div className="flex h-screen flex-col overflow-hidden bg-gray-50 transition-colors dark:bg-slate-950">
             <Toaster
                 position="top-right"
                 toastOptions={{
@@ -26,7 +26,7 @@ const Layout = () => {
             <div className="flex flex-1 min-h-0 overflow-hidden">
                 <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
-                <main className="flex-1 min-w-0 overflow-y-auto p-4 md:p-6 lg:p-8">
+                <main className="flex-1 min-w-0 overflow-y-auto bg-gradient-to-br from-transparent via-transparent to-slate-100/60 p-4 transition-colors dark:to-slate-900/70 md:p-6 lg:p-8">
                     <div className="max-w-7xl mx-auto">
                         <Outlet />
                     </div>

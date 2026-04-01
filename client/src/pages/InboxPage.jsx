@@ -555,9 +555,9 @@ const InboxPage = () => {
                     </div>
                 </div>
 
-                <div className="p-5 md:p-6">
+                <div className="p-4 md:p-6 xl:p-7">
                     {isRefreshingList && (
-                        <div className="mb-4 flex items-center justify-between gap-3 rounded-2xl border border-sky-200 bg-sky-50/80 px-4 py-3 text-sm text-sky-800">
+                        <div className="mb-5 flex items-center justify-between gap-3 rounded-2xl border border-sky-200 bg-sky-50/80 px-4 py-3 text-sm text-sky-800">
                             <div className="flex items-center gap-3">
                                 <div className="h-4 w-4 animate-spin rounded-full border-2 border-sky-200 border-b-sky-600" />
                                 <span>Refreshing inbox results...</span>
@@ -586,7 +586,7 @@ const InboxPage = () => {
                         </div>
                     ) : (
                         <>
-                        <div className={`grid grid-cols-1 gap-4 transition-opacity xl:grid-cols-2 ${isRefreshingList ? 'opacity-60' : 'opacity-100'}`}>
+                        <div className={`grid grid-cols-1 gap-5 transition-opacity xl:grid-cols-2 2xl:gap-6 ${isRefreshingList ? 'opacity-60' : 'opacity-100'}`}>
                             {emails.map((email, index) => {
                                 const emailIdentity = getEmailIdentity(email) || `email-card-${index}`;
                                 const emailIdForRoute = email._id || email.id;
@@ -594,14 +594,14 @@ const InboxPage = () => {
                                 return (
                                     <article
                                         key={emailIdentity}
-                                        className="group relative overflow-hidden rounded-[26px] border border-slate-200 bg-white p-5 shadow-[0_14px_35px_-24px_rgba(15,23,42,0.28)] transition duration-200 hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-[0_20px_45px_-24px_rgba(15,23,42,0.35)]"
+                                        className="group relative overflow-hidden rounded-[26px] border border-slate-200 bg-white px-5 py-5 shadow-[0_14px_35px_-24px_rgba(15,23,42,0.28)] transition duration-200 hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-[0_20px_45px_-24px_rgba(15,23,42,0.35)] md:px-6 md:py-5"
                                     >
                                         <div
                                             className="absolute inset-x-0 top-0 h-24 bg-gradient-to-r from-sky-500/[0.08] via-transparent to-amber-500/[0.08]"
                                             aria-hidden="true"
                                         />
 
-                                        <div className="relative">
+                                        <div className="relative space-y-5">
                                             <div className="flex items-start justify-between gap-4">
                                                 <button
                                                     type="button"
@@ -645,7 +645,7 @@ const InboxPage = () => {
                                             <button
                                                 type="button"
                                                 onClick={() => emailIdForRoute && handleEmailClick(emailIdForRoute)}
-                                                className="mt-5 block w-full text-left"
+                                                className="block w-full text-left"
                                             >
                                                 <h3 className="line-clamp-2 text-lg font-semibold tracking-tight text-slate-950 transition group-hover:text-sky-700">
                                                     {email.subject || '(No Subject)'}
@@ -655,7 +655,7 @@ const InboxPage = () => {
                                                 </p>
                                             </button>
 
-                                            <div className="mt-5 flex flex-wrap gap-2">
+                                            <div className="flex flex-wrap gap-2.5">
                                                 <span className={`inline-flex items-center rounded-full px-3 py-1 text-[11px] font-semibold ring-1 ring-inset ${getSentimentTone(email.sentiment)}`}>
                                                     {email.sentiment || 'NEUTRAL'}
                                                 </span>
@@ -671,7 +671,7 @@ const InboxPage = () => {
                                                 )}
                                             </div>
 
-                                            <div className="mt-5 flex items-center justify-between gap-4 border-t border-slate-100 pt-4">
+                                            <div className="flex items-center justify-between gap-4 border-t border-slate-100 pt-4">
                                                 <div className="text-xs text-slate-500">
                                                     {email.sentAt ? `Sent ${formatDate(email.sentAt)}` : 'Awaiting response'}
                                                 </div>
