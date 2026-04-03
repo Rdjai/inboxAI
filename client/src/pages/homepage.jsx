@@ -649,10 +649,10 @@ const Home = () => {
       </section>
 
       {/* Footer */}
-      <footer className="bg-gray-900 text-gray-400 py-8 md:py-12">
+      <footer className="bg-gray-900 py-10 text-gray-400 md:py-14">
         <div className="container mx-auto px-4">
-          <div className="flex flex-col md:flex-row justify-between items-center">
-            <div className="mb-6 md:mb-0">
+          <div className="flex flex-col gap-8 md:flex-row md:items-start md:justify-between">
+            <div className="max-w-md">
               <div className="flex items-center">
                 <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
                   <Brain className="w-5 h-5 text-white" />
@@ -665,22 +665,22 @@ const Home = () => {
                   </div>
                 </div>
               </div>
-              <p className="mt-2 text-sm md:text-base">Intelligent Email with Privacy Protection</p>
+              <p className="mt-3 text-sm leading-6 md:text-base">Intelligent Email with Privacy Protection</p>
             </div>
             
-            <div className="flex flex-wrap justify-center gap-4 md:gap-6 text-sm md:text-base">
-              <a href="#screenshots" className="hover:text-white transition-colors">Screenshots</a>
-              <a href="#ai" className="hover:text-white transition-colors">AI Assistant</a>
-              <a href="#temp-email" className="hover:text-white transition-colors">Temp Mail</a>
-              <a href="#features" className="hover:text-white transition-colors">Features</a>
-              <a href="#waitlist" className="hover:text-white transition-colors">Waitlist</a>
+            <div className="flex max-w-2xl flex-wrap justify-start gap-x-3 gap-y-3 text-sm md:justify-end md:gap-x-4 md:gap-y-4 md:text-base">
+              <a href="#screenshots" className="rounded-full border border-gray-800 px-4 py-2 transition-all hover:border-gray-600 hover:bg-white/5 hover:text-white">Screenshots</a>
+              <a href="#ai" className="rounded-full border border-gray-800 px-4 py-2 transition-all hover:border-gray-600 hover:bg-white/5 hover:text-white">AI Assistant</a>
+              <a href="#temp-email" className="rounded-full border border-gray-800 px-4 py-2 transition-all hover:border-gray-600 hover:bg-white/5 hover:text-white">Temp Mail</a>
+              <a href="#features" className="rounded-full border border-gray-800 px-4 py-2 transition-all hover:border-gray-600 hover:bg-white/5 hover:text-white">Features</a>
+              <a href="#waitlist" className="rounded-full border border-gray-800 px-4 py-2 transition-all hover:border-gray-600 hover:bg-white/5 hover:text-white">Waitlist</a>
             </div>
           </div>
           
-          <div className="mt-6 md:mt-8 pt-6 md:pt-8 border-t border-gray-800 text-center">
+          <div className="mt-8 border-t border-gray-800 pt-8 text-center md:mt-10 md:pt-10">
             <p className="text-sm md:text-base">© 2026 InboxAI. Built By Alien with ❤️ using Flutter & Mern.</p>
-            <p className="mt-2 text-xs md:text-sm">AI Email Assistant with temporary email service. Currently in development.</p>
-            <div className="mt-4 flex flex-wrap items-center justify-center gap-2 md:gap-4 text-xs md:text-sm">
+            <p className="mt-3 text-xs leading-6 md:text-sm">AI email assistant with temporary email service. Currently in development.</p>
+            <div className="mt-5 flex flex-wrap items-center justify-center gap-x-3 gap-y-2 text-xs md:gap-x-4 md:text-sm">
               <span className="text-amber-400">🚧 Status: In Development</span>
               <span className="hidden md:inline">•</span>
               <span>🎯 Target Launch: Q2 2026</span>
