@@ -4,6 +4,7 @@ const Email = require('../models/email.model');
 const { AppError } = require('../middleware/errorHandler.middleware');
 const logger = require('../utils/logger');
 const ImapService = require('../services/imap.service');
+const syncService = require('../services/sync.service');
 const jwt = require('jsonwebtoken');
 const axios = require('axios');
 const { JWT_SECRET, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_OAUTH_REDIRECT_URI, CLIENT_BASE_URL } = require('../config/env');
@@ -641,46 +642,8 @@ class EmailAccountController {
     async startBackgroundSync(account, limit, userId) {
         try {
             logger.info(`Starting sync for account: ${account.email}`);
-
-            const imapService = new ImapService(buildImapConfigWithOAuth(account));
-            await imapService.connect();
-
-            // Fetch emails
-            const emails = await imapService.fetchRecentEmails(limit);
-
-            let importedCount = 0;
-
-            for (const email of emails) {
-                // Check if email already exists
-                const existingEmail = await Email.findOne({
-                    messageId: email.messageId,
-                    accountId: account._id
-                });
-
-                if (!existingEmail) {
-                    await Email.create({
-                        accountId: account._id,
-                        userId,
-                        fromAddress: email.from,
-                        toAddress: account.email,
-                        subject: email.subject,
-                        bodyText: email.body,
-                        messageId: email.messageId,
-                        date: email.date,
-                        status: 'NEW'
-                    });
-                    importedCount++;
-                }
-            }
-
-            await imapService.disconnect();
-
-            // Update account statistics
-            account.statistics.totalEmails += importedCount;
-            account.statistics.lastSyncDuration = Date.now() - account.lastSyncedAt;
-            await account.save();
-
-            logger.info(`Sync completed for ${account.email}: ${importedCount} new emails`);
+            const result = await syncService.runAccountSync(account, { limit, userId });
+            logger.info(`Sync completed for ${account.email}: ${result.imported} new emails`);
 
         } catch (error) {
             logger.error(`Sync failed for ${account.email}:`, error);

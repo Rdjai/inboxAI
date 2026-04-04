@@ -12,14 +12,50 @@ const bruteForceProtectionRoutes = require('../routes/bruteForceProtection.route
 const { authMiddleware } = require('../middleware/auth.middleware');
 const mailService = require('../services/mail.service');
 const ImapService = require('../services/imap.service');
+const syncService = require('../services/sync.service');
 const EmailAccount = require('../models/emailAccount.model');
 const Email = require('../models/email.model');
 const mongoose = require('mongoose');
 const aiService = require('../services/ai.service');
 
-
 // Manual sync endpoint
-router.post('/email/sync/manual', authMiddleware, async (req, res) => {
+router.post('/email/sync/manual', authMiddleware, async (req, res, next) => {
+    try {
+        const userId = req.user._id;
+        const { accountId, limit = 50 } = req.body;
+
+        console.log(`Manual sync requested by ${userId} for account ${accountId}`);
+
+        const account = await EmailAccount.findOne({
+            _id: accountId,
+            userId
+        });
+
+        if (!account) {
+            return res.status(404).json({
+                success: false,
+                message: 'Email account not found'
+            });
+        }
+
+        const result = await syncService.runAccountSync(account, { limit, userId });
+
+        return res.json({
+            success: true,
+            message: 'Sync completed successfully',
+            data: result
+        });
+    } catch (error) {
+        console.error('Sync error:', error);
+        return res.status(500).json({
+            success: false,
+            message: `Sync failed: ${error.message}`
+        });
+    }
+});
+
+// Legacy manual sync endpoint
+router.post('/email/sync/manual-legacy', authMiddleware, async (req, res) => {
     try {
         const userId = req.user._id;
         const { accountId, limit = 50 } = req.body;
