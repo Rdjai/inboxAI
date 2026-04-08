@@ -9,6 +9,7 @@ const fs = require('fs');
 const { NODE_ENV, UPLOAD_DIR } = require('./config/env');
 const { connectDB } = require('./config/database');
 const { errorHandler } = require('./middleware/errorHandler.middleware');
+const { apiRateLimiter, heavyOperationRateLimiter } = require('./middleware/rateLimit.middleware');
 const routes = require('./routes');
 const logger = require('./utils/logger');
 
@@ -22,6 +23,8 @@ class App {
     }
 
     setupMiddlewares() {
+        this.app.set('trust proxy', 1);
+
         // Security headers
         this.app.use(helmet());
 
@@ -65,6 +68,11 @@ class App {
 
         // Static files
         this.app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+
+        // API rate limiting
+        this.app.use('/api', apiRateLimiter);
+        this.app.use('/api/email/sync', heavyOperationRateLimiter);
+        this.app.use('/api/email/accounts', heavyOperationRateLimiter);
     }
 
     setupRoutes() {
