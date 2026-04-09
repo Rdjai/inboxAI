@@ -298,43 +298,64 @@ emailSchema.index({
     language_override: 'language'
 });
 
-// 2. Optimized compound indexes for common query patterns
-emailSchema.index({ createdAt: -1 });
-emailSchema.index({ status: 1, createdAt: -1 });
-emailSchema.index({ isRead: 1, createdAt: -1 });
-emailSchema.index({ category: 1, createdAt: -1 });
-emailSchema.index({ priority: 1, createdAt: -1 });
-emailSchema.index({ sentiment: 1, createdAt: -1 });
-emailSchema.index({ assignedUserId: 1, createdAt: -1 });
-emailSchema.index({ userId: 1, createdAt: -1 });
-emailSchema.index({ accountId: 1, createdAt: -1 });
+// 2. Inbox query indexes
+// These mirror the actual inbox list path: equality filters plus createdAt sorting.
+emailSchema.index({ userId: 1, createdAt: -1 }, { name: 'idx_inbox_user_createdAt' });
+emailSchema.index({ accountId: 1, createdAt: -1 }, { name: 'idx_inbox_account_createdAt' });
+emailSchema.index({ assignedUserId: 1, createdAt: -1 }, { name: 'idx_inbox_assigned_createdAt' });
+emailSchema.index({ userId: 1, accountId: 1, createdAt: -1 }, { name: 'idx_inbox_user_account_createdAt' });
 
-// 3. Multi-field compound indexes for complex queries
-emailSchema.index({ assignedUserId: 1, status: 1, createdAt: -1 });
-emailSchema.index({ status: 1, priority: 1, createdAt: -1 });
+// 3. Inbox filter variants
+emailSchema.index({ userId: 1, status: 1, createdAt: -1 }, { name: 'idx_inbox_user_status_createdAt' });
+emailSchema.index({ accountId: 1, status: 1, createdAt: -1 }, { name: 'idx_inbox_account_status_createdAt' });
+emailSchema.index({ userId: 1, isRead: 1, createdAt: -1 }, { name: 'idx_inbox_user_isRead_createdAt' });
+emailSchema.index({ accountId: 1, isRead: 1, createdAt: -1 }, { name: 'idx_inbox_account_isRead_createdAt' });
+emailSchema.index({ userId: 1, assignedUserId: 1, createdAt: -1 }, { name: 'idx_inbox_user_assigned_createdAt' });
+emailSchema.index({ accountId: 1, assignedUserId: 1, createdAt: -1 }, { name: 'idx_inbox_account_assigned_createdAt' });
+emailSchema.index({ userId: 1, category: 1, createdAt: -1 }, { name: 'idx_inbox_user_category_createdAt' });
+emailSchema.index({ accountId: 1, category: 1, createdAt: -1 }, { name: 'idx_inbox_account_category_createdAt' });
+emailSchema.index({ userId: 1, priority: 1, createdAt: -1 }, { name: 'idx_inbox_user_priority_createdAt' });
+emailSchema.index({ accountId: 1, priority: 1, createdAt: -1 }, { name: 'idx_inbox_account_priority_createdAt' });
+
+// 4. Secondary list/reporting indexes
+emailSchema.index({ sentiment: 1, createdAt: -1 });
 emailSchema.index({ fromAddress: 1, createdAt: -1 });
 emailSchema.index({ toAddress: 1, createdAt: -1 });
-emailSchema.index({ userId: 1, status: 1, createdAt: -1 });
-emailSchema.index({ accountId: 1, status: 1, createdAt: -1 });
-emailSchema.index({ accountId: 1, isRead: 1, createdAt: -1 });
-emailSchema.index({ userId: 1, assignedUserId: 1, status: 1, createdAt: -1 });
-emailSchema.index({ status: 1, sentAt: -1 }, { partialFilterExpression: { sentAt: { $exists: true } } });
+emailSchema.index({ status: 1, priority: 1, createdAt: -1 });
+emailSchema.index({ status: 1, sentAt: -1 }, {
+    name: 'idx_status_sentAt',
+    partialFilterExpression: { sentAt: { $exists: true } }
+});
 
-// 4. Search-specific indexes
+// 5. Search-specific indexes
 emailSchema.index({ keywords: 1 });
 emailSchema.index({ 'extractedEntities.people': 1 });
 emailSchema.index({ 'extractedEntities.organizations': 1 });
 emailSchema.index({ 'extractedEntities.emails': 1 });
 
-// 5. Partial indexes for performance
+// 6. Partial indexes for high-volume inbox slices
 emailSchema.index(
-    { status: 1, assignedUserId: 1, createdAt: -1 },
-    { partialFilterExpression: { status: { $in: ['NEW', 'REVIEWED', 'APPROVED'] } } }
+    { accountId: 1, status: 1, createdAt: -1 },
+    {
+        name: 'idx_inbox_active_status_partial',
+        partialFilterExpression: { status: { $in: ['NEW', 'REVIEWED', 'APPROVED', 'DRAFTED'] } }
+    }
 );
 
 emailSchema.index(
-    { isRead: 1, createdAt: -1 },
-    { partialFilterExpression: { isRead: false } }
+    { accountId: 1, createdAt: -1 },
+    {
+        name: 'idx_inbox_unread_partial',
+        partialFilterExpression: { isRead: false }
+    }
+);
+
+emailSchema.index(
+    { assignedUserId: 1, status: 1, createdAt: -1 },
+    {
+        name: 'idx_review_queue_partial',
+        partialFilterExpression: { status: { $in: ['NEW', 'REVIEWED', 'APPROVED'] } }
+    }
 );
 
 // ===== SEARCH ENHANCEMENT METHODS =====
