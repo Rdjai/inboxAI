@@ -477,6 +477,41 @@ class ChartAggregationOptimizedService {
     }
 
     /**
+     * Get multiple aggregations (selective)
+     */
+    async getMultipleAggregations(filters = {}) {
+        const { fromDate, toDate, userId, accountId, types = [] } = filters;
+        const typeArray = Array.isArray(types) ? types : String(types).split(',').map(type => type.trim()).filter(Boolean);
+        const results = {};
+
+        const aggregationMap = {
+            volume: () => this.getEmailVolumeByDate(filters),
+            status: () => this.getStatusDistribution(filters),
+            category: () => this.getCategoryDistribution(filters),
+            priority: () => this.getPriorityDistribution(filters),
+            sentiment: () => this.getSentimentDistribution(filters),
+            responseTime: () => this.getResponseTimeStats(filters),
+            responseTimeByDate: () => this.getResponseTimeByDate(filters),
+            userActivity: () => this.getUserActivityStats(filters),
+            heatmap: () => this.getActivityHeatmap(filters),
+            processingFlow: () => this.getEmailProcessingFlow(filters),
+            confidence: () => this.getConfidenceDistribution(filters)
+        };
+
+        await Promise.all(typeArray.map(async type => {
+            if (aggregationMap[type]) {
+                results[type] = await aggregationMap[type]();
+            }
+        }));
+
+        return {
+            requestedTypes: typeArray,
+            data: results,
+            filters: { fromDate, toDate }
+        };
+    }
+
+    /**
      * Invalidate cache for specific patterns
      */
     invalidateCache(pattern) {
