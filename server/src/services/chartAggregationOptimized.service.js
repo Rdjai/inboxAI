@@ -376,6 +376,62 @@ class ChartAggregationOptimizedService {
     }
 
     /**
+     * Get response time by date
+     */
+    async getResponseTimeByDate(filters = {}) {
+        const cacheKey = cacheService.generateKey('response-time:by-date', filters);
+        const ttl = this.determineCacheTTL(filters.fromDate, filters.toDate);
+
+        return cacheService.getOrSet(cacheKey, async () => {
+            const { fromDate, toDate, userId, accountId } = filters;
+
+            const matchStage = {
+                responseTime: { $exists: true, $ne: null }
+            };
+            if (fromDate || toDate) {
+                matchStage.createdAt = {};
+                if (fromDate) matchStage.createdAt.$gte = new Date(fromDate);
+                if (toDate) matchStage.createdAt.$lte = new Date(toDate);
+            }
+            if (userId) matchStage.userId = userId;
+            if (accountId) matchStage.accountId = accountId;
+
+            const pipeline = [
+                { $match: matchStage },
+                {
+                    $group: {
+                        _id: {
+                            date: {
+                                $dateToString: {
+                                    format: '%Y-%m-%d',
+                                    date: '$createdAt'
+                                }
+                            }
+                        },
+                        avgResponseTime: { $avg: '$responseTime' },
+                        minResponseTime: { $min: '$responseTime' },
+                        maxResponseTime: { $max: '$responseTime' },
+                        count: { $sum: 1 }
+                    }
+                },
+                {
+                    $sort: { '_id.date': 1 }
+                }
+            ];
+
+            const results = await Email.aggregate(pipeline);
+
+            return results.map(item => ({
+                date: item._id.date,
+                avgResponseTime: Math.round(item.avgResponseTime || 0),
+                minResponseTime: Math.round(item.minResponseTime || 0),
+                maxResponseTime: Math.round(item.maxResponseTime || 0),
+                count: item.count
+            }));
+        }, ttl);
+    }
+
+    /**
      * Get comprehensive aggregation with parallel execution
      */
     async getComprehensiveAggregation(filters = {}) {

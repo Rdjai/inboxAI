@@ -63,33 +63,20 @@ router.get(
     chartAggregationController.getSentimentDistribution
 );
 
-/**
- * Response Time Statistics (Optimized)
- * GET /api/charts/response-time/stats
- * Query params: fromDate, toDate, userId, accountId
- */
+
 router.get(
     '/response-time/stats',
     permissionMiddleware(PERMISSIONS.ANALYTICS_VIEW, PERMISSIONS.SEARCH_ANALYTICS),
     chartAggregationController.getResponseTimeStats
 );
 
-/**
- * Response Time by Date (Optimized)
- * GET /api/charts/response-time/by-date
- * Query params: fromDate, toDate, userId, accountId
- */
 router.get(
     '/response-time/by-date',
     permissionMiddleware(PERMISSIONS.ANALYTICS_VIEW, PERMISSIONS.SEARCH_ANALYTICS),
     chartAggregationController.getResponseTimeByDate
 );
 
-/**
- * User Activity Statistics (Optimized)
- * GET /api/charts/user-activity
- * Query params: fromDate, toDate, accountId, limit
- */
+
 router.get(
     '/user-activity',
     permissionMiddleware(PERMISSIONS.ANALYTICS_VIEW, PERMISSIONS.SEARCH_ANALYTICS),

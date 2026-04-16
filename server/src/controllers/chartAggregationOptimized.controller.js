@@ -102,6 +102,17 @@ class ChartAggregationOptimizedController {
     }
 
     /**
+     * Get response time by date
+     */
+    async getResponseTimeByDate(req, res, next) {
+        await this.executeWithMonitoring(
+            'getResponseTimeByDate',
+            () => chartAggregationService.getResponseTimeByDate(req.query),
+            req, res, next
+        );
+    }
+
+    /**
      * Get user activity statistics
      */
     async getUserActivityStats(req, res, next) {
