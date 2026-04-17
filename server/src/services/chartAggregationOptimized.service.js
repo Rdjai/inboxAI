@@ -583,6 +583,58 @@ class ChartAggregationOptimizedService {
             return distribution;
         }, ttl);
     }
+
+    async getConfidenceDistribution(filters = {}) {
+        const cacheKey = cacheService.generateKey('distribution:confidence', filters);
+        const ttl = this.determineCacheTTL(filters.fromDate, filters.toDate);
+
+        return cacheService.getOrSet(cacheKey, async () => {
+            const { fromDate, toDate, userId, accountId } = filters;
+            const matchStage = {
+                confidence: { $exists: true, $ne: null }
+            };
+            if (fromDate || toDate) {
+                matchStage.createdAt = {};
+                if (fromDate) matchStage.createdAt.$gte = new Date(fromDate);
+                if (toDate) matchStage.createdAt.$lte = new Date(toDate);
+            }
+            if (userId) matchStage.userId = userId;
+            if (accountId) matchStage.accountId = accountId;
+
+            const pipeline = [
+                { $match: matchStage },
+                {
+                    $bucket: {
+                        groupBy: '$confidence',
+                        boundaries: [0, 0.2, 0.4, 0.6, 0.8, 1.0],
+                        default: 'other',
+                        output: {
+                            count: { $sum: 1 }
+                        }
+                    }
+                }
+            ];
+
+            const results = await Email.aggregate(pipeline);
+            const distribution = {
+                'Very Low (0-20%)': 0,
+                'Low (20-40%)': 0,
+                'Medium (40-60%)': 0,
+                'High (60-80%)': 0,
+                'Very High (80-100%)': 0
+            };
+
+            results.forEach(item => {
+                if (item._id === 0) distribution['Very Low (0-20%)'] = item.count;
+                else if (item._id === 0.2) distribution['Low (20-40%)'] = item.count;
+                else if (item._id === 0.4) distribution['Medium (40-60%)'] = item.count;
+                else if (item._id === 0.6) distribution['High (60-80%)'] = item.count;
+                else if (item._id === 0.8) distribution['Very High (80-100%)'] = item.count;
+            });
+
+            return distribution;
+        }, ttl);
+    }
 }
 
 module.exports = new ChartAggregationOptimizedService();

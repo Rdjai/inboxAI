@@ -91,6 +91,17 @@ class ChartAggregationOptimizedController {
     }
 
     /**
+     * Get confidence distribution
+     */
+    async getConfidenceDistribution(req, res, next) {
+        await this.executeWithMonitoring(
+            'getConfidenceDistribution',
+            () => chartAggregationService.getConfidenceDistribution(req.query),
+            req, res, next
+        );
+    }
+
+    /**
      * Get response time statistics
      */
     async getResponseTimeStats(req, res, next) {
@@ -152,6 +163,17 @@ class ChartAggregationOptimizedController {
         await this.executeWithMonitoring(
             'getComprehensiveAggregation',
             () => chartAggregationService.getComprehensiveAggregation(req.query),
+            req, res, next
+        );
+    }
+
+    /**
+     * Get multiple aggregations (selective)
+     */
+    async getMultipleAggregations(req, res, next) {
+        await this.executeWithMonitoring(
+            'getMultipleAggregations',
+            () => chartAggregationService.getMultipleAggregations(req.query),
             req, res, next
         );
     }
