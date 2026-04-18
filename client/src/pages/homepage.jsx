@@ -1,12 +1,12 @@
 // client/src/pages/Home.jsx
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { 
-  Smartphone, 
-  Mail, 
-  Sparkles, 
-  Shield, 
-  Zap, 
+import {
+  Smartphone,
+  Mail,
+  Sparkles,
+  Shield,
+  Zap,
   Download,
   CheckCircle,
   PlayCircle,
@@ -119,7 +119,7 @@ const Home = () => {
   const screenshots = [
     {
       id: 1,
-      url:"https://ik.imagekit.io/jjgsg6qhe/3-portrait.png",
+      url: "https://ik.imagekit.io/jjgsg6qhe/3-portrait.png",
       title: "AI Smart Inbox",
       description: "AI-organized inbox with priority sorting",
       icon: <Brain className="w-8 h-8" />,
@@ -127,7 +127,7 @@ const Home = () => {
     },
     {
       id: 2,
-      url:"https://ik.imagekit.io/jjgsg6qhe/5-portrait.png",
+      url: "https://ik.imagekit.io/jjgsg6qhe/5-portrait.png",
       title: "Temp Mail Generator",
       description: "Create disposable emails instantly",
       icon: <RefreshCw className="w-8 h-8" />,
@@ -135,7 +135,7 @@ const Home = () => {
     },
     {
       id: 3,
-      url:"https://ik.imagekit.io/jjgsg6qhe/4-portrait.png",
+      url: "https://ik.imagekit.io/jjgsg6qhe/4-portrait.png",
       title: "inbox Dashboard",
       description: "Detailed email insights and productivity stats",
       icon: <BarChart className="w-8 h-8" />,
@@ -143,7 +143,7 @@ const Home = () => {
     },
     {
       id: 4,
-      url:"https://ik.imagekit.io/jjgsg6qhe/2-portrait.png",
+      url: "https://ik.imagekit.io/jjgsg6qhe/2-portrait.png",
       title: "Team Collaboration",
       description: "Shared inboxes and team workflows",
       icon: <Users className="w-8 h-8" />,
@@ -219,7 +219,7 @@ const Home = () => {
                 <a href="#ai" onClick={() => setIsMenuOpen(false)} className="text-gray-700 hover:text-blue-600 font-medium py-2">AI Assistant</a>
                 <a href="#temp-email" onClick={() => setIsMenuOpen(false)} className="text-gray-700 hover:text-blue-600 font-medium py-2">Temp Mail</a>
                 <a href="#waitlist" onClick={() => setIsMenuOpen(false)} className="text-gray-700 hover:text-blue-600 font-medium py-2">Waitlist</a>
-                
+
                 <div className="pt-4 border-t border-gray-200">
                   <a href="#waitlist" onClick={() => setIsMenuOpen(false)} className="block bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all text-center font-medium">
                     Join Waitlist
@@ -232,17 +232,17 @@ const Home = () => {
       </nav>
 
       {/* Hero Section */}
-      <section className="relative overflow-hidden pt-24 md:pt-28">
+      <section className="relative overflow-hidden pt-24 md:pt-28 px-4 sm:px-6 lg:px-8">
         <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-purple-600 opacity-5 pointer-events-none"></div>
-        <div className="container mx-auto px-4 py-12 md:py-24">
-          <div className="flex flex-col lg:flex-row items-center">
+        <div className="container mx-auto max-w-7xl px-0 py-12 md:py-24">
+          <div className="flex flex-col lg:flex-row items-center gap-12">
             <div className="lg:w-1/2 mb-12 lg:mb-0">
               {/* Coming Soon Badge */}
               <div className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-full text-sm font-medium mb-6">
                 <Clock className="h-4 w-4 mr-2" />
                 🚀 COMING SOON - Be the first to experience it!
               </div>
-              
+
               <div className="flex items-center space-x-2 mb-4">
                 <div className="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">
                   <Brain className="h-4 w-4 mr-2" />
@@ -253,19 +253,19 @@ const Home = () => {
                   + Temp Mail Service
                 </div>
               </div>
-              
+
               <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6">
                 Intelligent Email
                 <span className="block text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">
                   Meets Privacy
                 </span>
               </h1>
-              
+
               <p className="text-xl text-gray-600 mb-8">
-                Transform your email experience with AI-powered intelligence and disposable privacy protection. 
+                Transform your email experience with AI-powered intelligence and disposable privacy protection.
                 Smart email management meets secure temporary emails in one powerful app.
               </p>
-              
+
               <div className="flex flex-col sm:flex-row gap-4">
                 <a
                   href="#waitlist"
@@ -284,7 +284,7 @@ const Home = () => {
                   Contribute github
                 </a>
               </div>
-                            
+
               <div className="mt-8 flex items-center space-x-4">
                 <div className="flex -space-x-2">
                   {[1, 2, 3, 4, 5].map((i) => (
@@ -304,7 +304,7 @@ const Home = () => {
                 </div>
               </div>
             </div>
-            
+
             <div className="lg:w-1/2 relative">
               {/* Coming Soon Badge on Mockup */}
               <div className="absolute -top-4 right-4 z-10">
@@ -312,12 +312,12 @@ const Home = () => {
                   🔧 PREVIEW
                 </div>
               </div>
-              
+
               {/* Mockup Phone */}
               <div className="relative mx-auto w-80 opacity-90">
                 <div className="absolute -top-6 -right-6 w-64 h-64 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full opacity-10 blur-3xl"></div>
                 <div className="absolute -bottom-6 -left-6 w-64 h-64 bg-gradient-to-r from-pink-400 to-orange-400 rounded-full opacity-10 blur-3xl"></div>
-              <img src='https://ik.imagekit.io/jjgsg6qhe/3-portrait.png'/>
+                <img src='https://ik.imagekit.io/jjgsg6qhe/3-portrait.png' />
               </div>
             </div>
           </div>
@@ -339,7 +339,7 @@ const Home = () => {
               AI-powered intelligence meets privacy protection in a single, powerful application
             </p>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
             {mainFeatures.map((feature, index) => (
               <div key={index} className={`bg-gradient-to-br ${feature.color} p-8 rounded-2xl text-white transform hover:-translate-y-2 transition-transform duration-300`}>
@@ -367,12 +367,12 @@ const Home = () => {
               Preview of the beautiful and intuitive interface we're building
             </p>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
             {screenshots.map((screenshot) => (
               <div key={screenshot.id} className="group relative">
-                
-                <img src={screenshot.url}/>
+
+                <img src={screenshot.url} />
                 <div className="mt-3 md:mt-4 text-center">
                   <h3 className="font-bold text-gray-900 text-sm md:text-base">{screenshot.title}</h3>
                   <p className="text-gray-600 text-xs md:text-sm">{screenshot.description}</p>
@@ -398,13 +398,13 @@ const Home = () => {
               Let artificial intelligence handle the heavy lifting of email management
             </p>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 items-center">
             <div>
               <h3 className="text-2xl md:text-3xl font-bold text-gray-900 mb-6">
                 Your AI Email Co-pilot
               </h3>
-              
+
               <div className="space-y-4">
                 {[
                   "Smart email categorization and priority sorting",
@@ -420,7 +420,7 @@ const Home = () => {
                   </div>
                 ))}
               </div>
-              
+
               <div className="mt-8">
                 <a href="#waitlist" className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-lg hover:from-blue-700 hover:to-cyan-700 transition-all">
                   <Brain className="h-5 w-5 mr-2" />
@@ -428,7 +428,7 @@ const Home = () => {
                 </a>
               </div>
             </div>
-            
+
             <div className="bg-white rounded-2xl p-6 shadow-xl">
               <div className="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-xl p-6">
                 <div className="flex items-center mb-4">
@@ -438,7 +438,7 @@ const Home = () => {
                     <p className="text-sm text-gray-600">Processing your emails</p>
                   </div>
                 </div>
-                
+
                 <div className="space-y-4">
                   <div className="bg-white rounded-lg p-4 border border-blue-100">
                     <div className="flex justify-between items-center mb-2">
@@ -449,7 +449,7 @@ const Home = () => {
                       <div className="bg-blue-600 h-2 rounded-full" style={{ width: '92%' }}></div>
                     </div>
                   </div>
-                  
+
                   <div className="bg-white rounded-lg p-4 border border-blue-100">
                     <div className="flex justify-between items-center mb-2">
                       <span className="font-medium text-gray-900">Priority Sorting</span>
@@ -457,7 +457,7 @@ const Home = () => {
                     </div>
                     <p className="text-sm text-gray-600">12 emails organized by priority</p>
                   </div>
-                  
+
                   <div className="bg-white rounded-lg p-4 border border-blue-100">
                     <div className="flex justify-between items-center mb-2">
                       <span className="font-medium text-gray-900">Auto-Responses</span>
@@ -487,13 +487,13 @@ const Home = () => {
               Protect your privacy with disposable emails - included with every account
             </p>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 items-center">
             <div className="order-2 md:order-1">
               <div className="bg-white rounded-2xl p-6 shadow-xl">
                 <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-6">
                   <h4 className="font-bold text-gray-900 mb-4 text-lg">Generate Temp Email</h4>
-                  
+
                   <div className="mb-6">
                     <div className="flex items-center justify-between bg-white p-3 rounded-lg border border-purple-200">
                       <code className="font-mono text-purple-600">random7482@temp.inboxai.com</code>
@@ -508,7 +508,7 @@ const Home = () => {
                     </div>
                     <p className="text-xs text-gray-500 mt-2">Expires in 24 hours • Unlimited generations</p>
                   </div>
-                  
+
                   <div className="grid grid-cols-2 gap-3">
                     <button className="bg-purple-100 text-purple-600 py-2 rounded-lg text-sm hover:bg-purple-200">
                       Copy Email
@@ -520,12 +520,12 @@ const Home = () => {
                 </div>
               </div>
             </div>
-            
+
             <div className="order-1 md:order-2">
               <h3 className="text-2xl md:text-3xl font-bold text-gray-900 mb-6">
                 Privacy Protection Included
               </h3>
-              
+
               <div className="space-y-4">
                 {[
                   "Generate unlimited disposable email addresses",
@@ -541,10 +541,10 @@ const Home = () => {
                   </div>
                 ))}
               </div>
-              
+
               <div className="mt-8">
                 <p className="text-gray-600 mb-4">
-                  <span className="font-bold text-purple-600">Bonus:</span> Every InboxAI account comes with 
+                  <span className="font-bold text-purple-600">Bonus:</span> Every InboxAI account comes with
                   free temporary email service at no extra cost.
                 </p>
                 <a href="#waitlist" className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:from-purple-700 hover:to-pink-700 transition-all">
@@ -572,7 +572,7 @@ const Home = () => {
               A comprehensive email solution packed with powerful features
             </p>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
             {features.map((feature, index) => (
               <div key={index} className={`bg-gradient-to-br from-white to-gray-50 p-6 rounded-2xl border ${feature.highlight ? 'border-blue-200 shadow-lg' : 'border-gray-200'} hover:border-blue-300 hover:shadow-xl transition-all duration-300`}>
@@ -599,7 +599,7 @@ const Home = () => {
             <Rocket className="h-3 w-3 md:h-4 md:w-4 mr-2 animate-pulse" />
             🚀 LIMITED EARLY ACCESS AVAILABLE
           </div>
-          
+
           <h2 className="text-2xl md:text-4xl font-bold text-white mb-4 md:mb-6">
             Join the Email Revolution
           </h2>
@@ -607,7 +607,7 @@ const Home = () => {
             Be among the first to experience AI-powered email management with built-in privacy protection.
             First 500 signups get lifetime premium features!
           </p>
-          
+
           {/* Waitlist Form */}
           <div className="max-w-md mx-auto mb-8 md:mb-12">
             <form className="flex flex-col sm:flex-row gap-3">
@@ -628,7 +628,7 @@ const Home = () => {
               We'll only email you about important updates. No spam, ever.
             </p>
           </div>
-          
+
           <div className="text-blue-100 text-sm md:text-base">
             <div className="flex flex-wrap items-center justify-center gap-3 md:gap-6">
               <div className="flex items-center">
@@ -667,7 +667,7 @@ const Home = () => {
               </div>
               <p className="mt-3 text-sm leading-6 md:text-base">Intelligent Email with Privacy Protection</p>
             </div>
-            
+
             <div className="flex max-w-2xl flex-wrap justify-start gap-x-3 gap-y-3 text-sm md:justify-end md:gap-x-4 md:gap-y-4 md:text-base">
               <a href="#screenshots" className="rounded-full border border-gray-800 px-4 py-2 transition-all hover:border-gray-600 hover:bg-white/5 hover:text-white">Screenshots</a>
               <a href="#ai" className="rounded-full border border-gray-800 px-4 py-2 transition-all hover:border-gray-600 hover:bg-white/5 hover:text-white">AI Assistant</a>
@@ -676,7 +676,7 @@ const Home = () => {
               <a href="#waitlist" className="rounded-full border border-gray-800 px-4 py-2 transition-all hover:border-gray-600 hover:bg-white/5 hover:text-white">Waitlist</a>
             </div>
           </div>
-          
+
           <div className="mt-8 border-t border-gray-800 pt-8 text-center md:mt-10 md:pt-10">
             <p className="text-sm md:text-base">© 2026 InboxAI. Built By Alien with ❤️ using Flutter & Mern.</p>
             <p className="mt-3 text-xs leading-6 md:text-sm">AI email assistant with temporary email service. Currently in development.</p>
