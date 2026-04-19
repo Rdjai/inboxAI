@@ -5,6 +5,7 @@ import { EmailProvider } from './context/EmailContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { Toaster } from 'react-hot-toast';
 import Layout from './components/layout/Layout';
+import Home from './pages/homepage';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
