@@ -232,11 +232,11 @@ const Home = () => {
       </nav>
 
       {/* Hero Section */}
-      <section className="relative overflow-hidden pt-24 md:pt-28 px-4 sm:px-6 lg:px-8">
+      <section className="relative overflow-hidden pt-24 md:pt-28 px-6 sm:px-8 lg:px-12">
         <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-purple-600 opacity-5 pointer-events-none"></div>
         <div className="container mx-auto max-w-7xl px-0 py-12 md:py-24">
           <div className="flex flex-col lg:flex-row items-center gap-12">
-            <div className="lg:w-1/2 mb-12 lg:mb-0">
+            <div className="lg:w-1/2 mb-12 lg:mb-0 lg:pl-8">
               {/* Coming Soon Badge */}
               <div className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-full text-sm font-medium mb-6">
                 <Clock className="h-4 w-4 mr-2" />
