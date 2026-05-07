@@ -7,6 +7,28 @@ yarn-error.log*
 pnpm-debug.log*
 .pnpm-store/
 
+
+# Task temp artifacts
+my-task/.tmp/
+
+# Local env files
+server/.env
+client/.env
+
+# Local uploads and runtime logs
+server/uploads/
+server/logs/
+
+# Client build output
+client/dist/
+
+# Flutter generated output
+processmail_app/.dart_tool/
+processmail_app/build/
+
+# Optional local task archives
+*.zip
+
 # Production builds
 dist/
 build/
