@@ -1,16 +1,28 @@
-# processmail_app
+# ProcessMail Flutter App
 
-A new Flutter project.
+This Flutter app now supports live server integration with the existing Node backend.
 
-## Getting Started
+## Server Integration
 
-This project is a starting point for a Flutter application.
+The app reads runtime configuration from Dart defines:
 
-A few resources to get you started if this is your first Flutter project:
+- `PM_API_URL` (default: `http://localhost:3000/api`)
+- `PM_EMAIL` (optional bootstrap login)
+- `PM_PASSWORD` (optional bootstrap login)
+- `PM_TOKEN` (optional bootstrap token)
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+If credentials/token are provided, the app logs in on splash and loads:
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+- `GET /email/accounts`
+- `GET /emails`
+
+## Run Example
+
+```bash
+flutter run \
+  --dart-define=PM_API_URL=http://10.0.2.2:3000/api \
+  --dart-define=PM_EMAIL=your@email.com \
+  --dart-define=PM_PASSWORD=yourpassword
+```
+
+For Android emulator, use `10.0.2.2` instead of `localhost`.

@@ -1,0 +1,11 @@
+id = "processmail-mailbox-tenancy-scope"
+title = "Mailbox ownership metadata is dropped and inbox analytics are not scoped"
+language = "javascript"
+framework = "node"
+difficulty = "medium"
+
+[paths]
+root = "."
+dockerfile = "my-task/environment/Dockerfile"
+test_script = "my-task/tests/test.sh"
+solve_script = "my-task/solution/solve.sh"

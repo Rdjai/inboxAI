@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:processmail_app/providers/email_provider.dart';
+import 'package:processmail_app/providers/auth_provider.dart';
 import 'package:processmail_app/providers/theme_provider.dart';
 import 'package:processmail_app/models/email_model.dart';
 import 'package:processmail_app/widgets/email_card.dart';
@@ -61,8 +62,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     final emailProvider = Provider.of<EmailProvider>(context);
+    final authProvider = Provider.of<AuthProvider>(context);
     final themeProvider = Provider.of<ThemeProvider>(context);
     final isDark = themeProvider.themeMode == ThemeMode.dark;
+    final displayName = authProvider.currentUserName ?? 'Guest';
 
     return Scaffold(
       backgroundColor: isDark
@@ -137,7 +140,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                       ),
                                       const SizedBox(height: 4),
                                       Text(
-                                        'John Doe! 👋',
+                                        '$displayName! 👋',
                                         style: GoogleFonts.poppins(
                                           fontSize: 28,
                                           fontWeight: FontWeight.bold,
@@ -175,6 +178,16 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                         Icons.label_important_outline,
                                       ),
                                     ],
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  emailProvider.isServerConnected
+                                      ? 'Live sync active'
+                                      : 'Live sync not connected',
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 12,
+                                    color: Colors.white.withOpacity(0.85),
                                   ),
                                 ),
                               ],

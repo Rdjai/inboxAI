@@ -9,6 +9,7 @@ import 'package:processmail_app/screens/compose_screen.dart';
 import 'package:processmail_app/screens/all_mail_screen.dart';
 import 'package:processmail_app/screens/inbox_screen.dart';
 import 'package:processmail_app/screens/settings_screen.dart';
+import 'package:processmail_app/providers/auth_provider.dart';
 import 'package:processmail_app/providers/email_provider.dart';
 import 'package:processmail_app/providers/theme_provider.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -25,7 +26,15 @@ class ProcessMailApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => ThemeProvider()),
-        ChangeNotifierProvider(create: (_) => EmailProvider()),
+        ChangeNotifierProvider(create: (_) => AuthProvider()),
+        ChangeNotifierProxyProvider<AuthProvider, EmailProvider>(
+          create: (_) => EmailProvider(),
+          update: (_, authProvider, emailProvider) {
+            final provider = emailProvider ?? EmailProvider();
+            provider.bindAuth(authProvider);
+            return provider;
+          },
+        ),
       ],
       child: Consumer<ThemeProvider>(
         builder: (context, themeProvider, child) {

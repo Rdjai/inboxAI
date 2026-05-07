@@ -60,7 +60,7 @@ class AllMailScreen extends StatelessWidget {
 
           // Email List
           Expanded(
-            child: emailProvider.emails.isEmpty
+            child: emailProvider.allEmails.isEmpty
                 ? Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -83,9 +83,9 @@ class AllMailScreen extends StatelessWidget {
                   )
                 : ListView.builder(
                     padding: const EdgeInsets.only(top: 8),
-                    itemCount: emailProvider.emails.length,
+                    itemCount: emailProvider.allEmails.length,
                     itemBuilder: (context, index) {
-                      final email = emailProvider.emails[index];
+                      final email = emailProvider.allEmails[index];
                       return EmailCard(email: email);
                     },
                   ),

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:animated_text_kit/animated_text_kit.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
+import 'package:processmail_app/providers/auth_provider.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -13,6 +15,7 @@ class _SplashScreenState extends State<SplashScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _animation;
+  String _statusText = 'Connecting to server...';
 
   @override
   void initState() {
@@ -27,10 +30,23 @@ class _SplashScreenState extends State<SplashScreen>
       curve: Curves.easeInOut,
     );
 
-    // Navigate to home after 3 seconds
-    Future.delayed(const Duration(seconds: 3), () {
-      Navigator.pushReplacementNamed(context, '/home');
+    _bootstrapApp();
+  }
+
+  Future<void> _bootstrapApp() async {
+    final authProvider = context.read<AuthProvider>();
+    final isAuthenticated = await authProvider.bootstrap();
+
+    if (!mounted) return;
+    setState(() {
+      _statusText = isAuthenticated
+          ? 'Connected. Loading your inbox...'
+          : 'Using local mode. Configure PM_EMAIL/PM_PASSWORD for live sync.';
     });
+
+    await Future.delayed(const Duration(seconds: 2));
+    if (!mounted) return;
+    Navigator.pushReplacementNamed(context, '/home');
   }
 
   @override
@@ -123,7 +139,7 @@ class _SplashScreenState extends State<SplashScreen>
 
             // Loading Text
             Text(
-              'Loading your inbox...',
+              _statusText,
               style: GoogleFonts.poppins(
                 fontSize: 14,
                 color: Colors.grey[500],

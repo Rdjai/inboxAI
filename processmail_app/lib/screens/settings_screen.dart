@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:processmail_app/providers/theme_provider.dart';
 import 'package:processmail_app/providers/email_provider.dart';
+import 'package:processmail_app/providers/auth_provider.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -11,7 +12,10 @@ class SettingsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
     final emailProvider = Provider.of<EmailProvider>(context);
+    final authProvider = Provider.of<AuthProvider>(context);
     final isDark = themeProvider.themeMode == ThemeMode.dark;
+    final displayName = authProvider.currentUserName ?? 'Guest User';
+    final displayEmail = authProvider.currentUserEmail ?? 'Not connected';
 
     return Scaffold(
       backgroundColor: isDark
@@ -64,7 +68,7 @@ class SettingsScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  'John Doe',
+                  displayName,
                   style: GoogleFonts.poppins(
                     fontSize: 22,
                     fontWeight: FontWeight.w600,
@@ -75,7 +79,7 @@ class SettingsScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'john.doe@processmail.com',
+                  displayEmail,
                   style: GoogleFonts.poppins(
                     fontSize: 14,
                     color: isDark
@@ -263,9 +267,10 @@ class SettingsScreen extends StatelessWidget {
           const SizedBox(height: 20),
 
           // Logout Button
-          if (emailProvider.accounts.isNotEmpty)
+          if (authProvider.isLoggedIn || emailProvider.accounts.isNotEmpty)
             ElevatedButton(
               onPressed: () {
+                context.read<AuthProvider>().logout();
                 emailProvider.logout();
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(

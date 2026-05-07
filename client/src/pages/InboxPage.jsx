@@ -38,6 +38,16 @@ const InboxPage = () => {
         search: '',
     });
 
+    const getAccountId = (account) => account?._id || account?.id || account?.accountId || null;
+
+    const getSelectedAccountId = () => {
+        if (!selectedAccount) return null;
+        if (typeof selectedAccount === 'object') {
+            return getAccountId(selectedAccount);
+        }
+        return selectedAccount;
+    };
+
     useEffect(() => {
         fetchEmails();
     }, [filters, pagination.page]);
@@ -75,18 +85,29 @@ const InboxPage = () => {
     const handleSyncGmail = async () => {
         try {
             setSyncing(true);
-            let accountId = selectedAccount || accounts?.[0]?._id;
+            let accountId = getSelectedAccountId();
+            let availableAccounts = Array.isArray(accounts) ? accounts : [];
+
+            const hasSelectedInState = availableAccounts.some((acc) => getAccountId(acc) === accountId);
+            if (!accountId || (availableAccounts.length > 0 && !hasSelectedInState)) {
+                accountId = getAccountId(availableAccounts[0]);
+                if (accountId) {
+                    setSelectedAccount(accountId);
+                }
+            }
+
             if (!accountId) {
                 const accountsRes = await emailAccountsAPI.getAccounts();
                 const payload = accountsRes?.data || accountsRes;
-                const fetchedAccounts = Array.isArray(payload)
+                availableAccounts = Array.isArray(payload)
                     ? payload
                     : Array.isArray(payload?.accounts)
                         ? payload.accounts
                         : Array.isArray(payload?.data)
                             ? payload.data
                             : [];
-                accountId = fetchedAccounts?.[0]?._id;
+
+                accountId = getAccountId(availableAccounts.find((acc) => getAccountId(acc)));
                 if (accountId) {
                     setSelectedAccount(accountId);
                 }
@@ -102,7 +123,7 @@ const InboxPage = () => {
                 fetched: payload.fetched ?? 0,
                 saved: payload.imported ?? payload.saved ?? 0
             });
-            toast.success(response.message || 'Emails synced successfully!');
+            toast.success(response?.message || payload?.message || 'Emails synced successfully!');
             fetchEmails(); // Refresh the list
         } catch (error) {
             toast.error('Sync failed: ' + (error.message || 'Unknown error'));

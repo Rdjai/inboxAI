@@ -1,0 +1,12 @@
+{
+  "fail_to_pass": [
+    "email schema retains mailbox ownership metadata",
+    "email list only includes the requester mailbox and paginates within that scope",
+    "email detail denies access to foreign mailbox records",
+    "dashboard analytics only count the requester mailbox"
+  ],
+  "pass_to_pass": [
+    "role middleware blocks unauthorized roles",
+    "ai service falls back deterministically for empty payloads"
+  ]
+}
