@@ -4,9 +4,7 @@ const { AppError } = require('../middleware/errorHandler.middleware');
 const logger = require('../utils/logger');
 
 class ChartAggregationController {
-    /**
-     * Get email volume data
-     */
+
     async getEmailVolume(req, res, next) {
         try {
             const { fromDate, toDate, userId, accountId, groupBy = 'date' } = req.query;

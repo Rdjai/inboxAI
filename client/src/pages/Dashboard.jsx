@@ -181,7 +181,7 @@ const Dashboard = () => {
     const weeklyBacklog = `${getNumber(weekSummary.unprocessedEmails).toLocaleString()} still need attention`;
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-8">
             <div className="rounded-2xl bg-gradient-to-r from-blue-500 via-cyan-500 to-slate-900 p-6 text-white shadow-lg">
                 <h1 className="mb-2 text-2xl font-bold">Welcome back, {user?.name}!</h1>
                 <p className="opacity-90">
@@ -200,8 +200,8 @@ const Dashboard = () => {
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-                <div className="rounded-xl bg-white p-6 shadow-sm">
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+                <div className="rounded-xl bg-white p-6 shadow-sm transition-shadow hover:shadow-md">
                     <div className="flex items-center justify-between">
                         <div>
                             <p className="text-sm text-gray-600">Email Accounts</p>
@@ -216,7 +216,7 @@ const Dashboard = () => {
                     </Link>
                 </div>
 
-                <div className="rounded-xl bg-white p-6 shadow-sm">
+                <div className="rounded-xl bg-white p-6 shadow-sm transition-shadow hover:shadow-md">
                     <div className="flex items-center justify-between">
                         <div>
                             <p className="text-sm text-gray-600">Total Emails</p>
@@ -231,7 +231,7 @@ const Dashboard = () => {
                     </Link>
                 </div>
 
-                <div className="rounded-xl bg-white p-6 shadow-sm">
+                <div className="rounded-xl bg-white p-6 shadow-sm transition-shadow hover:shadow-md">
                     <div className="flex items-center justify-between">
                         <div>
                             <p className="text-sm text-gray-600">Unread</p>
@@ -246,7 +246,7 @@ const Dashboard = () => {
                     </Link>
                 </div>
 
-                <div className="rounded-xl bg-white p-6 shadow-sm">
+                <div className="rounded-xl bg-white p-6 shadow-sm transition-shadow hover:shadow-md">
                     <div className="flex items-center justify-between">
                         <div>
                             <p className="text-sm text-gray-600">Sent Today</p>
@@ -263,8 +263,8 @@ const Dashboard = () => {
             </div>
 
             <div className="overflow-hidden rounded-2xl bg-white shadow-sm">
-                <div className="grid grid-cols-1 lg:grid-cols-[1.7fr_1fr]">
-                    <div className="bg-gradient-to-br from-slate-950 via-slate-900 to-cyan-900 p-6 text-white">
+                <div className="grid grid-cols-1 lg:grid-cols-[1.8fr_1fr] xl:grid-cols-[2fr_1fr]">
+                    <div className="bg-gradient-to-br from-slate-950 via-slate-900 to-cyan-900 p-6 text-white lg:p-8">
                         <div className="flex flex-wrap items-start justify-between gap-4">
                             <div>
                                 <p className="text-sm font-medium uppercase tracking-[0.2em] text-cyan-200">
@@ -283,11 +283,11 @@ const Dashboard = () => {
                             </Link>
                         </div>
 
-                        <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-3">
+                        <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                             {weeklyInsights.highlights.map((highlight) => (
                                 <div
                                     key={highlight.label}
-                                    className={`rounded-2xl border p-4 ${highlight.tone}`}
+                                    className={`rounded-2xl border p-4 ${highlight.tone} transition-shadow hover:shadow-md`}
                                 >
                                     <p className="text-xs font-semibold uppercase tracking-[0.18em]">
                                         {highlight.label}
@@ -299,21 +299,21 @@ const Dashboard = () => {
                         </div>
                     </div>
 
-                    <div className="flex flex-col justify-between bg-slate-50 p-6">
+                    <div className="flex flex-col justify-between bg-slate-50 p-6 lg:p-8">
                         <div>
                             <p className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">
                                 This week at a glance
                             </p>
                             <div className="mt-4 space-y-4">
-                                <div className="rounded-2xl border border-slate-200 bg-white p-4">
+                                <div className="rounded-2xl border border-slate-200 bg-white p-4 transition-shadow hover:shadow-sm">
                                     <p className="text-sm text-slate-500">Coverage</p>
                                     <p className="mt-2 text-lg font-semibold text-slate-900">{accountsConnectedLabel}</p>
                                 </div>
-                                <div className="rounded-2xl border border-slate-200 bg-white p-4">
+                                <div className="rounded-2xl border border-slate-200 bg-white p-4 transition-shadow hover:shadow-sm">
                                     <p className="text-sm text-slate-500">Throughput</p>
                                     <p className="mt-2 text-lg font-semibold text-slate-900">{weeklyThroughput}</p>
                                 </div>
-                                <div className="rounded-2xl border border-slate-200 bg-white p-4">
+                                <div className="rounded-2xl border border-slate-200 bg-white p-4 transition-shadow hover:shadow-sm">
                                     <p className="text-sm text-slate-500">Backlog</p>
                                     <p className="mt-2 text-lg font-semibold text-slate-900">{weeklyBacklog}</p>
                                 </div>

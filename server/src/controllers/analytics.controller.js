@@ -21,7 +21,6 @@ class AnalyticsController {
                 if (toDate) dateFilter.createdAt.$lte = new Date(toDate);
             }
 
-            // Get all stats in parallel
             const [
                 totalEmails,
                 unprocessedEmails,
@@ -31,40 +30,33 @@ class AnalyticsController {
                 priorityStats,
                 recentActivity
             ] = await Promise.all([
-                // Total emails
                 Email.countDocuments(dateFilter),
 
-                // Unprocessed emails (NEW, CLASSIFIED, DRAFTED)
                 Email.countDocuments({
                     ...dateFilter,
                     status: { $in: [EMAIL_STATUS.NEW, EMAIL_STATUS.CLASSIFIED, EMAIL_STATUS.DRAFTED] }
                 }),
 
-                // Average response time (sent - received)
                 this.calculateAvgResponseTime(dateFilter),
 
-                // Category distribution
                 Email.aggregate([
                     { $match: dateFilter },
                     { $group: { _id: '$category', count: { $sum: 1 } } },
                     { $sort: { count: -1 } }
                 ]),
 
-                // Status distribution
                 Email.aggregate([
                     { $match: dateFilter },
                     { $group: { _id: '$status', count: { $sum: 1 } } },
                     { $sort: { count: -1 } }
                 ]),
 
-                // Priority distribution
                 Email.aggregate([
                     { $match: dateFilter },
                     { $group: { _id: '$priority', count: { $sum: 1 } } },
                     { $sort: { count: -1 } }
                 ]),
 
-                // Recent activity
                 AuditLog.find(dateFilter)
                     .sort({ createdAt: -1 })
                     .limit(10)
@@ -72,7 +64,6 @@ class AnalyticsController {
                     .populate('emailId', 'subject')
             ]);
 
-            // Format data for frontend
             const categoryData = {};
             EMAIL_CATEGORIES.forEach(cat => {
                 categoryData[cat] = categoryStats.find(s => s._id === cat)?.count || 0;

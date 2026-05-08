@@ -1,4 +1,3 @@
-// src/config/redis.js
 const { REDIS_URL } = require('./env');
 
 module.exports = {
