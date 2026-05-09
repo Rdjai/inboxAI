@@ -9,8 +9,6 @@ import Home from './pages/homepage';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
-import Inbox from './pages/Inbox';
-import Compose from './pages/Compose';
 import Drafts from './pages/Drafts';
 import Review from './pages/Review';
 import Sent from './pages/Sent';
@@ -23,53 +21,40 @@ import InboxPage from './pages/InboxPage';
 import EmailDetailPage from './pages/EmailDetailPage';
 import EmailComposePage from './pages/Compose';
 
-// Protected Route Component
+const RouteLoading = () => (
+  <div className="flex items-center justify-center min-h-screen">
+    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+  </div>
+);
+
 const ProtectedRoute = ({ children }) => {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, loading } = useAuth();
 
-  console.log('🔒 ProtectedRoute - Auth state:', { isAuthenticated, isLoading });
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-      </div>
-    );
+  if (loading) {
+    return <RouteLoading />;
   }
 
   if (!isAuthenticated) {
-    console.log('🚫 Not authenticated, redirecting to login');
     return <Navigate to="/login" replace />;
   }
 
-  console.log('✅ User authenticated, allowing access');
   return children;
 };
 
-// Public Route Component (for login/register)
 const PublicRoute = ({ children }) => {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, loading } = useAuth();
 
-  console.log('👤 PublicRoute - Auth state:', { isAuthenticated, isLoading });
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-      </div>
-    );
+  if (loading) {
+    return <RouteLoading />;
   }
 
   if (isAuthenticated) {
-    console.log('🔄 Already authenticated, redirecting to dashboard');
-    return <Navigate to="/dashboard" replace />;
+    return <Navigate to="/app/dashboard" replace />;
   }
 
-  console.log('👤 Showing public route');
   return children;
 };
 
-// Create router
 const router = createBrowserRouter([
   {
     path: '/',
@@ -167,7 +152,6 @@ const router = createBrowserRouter([
       },
     ],
   },
-  // Redirect all unmatched routes
   {
     path: '*',
     element: <Navigate to="/" replace />,
@@ -180,8 +164,6 @@ const router = createBrowserRouter([
 });
 
 function App() {
-  console.log('🚀 App component rendering');
-
   return (
     <>
       <Toaster

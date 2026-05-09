@@ -42,7 +42,7 @@ const Register = () => {
         setLoading(false);
 
         if (result.success) {
-            navigate('/dashboard');
+            navigate('/app/dashboard');
         }
     };
 
