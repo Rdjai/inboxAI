@@ -23,7 +23,7 @@ export const EmailProvider = ({ children }) => {
     const [accountsLoading, setAccountsLoading] = useState(false);
     const [selectedAccount, setSelectedAccount] = useState(null);
     const [error, setError] = useState(null);
-    
+
     const { isAuthenticated, isLoading: authLoading } = useAuth();
 
     const extractData = (response) => {
@@ -69,7 +69,7 @@ export const EmailProvider = ({ children }) => {
             authLoading,
             token: localStorage.getItem('token') ? 'exists' : 'missing'
         });
-        
+
         if (isAuthenticated && !authLoading) {
             console.log('🔄 [EmailProvider] Fetching accounts...');
             fetchAccounts();
@@ -106,7 +106,7 @@ export const EmailProvider = ({ children }) => {
 
     const fetchAccounts = useCallback(async () => {
         console.log('📧 [fetchAccounts] Called, isAuthenticated:', isAuthenticated);
-        
+
         if (!isAuthenticated) {
             console.log('⛔ [fetchAccounts] User not authenticated, skipping');
             setAccountsLoading(false);
@@ -116,7 +116,7 @@ export const EmailProvider = ({ children }) => {
         try {
             setAccountsLoading(true);
             setError(null);
-            
+
             console.log('📧 [fetchAccounts] Calling API...');
             const response = await emailAccountsAPI.getAccounts();
             console.log('📧 [fetchAccounts] API response:', response);
@@ -144,12 +144,12 @@ export const EmailProvider = ({ children }) => {
         } catch (error) {
             console.error('❌ [fetchAccounts] Error:', error);
             setError(error.message || 'Failed to load email accounts');
-            
+
             // Only show error if it's not a 401
             if (error.status !== 401) {
                 toast.error('Failed to load email accounts');
             }
-            
+
             return [];
 
         } finally {
@@ -161,7 +161,7 @@ export const EmailProvider = ({ children }) => {
         console.log('📤 [addAccount] Starting with data:', accountData);
         console.log('📤 [addAccount] Current token:', localStorage.getItem('token') ? 'exists' : 'missing');
         console.log('📤 [addAccount] isAuthenticated:', isAuthenticated);
-        
+
         if (!isAuthenticated) {
             const errorMsg = 'Please login to add email accounts';
             toast.error(`❌ ${errorMsg}`);
@@ -174,7 +174,7 @@ export const EmailProvider = ({ children }) => {
         try {
             setLoading(true);
             console.log('📤 [addAccount] Calling createAccount API...');
-            
+
             const response = await emailAccountsAPI.createAccount(accountData);
             console.log('📤 [addAccount] API response:', response);
 
@@ -202,7 +202,7 @@ export const EmailProvider = ({ children }) => {
             setSelectedAccount(newAccount._id);
 
             toast.success('✅ Email account added successfully!');
-            
+
             return {
                 success: true,
                 data: newAccount,
@@ -215,14 +215,14 @@ export const EmailProvider = ({ children }) => {
                 status: error.status,
                 response: error.response
             });
-            
+
             const errorMsg = error.message || 'Failed to add account';
-            
+
             // Don't show toast for 401 - let auth system handle it
             if (error.status !== 401) {
                 toast.error(`❌ ${errorMsg}`);
             }
-            
+
             return {
                 success: false,
                 error: errorMsg
@@ -234,7 +234,7 @@ export const EmailProvider = ({ children }) => {
 
     const deleteAccount = async (accountId) => {
         console.log('🗑️ [deleteAccount] Deleting:', accountId);
-        
+
         if (!isAuthenticated) {
             toast.error('Please login to delete accounts');
             return { success: false, error: 'Not authenticated' };
@@ -264,7 +264,7 @@ export const EmailProvider = ({ children }) => {
 
     const fetchEmails = async (accountId, params = {}) => {
         console.log('📥 [fetchEmails] For account:', accountId);
-        
+
         if (!isAuthenticated) {
             console.log('⛔ [fetchEmails] Not authenticated');
             return [];
@@ -278,7 +278,7 @@ export const EmailProvider = ({ children }) => {
             }
 
             const response = await emailsAPI.getAllEmails(query);
-            
+
             let emailsData = [];
             const data = extractData(response);
             if (Array.isArray(data)) {
@@ -290,10 +290,10 @@ export const EmailProvider = ({ children }) => {
             }
 
             emailsData = emailsData.map(normalizeEmail);
-            
+
             console.log('✅ [fetchEmails] Setting emails:', emailsData.length);
             setEmails(emailsData);
-            
+
             return emailsData;
 
         } catch (error) {
@@ -307,7 +307,7 @@ export const EmailProvider = ({ children }) => {
 
     const sendEmail = async (idOrAccountId, emailData) => {
         console.log('📤 [sendEmail] Sending email...');
-        
+
         if (!isAuthenticated) {
             toast.error('Please login to send emails');
             return { success: false, error: 'Not authenticated' };
@@ -432,7 +432,7 @@ export const EmailProvider = ({ children }) => {
 
     const syncAccount = async (accountId, limit = 50) => {
         console.log('🔄 [syncAccount] Syncing:', accountId);
-        
+
         if (!isAuthenticated) {
             toast.error('Please login to sync emails');
             return { success: false, error: 'Not authenticated' };
@@ -477,7 +477,7 @@ export const EmailProvider = ({ children }) => {
     const markEmail = async (emailId, read = true) => {
         try {
             console.log('📌 [markEmail] Marking:', emailId, 'as read:', read);
-            
+
             if (read) {
                 await emailsAPI.markAsRead(emailId);
             } else {
@@ -503,7 +503,7 @@ export const EmailProvider = ({ children }) => {
     const deleteEmail = async (emailId) => {
         try {
             console.log('🗑️ [deleteEmail] Deleting:', emailId);
-            
+
             await emailsAPI.deleteEmail(emailId);
 
             // Update local state

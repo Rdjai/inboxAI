@@ -435,7 +435,9 @@ const Inbox = () => {
                         </button>
                     </div>
                 </div>
-            );
+            )}
+        </div>
+    );
 };
 
-            export default Inbox;
+export default Inbox;

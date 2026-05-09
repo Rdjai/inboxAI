@@ -48,15 +48,14 @@ const SidebarNavItem = ({ item, unreadCount, onClose }) => {
                             className={`inline-flex h-6 min-w-[2rem] items-center justify-center rounded-full px-2 text-[11px] font-semibold ${isActive
                                 ? 'bg-white/15 text-white dark:bg-slate-950/15 dark:text-slate-950'
                                 : 'bg-rose-50 text-rose-700 ring-1 ring-inset ring-rose-200 dark:bg-rose-500/10 dark:text-rose-300 dark:ring-rose-400/30'
-                                }`
-                                >
-                                { badgeText }
+                                }`}
+                        >
+                            {badgeText}
                         </span>
                     )}
-        </>
-    )
-}
-        </NavLink >
+                </>
+            )}
+        </NavLink>
     );
 };
 
@@ -82,17 +81,14 @@ const Sidebar = ({ isOpen, onClose }) => {
     return (
         <>
             <div
-                className={`fixed inset-0 z-40 bg-slate-950/45 transition-opacity duration-200 md:hidden ${isOpen ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0'}`}
+                className={`fixed inset-0 z-40 bg-slate-950/45 transition-opacity duration-200 md:hidden ${isOpen ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0'
+                    }`}
                 onClick={onClose}
                 aria-hidden={!isOpen}
             />
 
-            <aside className={`
-                sidebar-panel fixed bottom-0 left-0 top-[73px] z-50 w-[290px] border-r border-slate-200 bg-[#f6f8fb] dark:border-slate-800 dark:bg-slate-950
-                transition-transform duration-200 ease-out
-                ${isOpen ? 'translate-x-0' : '-translate-x-full'}
-                md:relative md:bottom-0 md:top-0 md:flex md:h-full md:translate-x-0 md:transition-none
-            `}>
+            <aside className={`sidebar-panel fixed bottom-0 left-0 top-[73px] z-50 w-[290px] border-r border-slate-200 bg-[#f6f8fb] transition-transform duration-200 ease-out dark:border-slate-800 dark:bg-slate-950 ${isOpen ? 'translate-x-0' : '-translate-x-full'
+                } md:relative md:bottom-0 md:top-0 md:flex md:h-full md:translate-x-0 md:transition-none`}>
                 <div className="flex h-full flex-col overflow-hidden px-4 py-4">
                     <div className="rounded-[28px] bg-gradient-to-br from-sky-500 via-cyan-500 to-slate-900 p-4 text-white shadow-lg">
                         <div className="flex items-start justify-between gap-3">
