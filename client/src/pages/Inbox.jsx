@@ -269,7 +269,9 @@ const Inbox = () => {
                                                             {email.from?.name || email.from?.email || email.fromAddress || 'Unknown Sender'}
                                                         </p>
                                                         {!email.isRead && (
-                                                            <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
+                                                            <span className="inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-[11px] font-semibold text-blue-700">
+                                                                Unread
+                                                            </span>
                                                         )}
                                                         {email.priority === 'high' && (
                                                             <span className="px-2 py-0.5 bg-red-100 text-red-800 text-xs font-medium rounded">

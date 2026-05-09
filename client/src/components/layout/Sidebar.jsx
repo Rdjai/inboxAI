@@ -43,16 +43,20 @@ const SidebarNavItem = ({ item, unreadCount, onClose }) => {
                         </p>
                     </div>
                     {showUnreadPulse && (
-                        <span className={`inline-flex min-w-[1.9rem] items-center justify-center rounded-full px-2 py-0.5 text-[11px] font-semibold ${isActive
-                            ? 'bg-white/15 text-white dark:bg-slate-950/15 dark:text-slate-950'
-                            : 'bg-rose-50 text-rose-700 ring-1 ring-inset ring-rose-200 dark:bg-rose-500/10 dark:text-rose-300 dark:ring-rose-400/30'
-                            }`}>
-                            {badgeText}
+                        <span
+                            title={`${badgeText} unread messages`}
+                            className={`inline-flex h-6 min-w-[2rem] items-center justify-center rounded-full px-2 text-[11px] font-semibold ${isActive
+                                ? 'bg-white/15 text-white dark:bg-slate-950/15 dark:text-slate-950'
+                                : 'bg-rose-50 text-rose-700 ring-1 ring-inset ring-rose-200 dark:bg-rose-500/10 dark:text-rose-300 dark:ring-rose-400/30'
+                                }`
+                                >
+                                { badgeText }
                         </span>
                     )}
-                </>
-            )}
-        </NavLink>
+        </>
+    )
+}
+        </NavLink >
     );
 };
 
