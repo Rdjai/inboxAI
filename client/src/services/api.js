@@ -30,8 +30,10 @@ api.interceptors.response.use(
         const message = error.response?.data?.message || error.message || 'An error occurred';
         const status = error.response?.status;
         const data = error.response?.data;
+        const requestUrl = error.config?.url || '';
+        const isAuthRequest = requestUrl.includes('/auth/login') || requestUrl.includes('/auth/register');
 
-        if (status === 401) {
+        if (status === 401 && !isAuthRequest) {
             localStorage.removeItem('token');
             localStorage.removeItem('user');
             localStorage.removeItem('tokenExpiresAt');

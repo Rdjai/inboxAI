@@ -3,7 +3,6 @@ const User = require('../models/user.model');
 const { JWT_SECRET, JWT_EXPIRES_IN } = require('../config/env');
 const { ROLES } = require('../utils/constants');
 const { AppError } = require('../middleware/errorHandler.middleware');
-const bruteForceProtection = require('../services/bruteForceProtection.service');
 const logger = require('../utils/logger');
 const { parseJwtExpiresInToSeconds } = require('../utils/jwt');
 
@@ -66,84 +65,22 @@ class AuthController {
         try {
             const { email, password } = req.body;
 
-            // Get client identifier
-            const clientId = bruteForceProtection.getClientIdentifier(req, email);
-
-            // Check login attempt
-            const checkResult = await bruteForceProtection.checkLoginAttempt(req, email);
-
-            if (!checkResult.allowed) {
-                // Log the blocked attempt
-                logger.warn(`Blocked login attempt: ${checkResult.code}`, {
-                    clientId,
-                    ip: req.ip,
-                    email,
-                    timestamp: new Date().toISOString()
-                });
-
-                // Return appropriate response
-                if (checkResult.code === 'ACCOUNT_LOCKED') {
-                    return res.status(423).json({
-                        success: false,
-                        message: checkResult.reason,
-                        retryAfter: checkResult.retryAfter,
-                        code: checkResult.code
-                    });
-                }
-
-                if (checkResult.code === 'RATE_LIMITED') {
-                    return res.status(429).json({
-                        success: false,
-                        message: checkResult.reason,
-                        retryAfter: checkResult.retryAfter,
-                        code: checkResult.code
-                    });
-                }
-
-                if (checkResult.code === 'MAX_ATTEMPTS_EXCEEDED') {
-                    return res.status(429).json({
-                        success: false,
-                        message: checkResult.reason,
-                        retryAfter: checkResult.retryAfter,
-                        code: checkResult.code
-                    });
-                }
-
-                return res.status(400).json({
-                    success: false,
-                    message: checkResult.reason,
-                    code: checkResult.code
-                });
-            }
-
             // Find user
             const user = await User.findOne({ email });
             if (!user) {
-                // Record failed attempt
-                bruteForceProtection.recordAttempt(clientId, false, req);
-
                 throw new AppError('Invalid credentials', 401);
             }
 
             // Check if account is active
             if (!user.isActive) {
-                // Record failed attempt
-                bruteForceProtection.recordAttempt(clientId, false, req);
-
                 throw new AppError('Account is deactivated', 401);
             }
 
             // Verify password
             const isPasswordValid = await user.comparePassword(password);
             if (!isPasswordValid) {
-                // Record failed attempt
-                bruteForceProtection.recordAttempt(clientId, false, req);
-
                 throw new AppError('Invalid credentials', 401);
             }
-
-            // Record successful login
-            bruteForceProtection.recordAttempt(clientId, true, req);
 
             // Generate token
             const tokenData = this.generateToken(user._id);
