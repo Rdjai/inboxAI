@@ -24,6 +24,7 @@ const Inbox = () => {
     const [filter, setFilter] = useState('all');
     const [search, setSearch] = useState('');
     const [selectedEmail, setSelectedEmail] = useState(null);
+    const [hoveredEmail, setHoveredEmail] = useState(null);
 
     // Load accounts on mount
     useEffect(() => {
@@ -234,149 +235,205 @@ const Inbox = () => {
                 </div>
             ) : (
                 <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-                    {/* Email List */}
-                    <div className="divide-y divide-gray-200">
-                        {filteredEmails.map((email) => (
-                            <div
-                                key={email._id}
-                                className={`px-6 py-4 hover:bg-gray-50 cursor-pointer transition-colors ${!email.isRead ? 'bg-blue-50' : ''}`}
-                                onClick={() => setSelectedEmail(email)}
-                            >
-                                <div className="flex items-start">
-                                    {/* Sender Avatar */}
-                                    <div className="flex-shrink-0 mr-4">
-                                        <div className="w-10 h-10 bg-gradient-to-r from-blue-100 to-purple-100 rounded-full flex items-center justify-center">
-                                            <span className="text-blue-600 font-bold">
-                                                {email.from?.name?.charAt(0) ||
-                                                    email.from?.email?.charAt(0) ||
-                                                    email.fromAddress?.charAt(0) ||
-                                                    email.from?.charAt(0) ||
-                                                    '?'}
-                                            </span>
-                                        </div>
-                                    </div>
-
-                                    {/* Email Content */}
-                                    <div className="flex-1 min-w-0">
-                                        <div className="flex items-start justify-between">
-                                            <div className="flex-1">
-                                                <div className="flex items-center space-x-2">
-                                                    <p className={`font-medium truncate ${!email.isRead ? 'text-gray-900 font-semibold' : 'text-gray-700'}`}>
-                                                        {email.from?.name || email.from?.email || email.fromAddress || 'Unknown Sender'}
-                                                    </p>
-                                                    {!email.isRead && (
-                                                        <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
-                                                    )}
-                                                    {email.priority === 'high' && (
-                                                        <span className="px-2 py-0.5 bg-red-100 text-red-800 text-xs font-medium rounded">
-                                                            Important
-                                                        </span>
-                                                    )}
-                                                </div>
-                                                <p className="text-sm font-medium text-gray-900 mt-1">
-                                                    {email.subject || '(No Subject)'}
-                                                </p>
-                                                <p className="text-sm text-gray-600 mt-1 line-clamp-2">
-                                                    {email.bodyText || email.body?.text || email.body || 'No preview available'}
-                                                </p>
-                                            </div>
-                                            <div className="ml-4 flex-shrink-0">
-                                                <span className="text-xs text-gray-500">
-                                                    {new Date(email.receivedAt || email.createdAt).toLocaleTimeString([], {
-                                                        hour: '2-digit',
-                                                        minute: '2-digit'
-                                                    })}
+                    <div className="grid grid-cols-1 xl:grid-cols-[1.7fr_1fr] gap-6">
+                        {/* Email List */}
+                        <div className="divide-y divide-gray-200">
+                            {filteredEmails.map((email) => (
+                                <div
+                                    key={email._id}
+                                    className={`px-6 py-4 hover:bg-gray-50 cursor-pointer transition-colors ${!email.isRead ? 'bg-blue-50' : ''}`}
+                                    onClick={() => setSelectedEmail(email)}
+                                    onMouseEnter={() => setHoveredEmail(email)}
+                                    onMouseLeave={() => setHoveredEmail(null)}
+                                >
+                                    <div className="flex items-start">
+                                        {/* Sender Avatar */}
+                                        <div className="flex-shrink-0 mr-4">
+                                            <div className="w-10 h-10 bg-gradient-to-r from-blue-100 to-purple-100 rounded-full flex items-center justify-center">
+                                                <span className="text-blue-600 font-bold">
+                                                    {email.from?.name?.charAt(0) ||
+                                                        email.from?.email?.charAt(0) ||
+                                                        email.fromAddress?.charAt(0) ||
+                                                        email.from?.charAt(0) ||
+                                                        '?'}
                                                 </span>
                                             </div>
                                         </div>
 
-                                        {/* Email Actions */}
-                                        <div className="mt-3 flex items-center space-x-3">
-                                            <button
-                                                onClick={(event) => {
-                                                    event.stopPropagation();
-                                                    markEmail(email._id, !email.isRead);
-                                                }}
-                                                className="text-xs text-blue-600 hover:text-blue-800"
-                                            >
-                                                {email.isRead ? 'Mark unread' : 'Mark read'}
-                                            </button>
-                                            <button
-                                                onClick={(event) => {
-                                                    event.stopPropagation();
-                                                    deleteEmail(email._id);
-                                                }}
-                                                className="text-xs text-red-600 hover:text-red-800"
-                                            >
-                                                Delete
-                                            </button>
-                                            <button
-                                                onClick={(event) => {
-                                                    event.stopPropagation();
-                                                    setSelectedEmail(email);
-                                                }}
-                                                className="text-xs text-green-600 hover:text-green-800"
-                                            >
-                                                Reply
-                                            </button>
+                                        {/* Email Content */}
+                                        <div className="flex-1 min-w-0">
+                                            <div className="flex items-start justify-between">
+                                                <div className="flex-1">
+                                                    <div className="flex items-center space-x-2">
+                                                        <p className={`font-medium truncate ${!email.isRead ? 'text-gray-900 font-semibold' : 'text-gray-700'}`}>
+                                                            {email.from?.name || email.from?.email || email.fromAddress || 'Unknown Sender'}
+                                                        </p>
+                                                        {!email.isRead && (
+                                                            <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
+                                                        )}
+                                                        {email.priority === 'high' && (
+                                                            <span className="px-2 py-0.5 bg-red-100 text-red-800 text-xs font-medium rounded">
+                                                                Important
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    <p className="text-sm font-medium text-gray-900 mt-1">
+                                                        {email.subject || '(No Subject)'}
+                                                    </p>
+                                                    <p className="text-sm text-gray-600 mt-1 line-clamp-2">
+                                                        {email.bodyText || email.body?.text || email.body || 'No preview available'}
+                                                    </p>
+                                                </div>
+                                                <div className="ml-4 flex-shrink-0">
+                                                    <span className="text-xs text-gray-500">
+                                                        {new Date(email.receivedAt || email.createdAt).toLocaleTimeString([], {
+                                                            hour: '2-digit',
+                                                            minute: '2-digit'
+                                                        })}
+                                                    </span>
+                                                </div>
+                                            </div>
+
+                                            {/* Email Actions */}
+                                            <div className="mt-3 flex items-center space-x-3">
+                                                <button
+                                                    onClick={(event) => {
+                                                        event.stopPropagation();
+                                                        markEmail(email._id, !email.isRead);
+                                                    }}
+                                                    className="text-xs text-blue-600 hover:text-blue-800"
+                                                >
+                                                    {email.isRead ? 'Mark unread' : 'Mark read'}
+                                                </button>
+                                                <button
+                                                    onClick={(event) => {
+                                                        event.stopPropagation();
+                                                        deleteEmail(email._id);
+                                                    }}
+                                                    className="text-xs text-red-600 hover:text-red-800"
+                                                >
+                                                    Delete
+                                                </button>
+                                                <button
+                                                    onClick={(event) => {
+                                                        event.stopPropagation();
+                                                        setSelectedEmail(email);
+                                                    }}
+                                                    className="text-xs text-green-600 hover:text-green-800"
+                                                >
+                                                    Reply
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
+                            ))}
+                        </div>
+
+                        <div className="hidden xl:block rounded-xl border border-gray-200 bg-slate-50 p-5 shadow-sm">
+                            {hoveredEmail ? (
+                                <>
+                                    <div className="flex items-start justify-between gap-3">
+                                        <div>
+                                            <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Preview</p>
+                                            <h2 className="mt-2 text-lg font-semibold text-slate-900 truncate">
+                                                {hoveredEmail.subject || '(No Subject)'}
+                                            </h2>
+                                            <p className="mt-2 text-sm text-slate-600 truncate">
+                                                {hoveredEmail.from?.name || hoveredEmail.from?.email || hoveredEmail.fromAddress || 'Unknown sender'}
+                                            </p>
+                                        </div>
+                                        <span className="text-xs text-slate-500">
+                                            {new Date(hoveredEmail.receivedAt || hoveredEmail.createdAt).toLocaleString([], {
+                                                month: 'short',
+                                                day: 'numeric',
+                                                hour: '2-digit',
+                                                minute: '2-digit'
+                                            })}
+                                        </span>
+                                    </div>
+
+                                    <div className="mt-5 space-y-3">
+                                        <div className="rounded-2xl bg-white p-4 border border-slate-200">
+                                            <p className="text-sm text-slate-600 leading-6">
+                                                {hoveredEmail.bodyText || hoveredEmail.body?.text || hoveredEmail.body || 'No preview available.'}
+                                            </p>
+                                        </div>
+                                        <div className="grid gap-3 text-sm text-slate-700">
+                                            <div className="flex items-center justify-between rounded-2xl bg-white px-4 py-3 border border-slate-200">
+                                                <span className="font-medium">Status</span>
+                                                <span className="text-slate-500">{hoveredEmail.isRead ? 'Read' : 'Unread'}</span>
+                                            </div>
+                                            {hoveredEmail.priority && (
+                                                <div className="flex items-center justify-between rounded-2xl bg-white px-4 py-3 border border-slate-200">
+                                                    <span className="font-medium">Priority</span>
+                                                    <span className={`rounded-full px-2 py-1 text-xs font-semibold ${hoveredEmail.priority === 'high' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800'}`}>
+                                                        {hoveredEmail.priority}
+                                                    </span>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                </>
+                            ) : (
+                                <div className="text-center py-20 text-slate-500">
+                                    <p className="text-sm font-medium">Hover over an email to preview the message.</p>
+                                    <p className="mt-2 text-xs">This preview appears on desktop while you browse your list.</p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+            )}
+
+                    {selectedEmail && (
+                        <div className="fixed inset-0 bg-black/30 flex items-center justify-center p-4 z-50">
+                            <div className="bg-white rounded-xl shadow-lg w-full max-w-4xl h-[85vh] overflow-hidden">
+                                <EmailDetail
+                                    email={selectedEmail}
+                                    onClose={() => setSelectedEmail(null)}
+                                />
                             </div>
-                        ))}
-                    </div>
-                </div>
-            )}
+                        </div>
+                    )}
 
-            {selectedEmail && (
-                <div className="fixed inset-0 bg-black/30 flex items-center justify-center p-4 z-50">
-                    <div className="bg-white rounded-xl shadow-lg w-full max-w-4xl h-[85vh] overflow-hidden">
-                        <EmailDetail
-                            email={selectedEmail}
-                            onClose={() => setSelectedEmail(null)}
-                        />
+                    {/* Debug Panel (Remove in production) */}
+                    <div className="bg-gray-50 rounded-lg p-4 text-sm">
+                        <h3 className="font-medium mb-2">📊 Debug Info:</h3>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                            <div>
+                                <span className="text-gray-500">Accounts:</span>
+                                <span className="ml-2 font-medium">{accounts.length}</span>
+                            </div>
+                            <div>
+                                <span className="text-gray-500">Emails in state:</span>
+                                <span className="ml-2 font-medium">{emails.length}</span>
+                            </div>
+                            <div>
+                                <span className="text-gray-500">Filtered:</span>
+                                <span className="ml-2 font-medium">{filteredEmails.length}</span>
+                            </div>
+                            <div>
+                                <span className="text-gray-500">Selected:</span>
+                                <span className="ml-2 font-medium">{selectedAccount ? 'Yes' : 'No'}</span>
+                            </div>
+                        </div>
+                        <button
+                            onClick={() => {
+                                console.log('=== DEBUG INFO ===');
+                                console.log('Accounts:', accounts);
+                                console.log('Selected Account:', selectedAccount);
+                                console.log('Emails in state:', emails);
+                                console.log('Filtered emails:', filteredEmails);
+                                console.log('Filter:', filter);
+                                console.log('Search:', search);
+                            }}
+                            className="mt-3 px-3 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700"
+                        >
+                            Log to Console
+                        </button>
                     </div>
                 </div>
-            )}
-
-            {/* Debug Panel (Remove in production) */}
-            <div className="bg-gray-50 rounded-lg p-4 text-sm">
-                <h3 className="font-medium mb-2">📊 Debug Info:</h3>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                    <div>
-                        <span className="text-gray-500">Accounts:</span>
-                        <span className="ml-2 font-medium">{accounts.length}</span>
-                    </div>
-                    <div>
-                        <span className="text-gray-500">Emails in state:</span>
-                        <span className="ml-2 font-medium">{emails.length}</span>
-                    </div>
-                    <div>
-                        <span className="text-gray-500">Filtered:</span>
-                        <span className="ml-2 font-medium">{filteredEmails.length}</span>
-                    </div>
-                    <div>
-                        <span className="text-gray-500">Selected:</span>
-                        <span className="ml-2 font-medium">{selectedAccount ? 'Yes' : 'No'}</span>
-                    </div>
-                </div>
-                <button
-                    onClick={() => {
-                        console.log('=== DEBUG INFO ===');
-                        console.log('Accounts:', accounts);
-                        console.log('Selected Account:', selectedAccount);
-                        console.log('Emails in state:', emails);
-                        console.log('Filtered emails:', filteredEmails);
-                        console.log('Filter:', filter);
-                        console.log('Search:', search);
-                    }}
-                    className="mt-3 px-3 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700"
-                >
-                    Log to Console
-                </button>
-            </div>
-        </div>
-    );
+            );
 };
 
-export default Inbox;
+            export default Inbox;
