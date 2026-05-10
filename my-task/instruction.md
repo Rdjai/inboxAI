@@ -1,24 +1,7 @@
-# Issue: Selected mailbox filter is dropped by the backend
+accountId is currently being overlooked in the backend. Frontend passes the data correctly when users change their mailbox, but the handler ignores it.
 
-The mailbox switcher is not being enforced consistently on the backend.
+Inbox route is returning wrong total email count since it counts the number of all emails in both mailboxes rather than the selected one. Similarly, the search route will return emails found in mailbox A even if you perform the search in mailbox B. The statistics shown on the dashboard are incorrect because the counts remain constant regardless of the chosen mailbox.
 
-When the client requests inbox or analytics data for a specific mailbox, it sends an `accountId` query parameter. The API should treat that mailbox as the scope for list, search, and dashboard responses. Right now the backend silently falls back to cross-mailbox data instead.
+The accountId param is getting stripped somewhere before it reaches the query layer. Even when this is resolved, the controllers are not using it when building database queries, and the search filter logic ignores it too.
 
-Symptoms:
-
-- inbox pagination still counts emails from other connected mailboxes
-- searching inside a selected mailbox returns matches from unrelated mailboxes
-- dashboard totals and status/category breakdowns do not match the mailbox currently being viewed
-
-Expected behavior:
-
-- mailbox-scoped endpoints should preserve `accountId` during request validation
-- `/api/emails` should paginate and summarize only the requested mailbox when `accountId` is provided
-- search requests should keep the mailbox filter applied all the way into the search service
-- dashboard analytics should aggregate only the requested mailbox when `accountId` is provided
-
-Actual behavior:
-
-- the mailbox filter is dropped before some handlers see it
-- inbox and search logic behave like cross-mailbox queries
-- dashboard aggregates are calculated across all mailboxes for the user-facing view
+Fix all three — inbox listing, search, and dashboard aggregations — so that when accountId is provided, all queries and counts are scoped to that mailbox only.

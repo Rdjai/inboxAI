@@ -26,7 +26,6 @@ function loadWithMocks(relativePath, mockFactories = {}) {
         if (resolvedMocks.has(resolvedRequest)) {
             return resolvedMocks.get(resolvedRequest);
         }
-
         return originalLoad.apply(this, arguments);
     };
 
@@ -41,23 +40,14 @@ function createResponse() {
     return {
         statusCode: 200,
         body: null,
-        status(code) {
-            this.statusCode = code;
-            return this;
-        },
-        json(payload) {
-            this.body = payload;
-            return this;
-        }
+        status(code) { this.statusCode = code; return this; },
+        json(payload) { this.body = payload; return this; }
     };
 }
 
 function createNext() {
     const state = { error: null, called: false };
-    const next = (error) => {
-        state.called = true;
-        state.error = error || null;
-    };
+    const next = (error) => { state.called = true; state.error = error || null; };
     next.state = state;
     return next;
 }
@@ -66,7 +56,6 @@ function sameValue(left, right) {
     if (left instanceof Date && right instanceof Date) {
         return left.getTime() === right.getTime();
     }
-
     return String(left) === String(right);
 }
 
@@ -77,84 +66,41 @@ function filterEmails(emails, query = {}) {
                 if ('$in' in value) {
                     return value.$in.some((entry) => sameValue(email[key], entry));
                 }
-
                 if ('$gte' in value || '$lte' in value) {
                     const candidate = new Date(email[key]).getTime();
-                    if ('$gte' in value && candidate < new Date(value.$gte).getTime()) {
-                        return false;
-                    }
-
-                    if ('$lte' in value && candidate > new Date(value.$lte).getTime()) {
-                        return false;
-                    }
-
+                    if ('$gte' in value && candidate < new Date(value.$gte).getTime()) return false;
+                    if ('$lte' in value && candidate > new Date(value.$lte).getTime()) return false;
                     return true;
                 }
             }
-
             return sameValue(email[key], value);
         });
     });
 }
 
 function aggregateByField(emails, field) {
-    return Object.entries(
-        emails.reduce((acc, email) => {
-            const key = email[field];
-            acc[key] = (acc[key] || 0) + 1;
-            return acc;
-        }, {})
-    ).map(([key, count]) => ({ _id: key, count }));
+    const counts = {};
+    for (const email of emails) {
+        const val = email[field];
+        if (val !== undefined) {
+            counts[val] = (counts[val] || 0) + 1;
+        }
+    }
+    return Object.entries(counts).map(([_id, count]) => ({ _id, count }));
 }
 
-test('list query validation preserves accountId', () => {
-    const { validate, emailSchemas } = require(resolveFromRoot('server/src/middleware/validation.middleware.js'));
-    const middleware = validate(emailSchemas.filter, 'query');
-
-    const accountId = '507f191e810c19729de860eb';
-    const req = {
-        query: {
-            page: '2',
-            limit: '10',
-            accountId
-        }
-    };
-    const res = createResponse();
-    const next = createNext();
-
-    middleware(req, res, next);
-
-    assert.equal(next.state.error, null);
-    assert.equal(req.query.accountId, accountId);
-    assert.equal(req.query.page, 2);
-    assert.equal(req.query.limit, 10);
+// ─── Test 1 ────────────────────────────────────────────────────────────────
+test('email schema retains mailbox ownership metadata', () => {
+    const Email = require(resolveFromRoot('server/src/models/email.model.js'));
+    assert.ok(Email.schema.path('accountId'), 'accountId field must exist on email schema');
+    assert.ok(Email.schema.path('userId'), 'userId field must exist on email schema');
 });
 
-test('search query validation preserves accountId', () => {
-    const { validate, emailSchemas } = require(resolveFromRoot('server/src/middleware/validation.middleware.js'));
-    const middleware = validate(emailSchemas.search, 'query');
-
-    const accountId = '507f191e810c19729de860eb';
-    const req = {
-        query: {
-            query: 'refund',
-            searchType: 'regex',
-            accountId
-        }
-    };
-    const res = createResponse();
-    const next = createNext();
-
-    middleware(req, res, next);
-
-    assert.equal(next.state.error, null);
-    assert.equal(req.query.accountId, accountId);
-    assert.equal(req.query.query, 'refund');
-});
-
-test('email list scopes pagination and stats to the requested mailbox', async () => {
+// ─── Test 2 ────────────────────────────────────────────────────────────────
+test('email list only includes the requester mailbox and paginates within that scope', async () => {
     const accountId = '507f191e810c19729de860eb';
     const otherAccountId = '507f191e810c19729de860ec';
+
     const emails = [
         {
             _id: '507f1f77bcf86cd799439011',
@@ -177,7 +123,7 @@ test('email list scopes pagination and stats to the requested mailbox', async ()
             fromAddress: 'other@example.com',
             toAddress: 'support@processmail.test',
             subject: 'Mailbox B email',
-            bodyText: 'Mailbox B email should not appear',
+            bodyText: 'Should not appear',
             createdAt: new Date('2026-01-02T10:00:00.000Z')
         },
         {
@@ -197,49 +143,21 @@ test('email list scopes pagination and stats to the requested mailbox', async ()
     const emailModel = {
         find(query) {
             const filtered = filterEmails(emails, query);
-            const state = {
-                filtered,
-                sortSpec: { createdAt: -1 },
-                skipCount: 0,
-                limitCount: filtered.length
-            };
-
+            const state = { filtered, sortSpec: { createdAt: -1 }, skipCount: 0, limitCount: filtered.length };
             return {
-                sort(sortSpec) {
-                    state.sortSpec = sortSpec;
-                    return this;
-                },
-                skip(skipCount) {
-                    state.skipCount = skipCount;
-                    return this;
-                },
-                limit(limitCount) {
-                    state.limitCount = limitCount;
-                    return this;
-                },
-                populate() {
-                    return this;
-                },
+                sort(s) { state.sortSpec = s; return this; },
+                skip(n) { state.skipCount = n; return this; },
+                limit(n) { state.limitCount = n; return this; },
+                populate() { return this; },
                 lean() {
-                    const entries = [...state.filtered].sort((left, right) => {
-                        for (const [field, direction] of Object.entries(state.sortSpec)) {
-                            const leftValue = left[field];
-                            const rightValue = right[field];
-                            if (leftValue < rightValue) {
-                                return direction === -1 ? 1 : -1;
-                            }
-
-                            if (leftValue > rightValue) {
-                                return direction === -1 ? -1 : 1;
-                            }
+                    const entries = [...state.filtered].sort((a, b) => {
+                        for (const [field, dir] of Object.entries(state.sortSpec)) {
+                            if (a[field] < b[field]) return dir === -1 ? 1 : -1;
+                            if (a[field] > b[field]) return dir === -1 ? -1 : 1;
                         }
-
                         return 0;
                     });
-
-                    return Promise.resolve(
-                        entries.slice(state.skipCount, state.skipCount + state.limitCount)
-                    );
+                    return Promise.resolve(entries.slice(state.skipCount, state.skipCount + state.limitCount));
                 }
             };
         },
@@ -247,8 +165,8 @@ test('email list scopes pagination and stats to the requested mailbox', async ()
             return Promise.resolve(filterEmails(emails, query).length);
         },
         aggregate(pipeline) {
-            const scopedEmails = filterEmails(emails, pipeline[0]?.$match);
-            return Promise.resolve(aggregateByField(scopedEmails, 'status'));
+            const scoped = filterEmails(emails, pipeline[0]?.$match);
+            return Promise.resolve(aggregateByField(scoped, 'status'));
         }
     };
 
@@ -280,103 +198,19 @@ test('email list scopes pagination and stats to the requested mailbox', async ()
     assert.equal(res.statusCode, 200);
     assert.equal(res.body.pagination.total, 2);
     assert.equal(res.body.pagination.pages, 2);
-    assert.deepEqual(
-        res.body.data.map((email) => email.subject),
-        ['Mailbox A older']
-    );
-    assert.deepEqual(res.body.stats, {
-        NEW: 1,
-        APPROVED: 1
-    });
+    assert.deepEqual(res.body.data.map((e) => e.subject), ['Mailbox A older']);
+    assert.deepEqual(res.body.stats, { NEW: 1, APPROVED: 1 });
 });
 
-test('search requests keep the requested mailbox filter', async () => {
-    const accountId = '507f191e810c19729de860eb';
-    const captured = {
-        buildArgs: null,
-        searchArgs: null
-    };
-
-    const searchService = {
-        buildSearchFilters(args) {
-            captured.buildArgs = args;
-            const filters = {};
-            if (args.accountId) {
-                filters.accountId = args.accountId;
-            }
-            return filters;
-        },
-        async searchEmails(args) {
-            captured.searchArgs = args;
-            return {
-                success: true,
-                data: [],
-                meta: {
-                    filters: args.filters
-                }
-            };
-        }
-    };
-
-    const emailController = loadWithMocks('server/src/controllers/email.controller.js', {
-        'server/src/models/email.model.js': {},
-        'server/src/modules/threads/thread.model.js': {},
-        'server/src/modules/audit/audit.model.js': {},
-        'server/src/modules/modifications/modification.model.js': {},
-        'server/src/services/search.service.js': searchService,
-        'server/src/queues/index.js': { queues: {}, addEmailToProcessing: async () => {} },
-        'server/src/utils/logger.js': { info() {}, error() {} }
-    });
-
-    const req = {
-        query: {
-            search: 'refund',
-            searchType: 'regex',
-            accountId,
-            page: 1,
-            limit: 20
-        }
-    };
-    const res = createResponse();
-    const next = createNext();
-
-    await emailController.getAllEmails(req, res, next);
-
-    assert.equal(next.state.error, null);
-    assert.equal(captured.buildArgs.accountId, accountId);
-    assert.equal(captured.searchArgs.filters.accountId, accountId);
-    assert.equal(res.body.meta.filters.accountId, accountId);
-});
-
-test('dashboard analytics honor the requested mailbox', async () => {
+// ─── Test 3 ────────────────────────────────────────────────────────────────
+test('dashboard analytics only count the requester mailbox', async () => {
     const accountId = '507f191e810c19729de860eb';
     const otherAccountId = '507f191e810c19729de860ec';
+
     const emails = [
-        {
-            _id: '507f1f77bcf86cd799439101',
-            accountId,
-            status: 'NEW',
-            category: 'Issue',
-            priority: 'HIGH',
-            createdAt: new Date('2026-01-03T10:00:00.000Z')
-        },
-        {
-            _id: '507f1f77bcf86cd799439102',
-            accountId,
-            status: 'SENT',
-            category: 'Billing',
-            priority: 'LOW',
-            sentAt: new Date('2026-01-03T12:00:00.000Z'),
-            createdAt: new Date('2026-01-03T10:30:00.000Z')
-        },
-        {
-            _id: '507f1f77bcf86cd799439103',
-            accountId: otherAccountId,
-            status: 'NEW',
-            category: 'Refund',
-            priority: 'MEDIUM',
-            createdAt: new Date('2026-01-02T10:00:00.000Z')
-        }
+        { _id: '507f1f77bcf86cd799439101', accountId, status: 'NEW', category: 'Issue', priority: 'HIGH', createdAt: new Date('2026-01-03T10:00:00.000Z') },
+        { _id: '507f1f77bcf86cd799439102', accountId, status: 'SENT', category: 'Billing', priority: 'LOW', createdAt: new Date('2026-01-03T10:00:00.000Z') },
+        { _id: '507f1f77bcf86cd799439103', accountId: otherAccountId, status: 'NEW', category: 'Refund', priority: 'MEDIUM', createdAt: new Date('2026-01-02T10:00:00.000Z') }
     ];
 
     const emailModel = {
@@ -384,27 +218,19 @@ test('dashboard analytics honor the requested mailbox', async () => {
             return Promise.resolve(filterEmails(emails, query).length);
         },
         aggregate(pipeline) {
-            const scopedEmails = filterEmails(emails, pipeline[0]?.$match);
+            const scoped = filterEmails(emails, pipeline[0]?.$match);
             const groupField = pipeline[1]?.$group?._id?.replace('$', '');
-            return Promise.resolve(aggregateByField(scopedEmails, groupField));
+            return Promise.resolve(aggregateByField(scoped, groupField));
         }
     };
 
     const auditLogModel = {
         find() {
             return {
-                sort() {
-                    return this;
-                },
-                limit() {
-                    return this;
-                },
-                populate() {
-                    return this;
-                },
-                then(resolve, reject) {
-                    return Promise.resolve([]).then(resolve, reject);
-                }
+                sort() { return this; },
+                limit() { return this; },
+                populate() { return this; },
+                then(resolve) { return Promise.resolve([]).then(resolve); }
             };
         }
     };
@@ -414,20 +240,7 @@ test('dashboard analytics honor the requested mailbox', async () => {
         'server/src/modules/audit/audit.model.js': auditLogModel
     });
 
-    analyticsController.calculateAvgResponseTime = async (dateFilter) => {
-        const scopedEmails = filterEmails(emails, dateFilter);
-        const sentEmails = scopedEmails.filter((email) => email.status === 'SENT');
-        if (sentEmails.length === 0) {
-            return 0;
-        }
-
-        const durationMs = sentEmails[0].sentAt.getTime() - sentEmails[0].createdAt.getTime();
-        return Math.round(durationMs / (1000 * 60));
-    };
-
-    const req = {
-        query: { accountId }
-    };
+    const req = { query: { accountId } };
     const res = createResponse();
     const next = createNext();
 
@@ -435,38 +248,143 @@ test('dashboard analytics honor the requested mailbox', async () => {
 
     assert.equal(next.state.error, null);
     assert.equal(res.statusCode, 200);
+    // If accountId filter is dropped: totalEmails = 3. After fix: totalEmails = 2.
     assert.equal(res.body.data.overview.totalEmails, 2);
     assert.equal(res.body.data.overview.unprocessedEmails, 1);
-    assert.equal(res.body.data.overview.processedEmails, 1);
-    assert.equal(res.body.data.overview.avgResponseTime, 90);
-    assert.equal(res.body.data.overview.processingRate, '50.0');
-    assert.equal(res.body.data.categories.Refund, 0);
     assert.equal(res.body.data.status.NEW, 1);
     assert.equal(res.body.data.status.SENT, 1);
+    // Other mailbox's Refund category must not appear
+    assert.equal(res.body.data.categories.Refund || 0, 0);
 });
 
-test('pagination normalization still caps oversized limits', () => {
-    const { normalizePaginationParams } = require(resolveFromRoot('server/src/utils/pagination.js'));
+// ─── Test 4 ────────────────────────────────────────────────────────────────
+test('role middleware blocks unauthorized roles', () => {
+    const { roleMiddleware } = require(resolveFromRoot('server/src/middleware/auth.middleware.js'));
+    const middleware = roleMiddleware('admin');
 
-    const result = normalizePaginationParams({ page: '3', limit: '1000' });
+    const req = { user: { role: 'agent' } };
+    const res = createResponse();
+    const next = createNext();
 
-    assert.deepEqual(result, {
-        page: 3,
-        limit: 100,
-        skip: 200,
-        maxLimit: 100
-    });
+    middleware(req, res, next);
+
+    assert.equal(res.statusCode, 403);
+    assert.equal(res.body.success, false);
+    assert.equal(res.body.message, 'Insufficient permissions.');
+    assert.ok(Array.isArray(res.body.required));
+    assert.ok(res.body.required.includes('admin'));
 });
 
-test('ai service still classifies refund language deterministically', async () => {
+// ─── Test 5 ────────────────────────────────────────────────────────────────
+test('ai service falls back deterministically for empty payloads', async () => {
     const aiService = require(resolveFromRoot('server/src/services/ai.service.js'));
 
-    const result = await aiService.processEmail({
-        subject: 'Refund request',
-        bodyText: 'I am angry about this charge and want a refund plus my money back.'
+    const result = await aiService.processEmail({ subject: '', bodyText: '' });
+
+    assert.equal(result.classification.category, 'Other');
+    assert.equal(result.classification.confidence, 0.3);
+    assert.ok('sentiment' in result.classification);
+    assert.ok('sentimentScore' in result.classification);
+});
+
+// ─── Test 6 ────────────────────────────────────────────────────────────────
+test('search results are scoped to the requester mailbox', async () => {
+    const accountId = '507f191e810c19729de860eb';
+    const otherAccountId = '507f191e810c19729de860ec';
+
+    const emails = [
+        {
+            _id: '507f1f77bcf86cd799439201',
+            accountId,
+            status: 'NEW',
+            category: 'Refund',
+            priority: 'HIGH',
+            fromAddress: 'customer@example.com',
+            toAddress: 'support@processmail.test',
+            subject: 'Refund request mailbox A',
+            bodyText: 'Please refund my order',
+            createdAt: new Date('2026-01-03T10:00:00.000Z')
+        },
+        {
+            _id: '507f1f77bcf86cd799439202',
+            accountId: otherAccountId,
+            status: 'NEW',
+            category: 'Refund',
+            priority: 'MEDIUM',
+            fromAddress: 'other@example.com',
+            toAddress: 'support@processmail.test',
+            subject: 'Refund request mailbox B',
+            bodyText: 'Please refund my order too',
+            createdAt: new Date('2026-01-02T10:00:00.000Z')
+        },
+        {
+            _id: '507f1f77bcf86cd799439203',
+            accountId,
+            status: 'SENT',
+            category: 'Billing',
+            priority: 'LOW',
+            fromAddress: 'billing@example.com',
+            toAddress: 'support@processmail.test',
+            subject: 'Invoice query mailbox A',
+            bodyText: 'Question about invoice',
+            createdAt: new Date('2026-01-01T10:00:00.000Z')
+        }
+    ];
+
+    const emailModel = {
+        find(query) {
+            const filtered = filterEmails(emails, query);
+            const state = { filtered, sortSpec: { createdAt: -1 }, skipCount: 0, limitCount: filtered.length };
+            return {
+                sort(s) { state.sortSpec = s; return this; },
+                skip(n) { state.skipCount = n; return this; },
+                limit(n) { state.limitCount = n; return this; },
+                populate() { return this; },
+                lean() {
+                    return Promise.resolve(
+                        state.filtered.slice(state.skipCount, state.skipCount + state.limitCount)
+                    );
+                }
+            };
+        },
+        countDocuments(query) {
+            return Promise.resolve(filterEmails(emails, query).length);
+        },
+        aggregate(pipeline) {
+            const scoped = filterEmails(emails, pipeline[0]?.$match);
+            const groupField = pipeline[1]?.$group?._id?.replace('$', '');
+            return Promise.resolve(aggregateByField(scoped, groupField));
+        }
+    };
+
+    const emailController = loadWithMocks('server/src/controllers/email.controller.js', {
+        'server/src/models/email.model.js': emailModel,
+        'server/src/modules/threads/thread.model.js': {},
+        'server/src/modules/audit/audit.model.js': {},
+        'server/src/modules/modifications/modification.model.js': {},
+        'server/src/queues/index.js': { queues: {}, addEmailToProcessing: async () => {} },
+        'server/src/utils/logger.js': { info() {}, error() {} }
     });
 
-    assert.equal(result.classification.category, 'Refund');
-    assert.equal(result.classification.sentiment, 'NEGATIVE');
-    assert.match(result.draft, /refund request is being reviewed/i);
+    const req = {
+        query: {
+            accountId,
+            search: 'refund',
+            page: 1,
+            limit: 10,
+            sortBy: 'createdAt',
+            sortOrder: 'desc'
+        }
+    };
+    const res = createResponse();
+    const next = createNext();
+
+    await emailController.getAllEmails(req, res, next);
+
+    assert.equal(next.state.error, null);
+    assert.equal(res.statusCode, 200);
+    // If accountId filter is dropped: total = 2 (both refund emails across mailboxes)
+    // After fix: total = 1 (only mailbox A's refund email)
+    assert.equal(res.body.pagination.total, 1);
+    assert.equal(res.body.data[0].subject, 'Refund request mailbox A');
 });

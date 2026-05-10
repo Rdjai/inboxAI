@@ -1,9 +1,8 @@
-#!/usr/bin/env bash
-set -euo pipefail
+#!/bin/sh
 
 cd /workspace
 
-git apply <<'PATCH'
+git apply << 'PATCH'
 diff --git a/server/src/controllers/analytics.controller.js b/server/src/controllers/analytics.controller.js
 index 4faa574..8391a3c 100644
 --- a/server/src/controllers/analytics.controller.js
