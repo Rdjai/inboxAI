@@ -1,5 +1,5 @@
-id = "processmail-mailbox-tenancy-scope"
-title = "Mailbox ownership metadata is dropped and inbox analytics are not scoped"
+id = "processmail-account-filter-scope"
+title = "Selected mailbox filters are dropped before inbox and dashboard queries"
 language = "javascript"
 framework = "node"
 difficulty = "medium"

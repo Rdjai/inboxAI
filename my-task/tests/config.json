@@ -1,12 +1,14 @@
 {
+  "base_commit": "d9411574d722e4bfa61252713a842c7baf0cdb53",
   "fail_to_pass": [
-    "email schema retains mailbox ownership metadata",
-    "email list only includes the requester mailbox and paginates within that scope",
-    "email detail denies access to foreign mailbox records",
-    "dashboard analytics only count the requester mailbox"
+    "list query validation preserves accountId",
+    "search query validation preserves accountId",
+    "email list scopes pagination and stats to the requested mailbox",
+    "search requests keep the requested mailbox filter",
+    "dashboard analytics honor the requested mailbox"
   ],
   "pass_to_pass": [
-    "role middleware blocks unauthorized roles",
-    "ai service falls back deterministically for empty payloads"
+    "pagination normalization still caps oversized limits",
+    "ai service still classifies refund language deterministically"
   ]
 }

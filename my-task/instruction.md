@@ -1,27 +1,24 @@
-# Issue: Inbox and Analytics Leak Cross-Mailbox Data
+# Issue: Selected mailbox filter is dropped by the backend
 
-We have a tenancy regression in the backend mailbox pipeline.
+The mailbox switcher is not being enforced consistently on the backend.
 
-When emails are imported or created, the API intends to associate them with the authenticated mailbox owner, but the inbox and analytics endpoints are still able to surface records from other users. The problem is easiest to notice on paginated inbox views and dashboard totals:
+When the client requests inbox or analytics data for a specific mailbox, it sends an `accountId` query parameter. The API should treat that mailbox as the scope for list, search, and dashboard responses. Right now the backend silently falls back to cross-mailbox data instead.
 
-- page 2 of the inbox can include messages that do not belong to the signed-in user
-- total counts and status/category rollups include emails from other mailboxes
-- looking up an email by id can succeed even when the record belongs to another mailbox
+Symptoms:
+
+- inbox pagination still counts emails from other connected mailboxes
+- searching inside a selected mailbox returns matches from unrelated mailboxes
+- dashboard totals and status/category breakdowns do not match the mailbox currently being viewed
 
 Expected behavior:
 
-- mailbox ownership metadata should persist on `Email` documents
-- inbox queries should paginate only within the requester’s mailbox
-- dashboard analytics should only aggregate the requester’s mailbox data
-- direct email lookups should not expose records from another mailbox
+- mailbox-scoped endpoints should preserve `accountId` during request validation
+- `/api/emails` should paginate and summarize only the requested mailbox when `accountId` is provided
+- search requests should keep the mailbox filter applied all the way into the search service
+- dashboard analytics should aggregate only the requested mailbox when `accountId` is provided
 
 Actual behavior:
 
-- ownership metadata written by the backend is not reliably available on stored email documents
-- inbox and analytics queries behave like global queries instead of mailbox-scoped queries
-
-Affects:
-
-- `server/src/models/email.model.js`
-- `server/src/controllers/email.controller.js`
-- `server/src/controllers/analytics.controller.js`
+- the mailbox filter is dropped before some handlers see it
+- inbox and search logic behave like cross-mailbox queries
+- dashboard aggregates are calculated across all mailboxes for the user-facing view

@@ -2,7 +2,10 @@ import axios from 'axios';
 import { io } from 'socket.io-client';
 import { getStatusColor, getPriorityColor, getCategoryIcon } from '../utils/helpers';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api';
+const API_BASE_URL =
+    import.meta.env.VITE_API_BASE_URL ||
+    import.meta.env.VITE_API_URL ||
+    'http://localhost:3000/api';
 const SOCKET_BASE_URL = API_BASE_URL.replace(/\/api\/?$/, '');
 const AUTH_EXPIRED_MESSAGE_KEY = 'auth_expired_message';
 
