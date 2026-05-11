@@ -6,7 +6,10 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 .pnpm-store/
-
+/client_old
+/server_old
+client_old/
+server_old/
 
 # Task temp artifacts
 my-task/.tmp/
