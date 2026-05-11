@@ -1,8 +1,19 @@
+const path = require('path');
+
 require('dotenv').config();
 
+const NODE_ENV = process.env.NODE_ENV || 'development';
+const PORT = Number(process.env.PORT || 3000);
+const APP_HOST = process.env.APP_HOST || '0.0.0.0';
+const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:5173';
+const CLIENT_ORIGINS = CLIENT_URL.split(',').map((value) => value.trim()).filter(Boolean);
+const UPLOAD_DIR = path.resolve(process.cwd(), process.env.UPLOAD_DIR || 'uploads');
+const LOG_DIR = path.resolve(process.cwd(), process.env.LOG_DIR || 'logs');
+
 module.exports = {
-    NODE_ENV: process.env.NODE_ENV || 'development',
-    PORT: process.env.PORT || 3000,
+    NODE_ENV,
+    PORT,
+    APP_HOST,
 
     MONGODB_URI: process.env.MONGODB_URI || process.env.MONGO_URI || 'mongodb://localhost:27017/processmail',
 
@@ -21,21 +32,20 @@ module.exports = {
     SMTP_USER: process.env.SMTP_USER || '',
     SMTP_PASS: process.env.SMTP_PASS || '',
 
-    // File Upload
-    UPLOAD_DIR: process.env.UPLOAD_DIR || 'uploads',
-    MAX_FILE_SIZE: process.env.MAX_FILE_SIZE || 5242880, // 5MB
+    UPLOAD_DIR,
+    LOG_DIR,
+    MAX_FILE_SIZE: process.env.MAX_FILE_SIZE || 5242880,
 
-    // AI Service
     AI_SERVICE_ENABLED: process.env.AI_SERVICE_ENABLED === 'true',
     OPENAI_API_KEY: process.env.OPENAI_API_KEY || '',
 
-    // OAuth (Google)
     GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID || '',
     GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET || '',
     GOOGLE_OAUTH_REDIRECT_URI: process.env.GOOGLE_OAUTH_REDIRECT_URI || 'http://localhost:3000/api/email/accounts/google/callback',
+    CLIENT_URL,
+    CLIENT_ORIGINS,
     CLIENT_BASE_URL: process.env.CLIENT_BASE_URL || 'http://localhost:5173',
 
-    // Rate Limiting
     RATE_LIMIT_WINDOW_MS: process.env.RATE_LIMIT_WINDOW_MS || 15 * 60 * 1000,
     RATE_LIMIT_MAX_REQUESTS: process.env.RATE_LIMIT_MAX_REQUESTS || 100
 };

@@ -18,6 +18,7 @@ my-task/.tmp/
 # Local env files
 server/.env
 client/.env
+.env.docker
 
 # Local uploads and runtime logs
 server/uploads/

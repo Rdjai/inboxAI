@@ -5,7 +5,7 @@ const morgan = require('morgan');
 const path = require('path');
 const fs = require('fs');
 
-const { NODE_ENV, UPLOAD_DIR } = require('./config/env');
+const { NODE_ENV, UPLOAD_DIR, LOG_DIR, CLIENT_ORIGINS } = require('./config/env');
 const { connectDB } = require('./config/database');
 const { errorHandler } = require('./middleware/errorHandler.middleware');
 const { apiRateLimiter, heavyOperationRateLimiter } = require('./middleware/rateLimit.middleware');
@@ -34,7 +34,7 @@ class App {
         ];
 
         const allowedOrigins = NODE_ENV === 'production'
-            ? (process.env.CLIENT_URL || '').split(',').map(v => v.trim()).filter(Boolean)
+            ? CLIENT_ORIGINS
             : devOrigins;
 
         this.app.use(cors({
@@ -47,10 +47,9 @@ class App {
         }));
 
         if (NODE_ENV === 'production') {
-            const logDir = path.join(__dirname, '../logs');
-            if (!fs.existsSync(logDir)) fs.mkdirSync(logDir, { recursive: true });
+            if (!fs.existsSync(LOG_DIR)) fs.mkdirSync(LOG_DIR, { recursive: true });
             this.app.use(morgan('combined', {
-                stream: fs.createWriteStream(path.join(logDir, 'access.log'), { flags: 'a' })
+                stream: fs.createWriteStream(path.join(LOG_DIR, 'access.log'), { flags: 'a' })
             }));
         } else {
             this.app.use(morgan('dev'));
@@ -58,7 +57,7 @@ class App {
 
         this.app.use(express.json({ limit: '10mb' }));
         this.app.use(express.urlencoded({ extended: true, limit: '10mb' }));
-        this.app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+        this.app.use('/uploads', express.static(UPLOAD_DIR));
 
         this.app.use('/api', apiRateLimiter);
         this.app.use('/api/email/sync', heavyOperationRateLimiter);
@@ -78,9 +77,8 @@ class App {
     }
 
     ensureUploadsDirectory() {
-        const uploadPath = UPLOAD_DIR || path.join(__dirname, '../uploads');
-        if (!fs.existsSync(uploadPath)) {
-            fs.mkdirSync(uploadPath, { recursive: true });
+        if (!fs.existsSync(UPLOAD_DIR)) {
+            fs.mkdirSync(UPLOAD_DIR, { recursive: true });
         }
     }
 

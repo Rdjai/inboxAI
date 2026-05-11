@@ -1,13 +1,14 @@
 const socketIO = require('socket.io');
 const logger = require('../utils/logger');
+const { NODE_ENV, CLIENT_ORIGINS } = require('../config/env');
 
 class SocketService {
     constructor(server) {
         this.io = socketIO(server, {
             cors: {
-                origin: process.env.NODE_ENV === 'production'
-                    ? process.env.CLIENT_URL
-                    : 'http://localhost:3000',
+                origin: NODE_ENV === 'production'
+                    ? CLIENT_ORIGINS
+                    : ['http://localhost:3000', 'http://localhost:5173'],
                 methods: ['GET', 'POST']
             }
         });

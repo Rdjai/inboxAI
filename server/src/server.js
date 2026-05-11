@@ -1,5 +1,5 @@
 const http = require('http');
-const { PORT, NODE_ENV } = require('./config/env');
+const { PORT, NODE_ENV, APP_HOST } = require('./config/env');
 const App = require('./app');
 const SocketService = require('./sockets');
 const logger = require('./utils/logger');
@@ -18,10 +18,10 @@ async function startServer() {
         const socketService = new SocketService(server);
         global.socketService = socketService;
 
-        server.listen(PORT, () => {
+        server.listen(PORT, APP_HOST, () => {
             logger.info(` Server running in ${NODE_ENV} mode on port ${PORT}`);
             logger.info(` ProcessMail Backend Ready`);
-            logger.info(` Health check: http://localhost:${PORT}/api/health`);
+            logger.info(` Health check: http://${APP_HOST}:${PORT}/api/health`);
         });
 
         process.on('SIGTERM', () => gracefulShutdown(server));
@@ -36,7 +36,7 @@ async function startServer() {
 function gracefulShutdown(server) {
     logger.info('Received shutdown signal, closing server...');
 
-    server.close(() => {
+    server.close(async () => {
         logger.info('Server closed');
         process.exit(0);
     });
