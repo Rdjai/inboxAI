@@ -1,0 +1,3 @@
+server/src/models/email.model.js: fixed
+server/src/controllers/email.controller.js: fixed
+server/src/controllers/analytics.controller.js: fixed

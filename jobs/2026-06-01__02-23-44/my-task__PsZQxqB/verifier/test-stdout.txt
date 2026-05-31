@@ -1,0 +1,50 @@
+Running all tests...
+TAP version 13
+# Subtest: email schema retains mailbox ownership metadata
+ok 1 - email schema retains mailbox ownership metadata
+  ---
+  duration_ms: 1197.776628
+  type: 'test'
+  ...
+# Subtest: email list only includes the requester mailbox and paginates within that scope
+ok 2 - email list only includes the requester mailbox and paginates within that scope
+  ---
+  duration_ms: 39.142811
+  type: 'test'
+  ...
+# Subtest: email detail denies access to foreign mailbox records
+ok 3 - email detail denies access to foreign mailbox records
+  ---
+  duration_ms: 2.008708
+  type: 'test'
+  ...
+# Subtest: dashboard analytics only count the requester mailbox
+ok 4 - dashboard analytics only count the requester mailbox
+  ---
+  duration_ms: 4.927786
+  type: 'test'
+  ...
+# Subtest: role middleware blocks unauthorized roles
+ok 5 - role middleware blocks unauthorized roles
+  ---
+  duration_ms: 18.597317
+  type: 'test'
+  ...
+# Subtest: ai service falls back deterministically for empty payloads
+ok 6 - ai service falls back deterministically for empty payloads
+  ---
+  duration_ms: 3.180258
+  type: 'test'
+  ...
+1..6
+# tests 6
+# suites 0
+# pass 6
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1307.218958
+Required : 6
+Passed   : 6
+RESULT: PASSED

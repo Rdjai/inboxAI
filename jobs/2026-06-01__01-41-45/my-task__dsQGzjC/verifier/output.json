@@ -1,0 +1,28 @@
+{
+  "tests": [
+    {
+      "name": "email schema retains mailbox ownership metadata",
+      "status": "FAILED"
+    },
+    {
+      "name": "email list only includes the requester mailbox and paginates within that scope",
+      "status": "FAILED"
+    },
+    {
+      "name": "email detail denies access to foreign mailbox records",
+      "status": "FAILED"
+    },
+    {
+      "name": "dashboard analytics only count the requester mailbox",
+      "status": "FAILED"
+    },
+    {
+      "name": "role middleware blocks unauthorized roles",
+      "status": "FAILED"
+    },
+    {
+      "name": "ai service falls back deterministically for empty payloads",
+      "status": "FAILED"
+    }
+  ]
+}

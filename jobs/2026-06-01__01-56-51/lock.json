@@ -1,0 +1,58 @@
+{
+    "schema_version": 1,
+    "created_at": "2026-05-31T20:26:53.643286Z",
+    "harbor": {
+        "version": "0.6.6",
+        "is_editable": false
+    },
+    "invocation": [
+        "C:\\Python313\\Scripts\\harbor",
+        "run",
+        "-p",
+        "./my-task",
+        "-a",
+        "oracle"
+    ],
+    "n_concurrent_trials": 4,
+    "retry": {
+        "max_retries": 0,
+        "exclude_exceptions": [
+            "VerifierOutputParseError",
+            "RewardFileEmptyError",
+            "VerifierTimeoutError",
+            "RewardFileNotFoundError",
+            "AgentTimeoutError"
+        ],
+        "wait_multiplier": 1.0,
+        "min_wait_sec": 1.0,
+        "max_wait_sec": 60.0
+    },
+    "trials": [
+        {
+            "task": {
+                "name": "my-task",
+                "type": "local",
+                "digest": "sha256:5daeb2819a9a7130f91b0f7df0d0c7e00def506af3350a4fc68e0eacbbc7bf32",
+                "path": "my-task"
+            },
+            "timeout_multiplier": 1.0,
+            "agent": {
+                "name": "oracle",
+                "kwargs": {},
+                "env": {}
+            },
+            "environment": {
+                "type": "docker",
+                "force_build": false,
+                "delete": true,
+                "suppress_override_warnings": false,
+                "env": {},
+                "kwargs": {}
+            },
+            "verifier": {
+                "env": {},
+                "disable": false
+            }
+        }
+    ]
+}

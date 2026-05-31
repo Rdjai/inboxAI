@@ -1,0 +1,80 @@
+Traceback (most recent call last):
+  File "C:\Python313\Lib\site-packages\harbor\trial\trial.py", line 951, in run
+    await self._setup_environment()
+  File "C:\Python313\Lib\site-packages\harbor\trial\trial.py", line 313, in _setup_environment
+    await self._start_environment_with_retry()
+  File "C:\Python313\Lib\site-packages\tenacity\asyncio\__init__.py", line 189, in async_wrapped
+    return await copy(fn, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python313\Lib\site-packages\tenacity\asyncio\__init__.py", line 111, in __call__
+    do = await self.iter(retry_state=retry_state)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python313\Lib\site-packages\tenacity\asyncio\__init__.py", line 153, in iter
+    result = await action(retry_state)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python313\Lib\site-packages\tenacity\_utils.py", line 99, in inner
+    return call(*args, **kwargs)
+  File "C:\Python313\Lib\site-packages\tenacity\__init__.py", line 400, in <lambda>
+    self._add_action_func(lambda rs: rs.outcome.result())
+                                     ~~~~~~~~~~~~~~~~~^^
+  File "C:\Python313\Lib\concurrent\futures\_base.py", line 449, in result
+    return self.__get_result()
+           ~~~~~~~~~~~~~~~~~^^
+  File "C:\Python313\Lib\concurrent\futures\_base.py", line 401, in __get_result
+    raise self._exception
+  File "C:\Python313\Lib\site-packages\tenacity\asyncio\__init__.py", line 114, in __call__
+    result = await fn(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python313\Lib\site-packages\harbor\trial\trial.py", line 325, in _start_environment_with_retry
+    await asyncio.wait_for(
+    ...<4 lines>...
+    )
+  File "C:\Python313\Lib\asyncio\tasks.py", line 507, in wait_for
+    return await fut
+           ^^^^^^^^^
+  File "C:\Python313\Lib\site-packages\harbor\environments\docker\docker.py", line 478, in start
+    await self._run_docker_compose_command(["build"])
+  File "C:\Python313\Lib\site-packages\harbor\environments\docker\docker.py", line 382, in _run_docker_compose_command
+    raise RuntimeError(
+    ...<5 lines>...
+    )
+RuntimeError: Docker compose command failed for environment my-task. Command: docker compose --project-name my-task__hfbbtdk --project-directory C:\Users\RDJ KASHYAP\Desktop\inboxflow\my-task\environment -f C:\Python313\Lib\site-packages\harbor\environments\docker\docker-compose-base.yaml -f C:\Python313\Lib\site-packages\harbor\environments\docker\docker-compose-build.yaml build. Return code: 1. Stdout: #1 [internal] load local bake definitions
+#1 reading from stdin 592B 0.0s done
+#1 DONE 0.0s
+
+#2 [internal] load build definition from Dockerfile
+#2 transferring dockerfile: 451B 0.0s done
+#2 DONE 0.1s
+
+#3 [internal] load metadata for us-docker.pkg.dev/afterqueryai/silver-repo-images/inboxai-mwtll:v1@sha256:53b3aab3f93a35dcf937d2b703ed4803c84d500e419c8bd4993ddedaea07d315
+#3 ...
+
+#4 [auth] afterqueryai/silver-repo-images/inboxai-mwtll:pull token for us-docker.pkg.dev
+#4 DONE 0.0s
+
+#3 [internal] load metadata for us-docker.pkg.dev/afterqueryai/silver-repo-images/inboxai-mwtll:v1@sha256:53b3aab3f93a35dcf937d2b703ed4803c84d500e419c8bd4993ddedaea07d315
+#3 ...
+
+#5 [auth] afterqueryai/silver-repo-images/inboxai-mwtll:pull token for us-docker.pkg.dev
+#5 DONE 0.0s
+
+#3 [internal] load metadata for us-docker.pkg.dev/afterqueryai/silver-repo-images/inboxai-mwtll:v1@sha256:53b3aab3f93a35dcf937d2b703ed4803c84d500e419c8bd4993ddedaea07d315
+#3 ERROR: failed to authorize: failed to fetch oauth token: denied: Permission 'artifactregistry.repositories.downloadArtifacts' denied on resource (or it may not exist).
+------
+ > [internal] load metadata for us-docker.pkg.dev/afterqueryai/silver-repo-images/inboxai-mwtll:v1@sha256:53b3aab3f93a35dcf937d2b703ed4803c84d500e419c8bd4993ddedaea07d315:
+------
+Dockerfile:1
+
+--------------------
+
+   1 | >>> FROM us-docker.pkg.dev/afterqueryai/silver-repo-images/inboxai-mwtll:v1@sha256:53b3aab3f93a35dcf937d2b703ed4803c84d500e419c8bd4993ddedaea07d315
+
+   2 |     
+
+   3 |     ENTRYPOINT []
+
+--------------------
+
+failed to solve: failed to fetch oauth token: denied: Permission 'artifactregistry.repositories.downloadArtifacts' denied on resource (or it may not exist).
+
+. Stderr: None. 

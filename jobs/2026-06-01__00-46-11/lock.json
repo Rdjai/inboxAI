@@ -1,0 +1,58 @@
+{
+    "schema_version": 1,
+    "created_at": "2026-05-31T19:16:12.963327Z",
+    "harbor": {
+        "version": "0.6.6",
+        "is_editable": false
+    },
+    "invocation": [
+        "C:\\Python313\\Scripts\\harbor",
+        "run",
+        "-p",
+        "./my-task",
+        "-a",
+        "nop"
+    ],
+    "n_concurrent_trials": 4,
+    "retry": {
+        "max_retries": 0,
+        "exclude_exceptions": [
+            "RewardFileNotFoundError",
+            "AgentTimeoutError",
+            "VerifierOutputParseError",
+            "RewardFileEmptyError",
+            "VerifierTimeoutError"
+        ],
+        "wait_multiplier": 1.0,
+        "min_wait_sec": 1.0,
+        "max_wait_sec": 60.0
+    },
+    "trials": [
+        {
+            "task": {
+                "name": "my-task",
+                "type": "local",
+                "digest": "sha256:9ccc3a2d560beddbcda090558156116a6d04845a33c9915d803fcb58c4919c51",
+                "path": "my-task"
+            },
+            "timeout_multiplier": 1.0,
+            "agent": {
+                "name": "nop",
+                "kwargs": {},
+                "env": {}
+            },
+            "environment": {
+                "type": "docker",
+                "force_build": false,
+                "delete": true,
+                "suppress_override_warnings": false,
+                "env": {},
+                "kwargs": {}
+            },
+            "verifier": {
+                "env": {},
+                "disable": false
+            }
+        }
+    ]
+}

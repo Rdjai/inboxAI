@@ -1,0 +1,17 @@
+[stdin]:21
+    if (!text.includes(marker)) throw new Error('email model schema marker not found');
+                                ^
+
+Error: email model schema marker not found
+    at [stdin]:21:39
+    at update ([stdin]:5:19)
+    at [stdin]:14:1
+    at runScriptInThisContext (node:internal/vm:209:10)
+    at node:internal/process/execution:449:12
+    at [stdin]-wrapper:6:24
+    at runScriptInContext (node:internal/process/execution:447:60)
+    at evalFunction (node:internal/process/execution:87:30)
+    at evalScript (node:internal/process/execution:99:3)
+    at node:internal/main/eval_stdin:53:5
+
+Node.js v22.17.1

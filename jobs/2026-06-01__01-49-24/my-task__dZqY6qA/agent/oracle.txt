@@ -1,0 +1,22 @@
+node:fs:441
+    return binding.readFileUtf8(path, stringToFlags(options.flag));
+                   ^
+
+Error: ENOENT: no such file or directory, open 'server/src/models/email.model.js'
+    at Object.readFileSync (node:fs:441:20)
+    at [stdin]:26:16
+    at runScriptInThisContext (node:internal/vm:209:10)
+    at node:internal/process/execution:449:12
+    at [stdin]-wrapper:6:24
+    at runScriptInContext (node:internal/process/execution:447:60)
+    at evalFunction (node:internal/process/execution:87:30)
+    at evalScript (node:internal/process/execution:99:3)
+    at node:internal/main/eval_stdin:53:5
+    at Socket.<anonymous> (node:internal/process/execution:200:5) {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: 'server/src/models/email.model.js'
+}
+
+Node.js v22.17.1

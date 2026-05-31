@@ -1,0 +1,32 @@
+version = "1.0"
+
+[metadata]
+name = "processmail-mailbox-tenancy-scope"
+description = "Mailbox ownership metadata is dropped and inbox/analytics are not scoped to the authenticated user."
+category = "bug_fix"
+difficulty = "medium"
+tags = ["javascript", "node", "express", "mongoose"]
+estimated_time_hours = 3.0
+author_name = "Jagannath Kashyap"
+author_email = "jagannathkashyap38@gmail.com"
+human_solve_time = ""
+requires_internet = false
+repo_type = "silver_repo_inboxAI_template"
+task_type = "bug_fix"
+verifier_runtime_sec = 300
+
+[verifier]
+command = "bash ${HARBOR_TEST_DIR:-/tests}/test.sh"
+timeout_sec = 300.0
+
+[agent]
+timeout_sec = 3600.0
+
+[environment]
+build_timeout_sec = 1800.0
+cpus = 1
+memory_mb = 4096
+storage_mb = 10240
+gpus = 0
+allow_internet = false
+required_tools = ["bash", "node"]

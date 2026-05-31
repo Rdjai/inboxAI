@@ -1,0 +1,159 @@
+Running all tests...
+TAP version 13
+# Subtest: email schema retains mailbox ownership metadata
+not ok 1 - email schema retains mailbox ownership metadata
+  ---
+  duration_ms: 2.250519
+  type: 'test'
+  location: '/workspace/my-task/tests/backend_behavior.test.js:63:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Cannot find module '/workspace/server/src/models/email.model.js'
+    Require stack:
+    - /workspace/my-task/tests/backend_behavior.test.js
+  code: 'MODULE_NOT_FOUND'
+  stack: |-
+    Function._resolveFilename (node:internal/modules/cjs/loader:1401:15)
+    defaultResolveImpl (node:internal/modules/cjs/loader:1057:19)
+    resolveForCJSWithHooks (node:internal/modules/cjs/loader:1062:22)
+    Function._load (node:internal/modules/cjs/loader:1211:37)
+    TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    wrapModuleLoad (node:internal/modules/cjs/loader:235:24)
+    Module.require (node:internal/modules/cjs/loader:1487:12)
+    require (node:internal/modules/helpers:135:16)
+    TestContext.<anonymous> (/workspace/my-task/tests/backend_behavior.test.js:64:19)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+  ...
+# Subtest: email list only includes the requester mailbox and paginates within that scope
+not ok 2 - email list only includes the requester mailbox and paginates within that scope
+  ---
+  duration_ms: 1.598955
+  type: 'test'
+  location: '/workspace/my-task/tests/backend_behavior.test.js:69:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Cannot find module '/workspace/server/src/controllers/email.controller.js'
+    Require stack:
+    - /workspace/my-task/tests/backend_behavior.test.js
+  code: 'MODULE_NOT_FOUND'
+  stack: |-
+    Function._resolveFilename (node:internal/modules/cjs/loader:1401:15)
+    Function.resolve (node:internal/modules/helpers:145:19)
+    loadWithMocks (/workspace/my-task/tests/backend_behavior.test.js:10:28)
+    TestContext.<anonymous> (/workspace/my-task/tests/backend_behavior.test.js:94:24)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+  ...
+# Subtest: email detail denies access to foreign mailbox records
+not ok 3 - email detail denies access to foreign mailbox records
+  ---
+  duration_ms: 0.559644
+  type: 'test'
+  location: '/workspace/my-task/tests/backend_behavior.test.js:103:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Cannot find module '/workspace/server/src/controllers/email.controller.js'
+    Require stack:
+    - /workspace/my-task/tests/backend_behavior.test.js
+  code: 'MODULE_NOT_FOUND'
+  stack: |-
+    Function._resolveFilename (node:internal/modules/cjs/loader:1401:15)
+    Function.resolve (node:internal/modules/helpers:145:19)
+    loadWithMocks (/workspace/my-task/tests/backend_behavior.test.js:10:28)
+    TestContext.<anonymous> (/workspace/my-task/tests/backend_behavior.test.js:112:24)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: dashboard analytics only count the requester mailbox
+not ok 4 - dashboard analytics only count the requester mailbox
+  ---
+  duration_ms: 0.789718
+  type: 'test'
+  location: '/workspace/my-task/tests/backend_behavior.test.js:120:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Cannot find module '/workspace/server/src/controllers/analytics.controller.js'
+    Require stack:
+    - /workspace/my-task/tests/backend_behavior.test.js
+  code: 'MODULE_NOT_FOUND'
+  stack: |-
+    Function._resolveFilename (node:internal/modules/cjs/loader:1401:15)
+    Function.resolve (node:internal/modules/helpers:145:19)
+    loadWithMocks (/workspace/my-task/tests/backend_behavior.test.js:10:28)
+    TestContext.<anonymous> (/workspace/my-task/tests/backend_behavior.test.js:138:24)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: role middleware blocks unauthorized roles
+not ok 5 - role middleware blocks unauthorized roles
+  ---
+  duration_ms: 0.687627
+  type: 'test'
+  location: '/workspace/my-task/tests/backend_behavior.test.js:148:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Cannot find module '/workspace/server/src/middleware/auth.middleware.js'
+    Require stack:
+    - /workspace/my-task/tests/backend_behavior.test.js
+  code: 'MODULE_NOT_FOUND'
+  stack: |-
+    Function._resolveFilename (node:internal/modules/cjs/loader:1401:15)
+    Function.resolve (node:internal/modules/helpers:145:19)
+    loadWithMocks (/workspace/my-task/tests/backend_behavior.test.js:10:28)
+    TestContext.<anonymous> (/workspace/my-task/tests/backend_behavior.test.js:149:32)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: ai service falls back deterministically for empty payloads
+not ok 6 - ai service falls back deterministically for empty payloads
+  ---
+  duration_ms: 0.501249
+  type: 'test'
+  location: '/workspace/my-task/tests/backend_behavior.test.js:161:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Cannot find module '/workspace/server/src/services/ai.service.js'
+    Require stack:
+    - /workspace/my-task/tests/backend_behavior.test.js
+  code: 'MODULE_NOT_FOUND'
+  stack: |-
+    Function._resolveFilename (node:internal/modules/cjs/loader:1401:15)
+    Function.resolve (node:internal/modules/helpers:145:19)
+    loadWithMocks (/workspace/my-task/tests/backend_behavior.test.js:10:28)
+    TestContext.<anonymous> (/workspace/my-task/tests/backend_behavior.test.js:162:21)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+1..6
+# tests 6
+# suites 0
+# pass 0
+# fail 6
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 34.866954
+Required : 6
+Passed   : 0
+RESULT: FAILED
+Missing: ['ai service falls back deterministically for empty payloads', 'dashboard analytics only count the requester mailbox', 'email detail denies access to foreign mailbox records', 'email list only includes the requester mailbox and paginates within that scope', 'email schema retains mailbox ownership metadata', 'role middleware blocks unauthorized roles']

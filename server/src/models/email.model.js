@@ -130,16 +130,6 @@ const emailMetadataSchema = new mongoose.Schema(
 );
 
 const emailSchema = new mongoose.Schema({
-    userId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
-        index: true
-    },
-    accountId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'EmailAccount',
-        index: true
-    },
     fromAddress: {
         type: String,
         required: true,
@@ -300,23 +290,9 @@ emailSchema.index({
 
 // 2. Inbox query indexes
 // These mirror the actual inbox list path: equality filters plus createdAt sorting.
-emailSchema.index({ userId: 1, createdAt: -1 }, { name: 'idx_inbox_user_createdAt' });
-emailSchema.index({ accountId: 1, createdAt: -1 }, { name: 'idx_inbox_account_createdAt' });
 emailSchema.index({ assignedUserId: 1, createdAt: -1 }, { name: 'idx_inbox_assigned_createdAt' });
-emailSchema.index({ userId: 1, accountId: 1, createdAt: -1 }, { name: 'idx_inbox_user_account_createdAt' });
 
 // 3. Inbox filter variants
-emailSchema.index({ userId: 1, status: 1, createdAt: -1 }, { name: 'idx_inbox_user_status_createdAt' });
-emailSchema.index({ accountId: 1, status: 1, createdAt: -1 }, { name: 'idx_inbox_account_status_createdAt' });
-emailSchema.index({ userId: 1, isRead: 1, createdAt: -1 }, { name: 'idx_inbox_user_isRead_createdAt' });
-emailSchema.index({ accountId: 1, isRead: 1, createdAt: -1 }, { name: 'idx_inbox_account_isRead_createdAt' });
-emailSchema.index({ userId: 1, assignedUserId: 1, createdAt: -1 }, { name: 'idx_inbox_user_assigned_createdAt' });
-emailSchema.index({ accountId: 1, assignedUserId: 1, createdAt: -1 }, { name: 'idx_inbox_account_assigned_createdAt' });
-emailSchema.index({ userId: 1, category: 1, createdAt: -1 }, { name: 'idx_inbox_user_category_createdAt' });
-emailSchema.index({ accountId: 1, category: 1, createdAt: -1 }, { name: 'idx_inbox_account_category_createdAt' });
-emailSchema.index({ userId: 1, priority: 1, createdAt: -1 }, { name: 'idx_inbox_user_priority_createdAt' });
-emailSchema.index({ accountId: 1, priority: 1, createdAt: -1 }, { name: 'idx_inbox_account_priority_createdAt' });
-
 // 4. Secondary list/reporting indexes
 emailSchema.index({ sentiment: 1, createdAt: -1 });
 emailSchema.index({ fromAddress: 1, createdAt: -1 });
@@ -334,22 +310,6 @@ emailSchema.index({ 'extractedEntities.organizations': 1 });
 emailSchema.index({ 'extractedEntities.emails': 1 });
 
 // 6. Partial indexes for high-volume inbox slices
-emailSchema.index(
-    { accountId: 1, status: 1, createdAt: -1 },
-    {
-        name: 'idx_inbox_active_status_partial',
-        partialFilterExpression: { status: { $in: ['NEW', 'REVIEWED', 'APPROVED', 'DRAFTED'] } }
-    }
-);
-
-emailSchema.index(
-    { accountId: 1, createdAt: -1 },
-    {
-        name: 'idx_inbox_unread_partial',
-        partialFilterExpression: { isRead: false }
-    }
-);
-
 emailSchema.index(
     { assignedUserId: 1, status: 1, createdAt: -1 },
     {

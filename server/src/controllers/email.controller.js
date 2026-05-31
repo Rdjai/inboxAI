@@ -39,12 +39,7 @@ class EmailController {
             } = req.query;
 
             // Build base query
-            let query = {};
-
-            // Apply resource ownership filter if required
-            if (req.requireOwnership) {
-                query[req.requireOwnership.field] = req.requireOwnership.userId;
-            }
+            const query = {};
 
             if (status) query.status = status;
             if (category) query.category = category;
@@ -345,15 +340,7 @@ class EmailController {
 
     async getEmailById(req, res, next) {
         try {
-            // Build query with resource ownership check
-            let query = { _id: req.params.id };
-
-            // Apply resource ownership filter if required
-            if (req.requireOwnership) {
-                query[req.requireOwnership.field] = req.requireOwnership.userId;
-            }
-
-            let emailQuery = Email.findOne(query)
+            let emailQuery = Email.findById(req.params.id)
                 .populate('assignedUserId', 'name email');
 
             if (Email.schema.path('auditLogs')) {

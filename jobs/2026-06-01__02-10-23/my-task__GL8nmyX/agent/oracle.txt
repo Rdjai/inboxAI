@@ -1,0 +1,18 @@
+email model already has accountId
+[stdin]:16
+    throw new Error(`${label}: expected text not found`);
+    ^
+
+Error: email list account scope: expected text not found
+    at replaceInFile ([stdin]:16:11)
+    at [stdin]:59:1
+    at runScriptInThisContext (node:internal/vm:209:10)
+    at node:internal/process/execution:449:12
+    at [stdin]-wrapper:6:24
+    at runScriptInContext (node:internal/process/execution:447:60)
+    at evalFunction (node:internal/process/execution:87:30)
+    at evalScript (node:internal/process/execution:99:3)
+    at node:internal/main/eval_stdin:53:5
+    at Socket.<anonymous> (node:internal/process/execution:200:5)
+
+Node.js v22.17.1
