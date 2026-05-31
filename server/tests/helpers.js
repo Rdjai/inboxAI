@@ -3,6 +3,30 @@
  * All helpers return plain objects — no live DB connections required.
  */
 
+const path = require('node:path');
+const Module = require('node:module');
+
+const serverRoot = path.resolve(__dirname, '..');
+
+function loadWithMocks(relativePath, mocks = {}) {
+    const targetPath = require.resolve(path.join(serverRoot, relativePath));
+    delete require.cache[targetPath];
+
+    const originalLoad = Module._load;
+    Module._load = function patchedLoad(request, parent, isMain) {
+        if (Object.prototype.hasOwnProperty.call(mocks, request)) {
+            return mocks[request];
+        }
+        return originalLoad.apply(this, arguments);
+    };
+
+    try {
+        return require(targetPath);
+    } finally {
+        Module._load = originalLoad;
+    }
+}
+
 function createResponse() {
     return {
         statusCode: 200,
@@ -100,4 +124,13 @@ function makeEmailModel(emails) {
     };
 }
 
-module.exports = { createResponse, createNext, makeEmail, makeEmailModel, filterEmails, aggregateByField, sameValue };
+module.exports = {
+    loadWithMocks,
+    createResponse,
+    createNext,
+    makeEmail,
+    makeEmailModel,
+    filterEmails,
+    aggregateByField,
+    sameValue
+};
